@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -7,7 +8,8 @@ using UnityEngine.UI;
 namespace ChoppingTrees
 {
     /// <summary>
-    /// In-game overlay: money and resources with production rates, the equipped axe, crosshair and
+    /// In-game overlay: money, the backpack (what the player carries), the lumber yard stock with
+    /// production rates, the equipped axe, crosshair and
     /// hit marker, the targeted tree's health, interaction prompts with key caps, the courier
     /// timer, the save indicator and the FPS counter (F3 cycles it).
     /// Text is only reformatted when the shown value changes.
@@ -43,6 +45,14 @@ namespace ChoppingTrees
         Color m_HitColor = Color.white;
         string m_LastAxe;
 
+        // backpack
+        TextMeshProUGUI m_PackName, m_PackValue, m_PackFull;
+        RectTransform m_PackBar, m_PackRect;
+        Image m_PackBarImage, m_PackIcon;
+        string m_LastPack;
+        float m_PackPunch, m_PackShake;
+        GameObject m_YardCaption;
+
         GameObject m_FpsRoot;
         TextMeshProUGUI m_Fps, m_FpsDetail;
         float m_FpsRefresh;
@@ -64,6 +74,12 @@ namespace ChoppingTrees
             BuildFps();
             BuildFooter();
             game.Saved += () => m_SavedTimer = 2.2f;
+            game.Model.BackpackFilled += () =>
+            {
+                m_PackShake = 1f;
+                AudioManager.Ui("error", 0.35f);
+                Toasts.Show("Backpack full! Sell your wood at the Lumber Market.", Toasts.Kind.Warning);
+            };
         }
 
         void BuildResources(Game game)
@@ -85,6 +101,13 @@ namespace ChoppingTrees
             m_Money.textWrappingMode = TextWrappingModes.NoWrap;
             m_Money.Layout(-1, -1, 1);
             m_MoneyRect = m_Money.rectTransform;
+
+            BuildBackpack(col);
+
+            var yardCaption = UIFactory.Caption(col, "Lumber yard", UIStyle.Muted, 13f);
+            yardCaption.Layout(-1, 18);
+            yardCaption.margin = new Vector4(6, 4, 0, 0);
+            m_YardCaption = yardCaption.gameObject;
 
             foreach (var r in game.Db.resources)
             {
@@ -116,6 +139,54 @@ namespace ChoppingTrees
             UIFactory.Text(courier.transform, "Courier", 17, UIStyle.Muted).Layout(70);
             m_CourierBar = UIFactory.Bar(courier.transform, 8, UIStyle.CategoryColor(UpgradeCategory.Economy));
             m_Courier = courier.gameObject;
+        }
+
+        void BuildBackpack(RectTransform col)
+        {
+            var pack = UIFactory.Surface(col, "Backpack", UIStyle.Hud);
+            UIFactory.VStack(pack, 6f, new RectOffset(16, 16, 9, 11));
+            m_PackRect = pack.rectTransform;
+            var row = UIFactory.Rect("Row", pack.transform);
+            UIFactory.HStack(row, 10f);
+            m_PackIcon = UIFactory.Icon(row, "backpack", UIStyle.CategoryColor(UpgradeCategory.Axe), 26f);
+            m_PackName = UIFactory.Text(row, "", 17, UIStyle.Muted);
+            m_PackName.textWrappingMode = TextWrappingModes.NoWrap;
+            m_PackName.overflowMode = TextOverflowModes.Ellipsis;
+            m_PackName.Layout(-1, -1, 1);
+            m_PackValue = UIFactory.Text(row, "", 24, UIStyle.Text, true, TextAlignmentOptions.Right);
+            m_PackValue.textWrappingMode = TextWrappingModes.NoWrap;
+            m_PackBar = UIFactory.Bar(pack.transform, 7, UIStyle.Accent);
+            m_PackBarImage = m_PackBar.GetComponent<Image>();
+            m_PackFull = UIFactory.Text(pack.transform, "Full - sell at the Lumber Market", 15, UIStyle.Bad, true);
+            m_PackFull.textWrappingMode = TextWrappingModes.NoWrap;
+            m_PackFull.gameObject.SetActive(false);
+        }
+
+        void UpdateBackpack(GameModel model, float dt)
+        {
+            double carried = model.State.CarriedTotal, cap = model.BackpackCapacity;
+            string v = $"{NumberUtil.Format(Math.Floor(carried))}<size=70%><color=#B5AE9C> / {NumberUtil.Format(cap)}</color></size>";
+            if (v != m_LastPack)
+            {
+                if (m_LastPack != null && carried > 0) m_PackPunch = 1f;
+                m_LastPack = v;
+                m_PackValue.text = v;
+                m_PackName.text = model.Upgrades.BackpackName;
+            }
+            bool full = model.BackpackFull;
+            float fill = model.BackpackFill;
+            UIFactory.SetBar(m_PackBar, fill);
+            Color bar = full ? UIStyle.Bad : fill > 0.8f ? Color.Lerp(UIStyle.Accent, UIStyle.Bad, 0.45f) : UIStyle.Accent;
+            m_PackBarImage.color = bar;
+            // A log was left behind because the pack is full: shake the chip and show the hint.
+            if (full && Time.unscaledTime - WoodPickup.LastRefusedTime < 0.2f && m_PackShake < 0.3f) m_PackShake = 0.6f;
+            if (m_PackFull.gameObject.activeSelf != full) m_PackFull.gameObject.SetActive(full);
+            m_PackPunch = Mathf.MoveTowards(m_PackPunch, 0f, dt * 5f);
+            m_PackShake = Mathf.MoveTowards(m_PackShake, 0f, dt * 2.5f);
+            m_PackValue.color = full ? UIStyle.Bad : Color.Lerp(UIStyle.Text, UIStyle.Accent, m_PackPunch);
+            m_PackIcon.color = full ? UIStyle.Bad : UIStyle.CategoryColor(UpgradeCategory.Axe);
+            // Wobble (rotation, which the layout group leaves alone).
+            m_PackRect.localRotation = Quaternion.Euler(0f, 0f, Mathf.Sin(Time.unscaledTime * 50f) * 2.5f * m_PackShake);
         }
 
         void BuildCrosshair()
@@ -248,13 +319,18 @@ namespace ChoppingTrees
             m_MoneyPunch = Mathf.MoveTowards(m_MoneyPunch, 0f, dt * 4f);
             m_MoneyRect.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(m_MoneyPunch * Mathf.PI));
 
+            UpdateBackpack(model, dt);
+
+            // Lumber yard: machine output, shown once there is any.
+            bool anyYard = false;
             foreach (var row in m_Rows)
             {
                 double amount = model.State.Get(row.def.id);
                 double net = model.Production.NetRate(row.def.id);
                 double gross = model.Production.GrossRate(row.def.id);
-                bool show = !row.def.hiddenUntilProduced || amount >= 1 || gross > 0;
+                bool show = amount >= 1 || gross > 0;
                 if (row.go.activeSelf != show) row.go.SetActive(show);
+                anyYard |= show;
                 if (!show) continue;
                 string v = NumberUtil.Format(amount);
                 if (v != row.lastValue)
@@ -277,6 +353,8 @@ namespace ChoppingTrees
                 row.punch = Mathf.MoveTowards(row.punch, 0f, dt * 5f);
                 row.value.color = Color.Lerp(UIStyle.Text, UIStyle.Accent, row.punch);
             }
+
+            if (m_YardCaption.activeSelf != anyYard) m_YardCaption.SetActive(anyYard);
 
             string axe = model.Upgrades.AxeName;
             if (axe != m_LastAxe)

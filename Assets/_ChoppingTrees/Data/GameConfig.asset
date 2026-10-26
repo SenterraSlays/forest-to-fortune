@@ -43,6 +43,15 @@ MonoBehaviour:
   pickupMagnetRadius: 4
   pickupAutoCollectSeconds: 25
   maxActivePickups: 48
+  backpackCapacity:
+  - 50
+  - 150
+  - 400
+  - 1000
+  - 2500
+  - 6000
+  - 15000
+  baseBackpackName: Burlap Sack
   startingMoney: 0
   autosaveSeconds: 30
   baseOfflineHours: 2

@@ -11,11 +11,15 @@ namespace ChoppingTrees
     [Serializable]
     public class SaveData
     {
-        public const int CurrentVersion = 1;
+        /// <summary>2: added <see cref="backpack"/> (1.2). Version 1 stock all stays in the yard.</summary>
+        public const int CurrentVersion = 2;
 
         public int version = CurrentVersion;
         public double money;
+        /// <summary>Yard stock (machine output).</summary>
         public List<Amount> resources = new List<Amount>();
+        /// <summary>Wood carried by the player.</summary>
+        public List<Amount> backpack = new List<Amount>();
         public List<UpgradeLevel> upgrades = new List<UpgradeLevel>();
         public double totalEarned;
         public double totalWoodChopped;

@@ -130,7 +130,7 @@ namespace ChoppingTrees
             {
                 case HitResult.Damaged:
                 case HitResult.Felled:
-                    AudioManager.Sfx("axe_chop", hit.point, 1f, tree.Type.soundPitch);
+                    AudioManager.Sfx("tree_hit", hit.point, 1f, tree.Type.soundPitch);
                     Effects.WoodChips(hit.point, hit.normal, tree.Type.chipColor, result == HitResult.Felled ? 22 : 12, tree.transform.position.y);
                     FloatingText.Show(hit.point + hit.normal * 0.2f, "-" + NumberUtil.Format(damage, true), new Color(1f, 0.95f, 0.85f), 0.7f);
                     m_HitStop = 0.045f;

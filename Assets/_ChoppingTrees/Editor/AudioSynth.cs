@@ -7,10 +7,11 @@ using UnityEngine;
 namespace ChoppingTrees.EditorTools
 {
     /// <summary>
-    /// Synthesises every sound in the game into WAV files and fills the AudioLibrary asset
+    /// Synthesises the game's sounds into WAV files and fills the AudioLibrary asset
     /// (Tools > Chopping Trees > 4. Generate Audio). All original: filtered noise, decaying
     /// partials and simple envelopes. Deterministic (fixed seed). Loops are cross-faded so they
-    /// repeat without clicks.
+    /// repeat without clicks. The tree hit, fall and landing sounds are recordings in
+    /// Audio/Recorded instead (see <see cref="s_Recorded"/>).
     /// </summary>
     public static class AudioSynth
     {
@@ -35,11 +36,8 @@ namespace ChoppingTrees.EditorTools
 
             Add("axe_swing", "axe_swing_1", Swish(0.22f, 650f, 0.8f));
             Add("axe_swing", "axe_swing_2", Swish(0.2f, 780f, 0.8f));
-            for (int i = 0; i < 4; i++) Add("axe_chop", "axe_chop_" + (i + 1), Chop(i));
             Add("axe_thud", "axe_thud", Thud(0.14f, 120f, 0.8f));
             Add("axe_clang", "axe_clang", Clang());
-            Add("tree_crack", "tree_crack", Crack());
-            Add("tree_fall", "tree_fall", Fall());
             Add("log_break", "log_break", LogBreak());
             Add("collect", "collect", Pop());
             Add("sell", "sell", Coins());
@@ -60,6 +58,7 @@ namespace ChoppingTrees.EditorTools
             Add("gate_open", "gate_open", Creak(1.6f, 0.9f));
             Add("wind", "wind", MakeLoop(Wind(9f), 1.5f), 0.9f);
             for (int i = 0; i < 3; i++) Add("bird", "bird_" + (i + 1), Bird(i));
+            foreach (var r in s_Recorded) AddRecorded(r.group, r.file);
             AssetDatabase.Refresh();
             var lib = BuildLibrary();
             return $"{CountFiles()} sounds in {s_Groups.Count} groups -> {AssetDatabase.GetAssetPath(lib)}";
@@ -77,6 +76,61 @@ namespace ChoppingTrees.EditorTools
             Write(file, data, peak);
             if (!s_Groups.TryGetValue(group, out var list)) s_Groups[group] = list = new List<string>();
             list.Add(file);
+        }
+
+        /// <summary>Recorded sounds in Audio/Recorded (trimmed WAVs) that are used instead of synthesised ones.</summary>
+        static readonly (string group, string file, float volume)[] s_Recorded =
+        {
+            ("tree_hit", "tree_hit", 0.9f),         // axe biting into a trunk
+            ("tree_falling", "tree_falling", 1f),   // the trunk giving way and toppling
+            ("tree_land", "tree_land", 1f),         // the tree hitting the ground
+        };
+
+        /// <summary>Groups that older libraries had and the recorded sounds replaced.</summary>
+        static readonly string[] s_Replaced = { "axe_chop", "tree_crack", "tree_fall" };
+
+        static void AddRecorded(string group, string file)
+        {
+            string path = $"{Dir}/Recorded/{file}.wav";
+            AssetDatabase.ImportAsset(path);
+            var imp = (AudioImporter)AssetImporter.GetAtPath(path);
+            if (imp == null)
+            {
+                Debug.LogWarning("[Audio] Missing recorded sound " + path);
+                return;
+            }
+            var settings = imp.defaultSampleSettings;
+            settings.loadType = AudioClipLoadType.DecompressOnLoad;
+            settings.compressionFormat = AudioCompressionFormat.Vorbis;
+            settings.quality = 0.8f;
+            imp.defaultSampleSettings = settings;
+            imp.forceToMono = true;
+            imp.SaveAndReimport();
+            if (!s_Groups.TryGetValue(group, out var list)) s_Groups[group] = list = new List<string>();
+            list.Add("Recorded/" + file);
+        }
+
+        /// <summary>Puts the recorded sounds into the existing library without re-synthesising
+        /// anything else (Tools > Chopping Trees > Import Recorded Audio).</summary>
+        [MenuItem("Tools/Chopping Trees/Import Recorded Audio", priority = 40)]
+        public static string ImportRecorded()
+        {
+            s_Groups.Clear();
+            foreach (var r in s_Recorded) AddRecorded(r.group, r.file);
+            var lib = AssetDatabase.LoadAssetAtPath<AudioLibrary>(LibraryPath);
+            if (lib == null) return "no library; run 4. Generate Audio";
+            var entries = new List<AudioLibrary.Entry>();
+            foreach (var e in lib.entries)
+                if (e != null && Array.IndexOf(s_Replaced, e.name) < 0 && !s_Groups.ContainsKey(e.name)) entries.Add(e);
+            foreach (var r in s_Recorded)
+            {
+                var clip = AssetDatabase.LoadAssetAtPath<AudioClip>($"{Dir}/Recorded/{r.file}.wav");
+                if (clip != null) entries.Add(new AudioLibrary.Entry { name = r.group, clips = new[] { clip }, volume = r.volume });
+            }
+            lib.entries = entries.ToArray();
+            EditorUtility.SetDirty(lib);
+            AssetDatabase.SaveAssets();
+            return $"{lib.entries.Length} groups, recorded: {string.Join(", ", Array.ConvertAll(s_Recorded, r => r.group))}";
         }
 
         static readonly Dictionary<string, float> s_Volumes = new Dictionary<string, float>
@@ -97,7 +151,9 @@ namespace ChoppingTrees.EditorTools
             {
                 var clips = new List<AudioClip>();
                 foreach (var f in kv.Value) clips.Add(AssetDatabase.LoadAssetAtPath<AudioClip>($"{Dir}/{f}.wav"));
-                entries.Add(new AudioLibrary.Entry { name = kv.Key, clips = clips.ToArray(), volume = s_Volumes.TryGetValue(kv.Key, out var v) ? v : 1f });
+                float volume = s_Volumes.TryGetValue(kv.Key, out var v) ? v : 1f;
+                foreach (var r in s_Recorded) if (r.group == kv.Key) volume = r.volume;
+                entries.Add(new AudioLibrary.Entry { name = kv.Key, clips = clips.ToArray(), volume = volume });
             }
             lib.entries = entries.ToArray();
             EditorUtility.SetDirty(lib);
@@ -338,33 +394,6 @@ namespace ChoppingTrees.EditorTools
                 float env = Mathf.Sin(Mathf.Clamp01(t / len) * Mathf.PI);
                 x[i] = bp.Run(pulse * 4f + RandS() * 0.05f) * env * 2f;
             }
-            return x;
-        }
-
-        static float[] Crack()
-        {
-            var x = Creak(1.1f, 1.1f);
-            float[] snaps = { 0.55f, 0.72f, 0.81f, 0.95f, 1.0f };
-            foreach (var s in snaps) Mix(x, Clicks(new[] { 0f }, 1200f + Rand01() * 900f, 0.02f), s, 0.9f);
-            Mix(x, Chop(1), 0.93f, 0.6f);
-            return x;
-        }
-
-        static float[] Fall()
-        {
-            var x = Buf(2.2f);
-            Mix(x, Swish(0.9f, 1600f, 0.45f), 0f, 1f);
-            var leaves = Buf(1.6f);
-            var hp = Filter.High(2500f);
-            for (int i = 0; i < leaves.Length; i++)
-            {
-                float t = i / (float)SR;
-                leaves[i] = hp.Run(RandS()) * Mathf.Sin(Mathf.Clamp01(t / 1.6f) * Mathf.PI) * (0.5f + 0.5f * Mathf.Sin(t * 37f)) * 0.5f;
-            }
-            Mix(x, leaves, 0.1f, 1f);
-            Mix(x, Thud(0.9f, 48f, 1f), 0.75f, 1.6f);
-            Mix(x, Thud(0.35f, 110f, 0.8f), 0.77f, 0.8f);
-            Mix(x, Thud(0.3f, 70f, 0.6f), 1.12f, 0.5f);
             return x;
         }
 

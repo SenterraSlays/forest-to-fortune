@@ -75,6 +75,9 @@ namespace ChoppingTrees.EditorTools
                     null, Req("axe_tier", 1)),
                 Up("axe_speed", "Grip Training", "Faster, steadier swings.", UpgradeCategory.Axe, UpgradeEffect.AxeSpeed, null, 10, 60, 1.7, null, 0.08f, 2,
                     null, Req("axe_sharpen", 1)),
+                Up("backpack", "Backpack", "Carry more wood on each trip to the market. Machine output goes to the yard, never your pack.", UpgradeCategory.Axe, UpgradeEffect.BackpackCapacity, null, 6, 0, 6,
+                    new double[] { 50, 350, 2200, 15000, 100000, 700000 }, 1, 3,
+                    new[] { "Canvas Satchel", "Leather Rucksack", "Frame Pack", "Logger's Pack", "Expedition Pack", "Hauler's Harness" }, Req("axe_tier", 1)),
 
                 Up("chopper_count", "Auto-Chopper", "A petrol-powered saw that cuts logs on its own. More machines, more wood.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "chopper", 8, 0, 2.4,
                     new double[] { 200, 1200, 3200, 7500, 16000, 36000, 80000, 180000 }, 1, 0),
@@ -92,7 +95,7 @@ namespace ChoppingTrees.EditorTools
                 Up("wood_price", "Market Contacts", "Better buyers pay more for your wood.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "wood", 15, 100, 1.75, null, 0.2f, 0),
                 Up("plank_price", "Furniture Buyers", "Carpenters pay a premium for your planks.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "planks", 10, 7500, 1.9, null, 0.25f, 1,
                     null, Req("sawmill_count", 1)),
-                Up("courier", "Wood Courier", "A courier collects and sells all your stock every 15 seconds, wherever you are.", UpgradeCategory.Economy, UpgradeEffect.AutoSell, null, 1, 8000, 1, null, 15f, 2,
+                Up("courier", "Wood Courier", "A courier collects and sells everything your machines have stored in the yard every 15 seconds, wherever you are.", UpgradeCategory.Economy, UpgradeEffect.AutoSell, null, 1, 8000, 1, null, 15f, 2,
                     null, Req("wood_price", 1), Req("chopper_count", 2)),
                 Up("night_shift", "Night Shift", "Machines keep working longer while the game is closed.", UpgradeCategory.Economy, UpgradeEffect.OfflineHours, null, 5, 2000, 3, null, 2f, 3,
                     null, Req("wood_price", 1), Req("chopper_count", 1)),
@@ -103,30 +106,39 @@ namespace ChoppingTrees.EditorTools
                     null, Req("area_grove", 1), Req("axe_tier", 3)),
             };
 
-            // ---- skill tree layout (x = -4..4 left to right, y = 0..5 from the trunk up) and icons
+            // ---- skill tree layout (x = -4..4 left to right, y = 0..5 from the trunk up) and icons.
+            // Branches read left to right: Forests, Axe, Automation, Economy; each grows upwards
+            // from its first upgrade, with links curving between rows.
             var layout = new Dictionary<string, (float x, float y, string icon)>
             {
-                ["axe_tier"] = (-2.3f, 1.0f, "axe"),
-                ["axe_sharpen"] = (-3.5f, 1.95f, "gem"),
-                ["axe_speed"] = (-3.7f, 3.2f, "bolt"),
-                ["area_grove"] = (-2.1f, 3.0f, "pine"),
-                ["area_ridge"] = (-2.0f, 4.55f, "mountain"),
-                ["chopper_count"] = (0.15f, 1.3f, "saw"),
-                ["chopper_speed"] = (-0.75f, 2.5f, "gear"),
-                ["foreman"] = (0.2f, 2.75f, "chart"),
-                ["chopper_tier"] = (-0.75f, 4.1f, "crown"),
-                ["sawmill_count"] = (1.3f, 2.45f, "plank"),
-                ["sawmill_speed"] = (0.95f, 3.85f, "bolt"),
-                ["plank_price"] = (2.2f, 3.7f, "star"),
-                ["wood_price"] = (2.45f, 1.0f, "coin"),
-                ["night_shift"] = (3.65f, 2.0f, "moon"),
-                ["courier"] = (3.45f, 3.2f, "cart"),
+                ["area_grove"] = (-3.95f, 2.75f, "pine"),
+                ["area_ridge"] = (-3.95f, 4.15f, "mountain"),
+
+                ["axe_tier"] = (-2.75f, 1.35f, "axe"),
+                ["axe_sharpen"] = (-2.75f, 2.6f, "gem"),
+                ["axe_speed"] = (-2.75f, 3.85f, "bolt"),
+                ["backpack"] = (-1.65f, 2.5f, "backpack"),
+
+                ["chopper_count"] = (0.0f, 1.35f, "saw"),
+                ["chopper_speed"] = (-0.55f, 2.6f, "gear"),
+                ["chopper_tier"] = (-0.55f, 3.95f, "crown"),
+                ["foreman"] = (0.5f, 2.85f, "chart"),
+                ["sawmill_count"] = (1.55f, 2.45f, "plank"),
+                ["sawmill_speed"] = (1.55f, 3.8f, "bolt"),
+
+                ["wood_price"] = (2.85f, 1.35f, "coin"),
+                ["courier"] = (2.85f, 2.75f, "cart"),
+                ["night_shift"] = (3.95f, 2.55f, "moon"),
+                ["plank_price"] = (2.75f, 4.1f, "star"),
             };
             foreach (var u in ups)
                 if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }
 
             // ---- config and database
             var cfg = Asset<GameConfig>($"{Data}/GameConfig.asset");
+            // Wood carried by hand per backpack tier (machine output goes to the yard instead).
+            cfg.backpackCapacity = new double[] { 50, 150, 400, 1000, 2500, 6000, 15000 };
+            cfg.baseBackpackName = "Burlap Sack";
             var db = Asset<GameDatabase>(DatabasePath);
             db.config = cfg;
             db.resources = new[] { wood, planks };

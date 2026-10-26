@@ -117,6 +117,15 @@ namespace ChoppingTrees
             ["leaf"] = p => Union(Cut(Circle(p, V(.4f, .4f), .38f), Union(Circle(p, V(.04f, .82f), .4f), Circle(p, V(.82f, .04f), .4f))), Capsule(p, V(.14f, .14f), V(.4f, .4f), .03f)),
             ["chart"] = p => Union(Union(Box(p, V(.26f, .32f), V(.08f, .16f)), Box(p, V(.5f, .42f), V(.08f, .26f))), Box(p, V(.74f, .54f), V(.08f, .38f))),
             ["dot"] = p => Circle(p, V(.5f, .5f), .4f),
+            ["backpack"] = p =>
+            {
+                float body = Cut(Box(p, V(.5f, .42f), V(.27f, .31f), 0f, .1f), Box(p, V(.5f, .55f), V(.3f, .018f)));
+                float pocket = Cut(Box(p, V(.5f, .3f), V(.15f, .1f), 0f, .04f), Box(p, V(.5f, .3f), V(.105f, .058f), 0f, .02f));
+                float handle = Cut(RingD(p, V(.5f, .76f), .11f, .06f), Box(p, V(.5f, .66f), V(.2f, .08f)));
+                return Union(Cut(body, pocket), handle);
+            },
+            ["plus"] = p => Union(Box(p, V(.5f, .5f), V(.075f, .32f), 0f, .04f), Box(p, V(.5f, .5f), V(.32f, .075f), 0f, .04f)),
+            ["arrow_up"] = p => Union(Capsule(p, V(.5f, .18f), V(.5f, .78f), .08f), Union(Capsule(p, V(.5f, .8f), V(.24f, .54f), .08f), Capsule(p, V(.5f, .8f), V(.76f, .54f), .08f))),
         };
 
         public static Sprite Get(string name)
@@ -146,6 +155,120 @@ namespace ChoppingTrees
         // ---------------------------------------------------------------- panel sprites
 
         static Sprite s_Shadow, s_Ring, s_GradientH, s_GradientV, s_Glow;
+        static Sprite s_Bezel, s_Face, s_ThinRing, s_ArcRing, s_Vignette, s_TreeRings, s_ForestNear, s_ForestFar, s_Dash;
+
+        // ---------------------------------------------------------------- skill tree sprites
+
+        /// <summary>Metal node bezel: a ring shaded light at the top and dark at the bottom (grey
+        /// values, so the Image tint keeps the shading), with a thin bright inner lip.</summary>
+        public static Sprite Bezel => s_Bezel != null ? s_Bezel : s_Bezel = MakeRadial(128, (r, nx, ny) =>
+        {
+            float a = Mathf.Clamp01((1f - r) * 64f) * Mathf.Clamp01((r - 0.80f) * 64f);
+            float shade = Mathf.Lerp(0.58f, 1f, ny * 0.5f + 0.5f);
+            shade += 0.22f * Mathf.Clamp01(1f - Mathf.Abs(r - 0.83f) * 30f);             // inner lip
+            shade += 0.16f * Mathf.Pow(Mathf.Clamp01(-nx * 0.6f + ny * 0.8f), 6f);       // top-left glint
+            shade = Mathf.Min(1f, shade);
+            return new Color(shade, shade, shade, a);
+        });
+
+        /// <summary>Node face: a disc that is slightly lighter in the middle and at the top.</summary>
+        public static Sprite Face => s_Face != null ? s_Face : s_Face = MakeRadial(128, (r, nx, ny) =>
+        {
+            float a = Mathf.Clamp01((1f - r) * 64f);
+            float shade = Mathf.Lerp(1f, 0.72f, r * r) + 0.08f * Mathf.Clamp01(ny) * (1f - r);
+            return new Color(shade, shade, shade, a);
+        });
+
+        /// <summary>Thin outline circle (selection ring, milestone ring, affordable ring).</summary>
+        public static Sprite ThinRing => s_ThinRing != null ? s_ThinRing : s_ThinRing = MakeRadial(128, (r, nx, ny) =>
+            new Color(1, 1, 1, Mathf.Clamp01(1f - Mathf.Abs(r - 0.975f) * 64f / 1.6f)));
+
+        /// <summary>Band inside the bezel used as a radial progress arc (Image.Type.Filled).</summary>
+        public static Sprite ArcRing => s_ArcRing != null ? s_ArcRing : s_ArcRing = MakeRadial(128, (r, nx, ny) =>
+            new Color(1, 1, 1, Mathf.Clamp01((0.955f - r) * 64f) * Mathf.Clamp01((r - 0.855f) * 64f)));
+
+        /// <summary>Dark edges, clear centre (stretched over a panel).</summary>
+        public static Sprite Vignette => s_Vignette != null ? s_Vignette : s_Vignette = MakeRadial(128, (r, nx, ny) =>
+            new Color(1, 1, 1, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.55f, 1.42f, r))));
+
+        /// <summary>Faint concentric growth rings, like the cut face of a log.</summary>
+        public static Sprite TreeRings => s_TreeRings != null ? s_TreeRings : s_TreeRings = MakeRadial(512, (r, nx, ny) =>
+        {
+            if (r >= 1f) return Color.clear;
+            float ang = Mathf.Atan2(ny, nx);
+            float rr = r + 0.012f * Mathf.Sin(ang * 3f + r * 9f) + 0.006f * Mathf.Sin(ang * 7f - r * 15f);
+            float ring = Mathf.Pow(0.5f + 0.5f * Mathf.Cos(rr * Mathf.PI * 2f * 11f * (0.8f + 0.4f * rr)), 14f);
+            float fade = Mathf.Clamp01((1f - r) * 4f) * Mathf.Clamp01(r * 6f);
+            return new Color(1, 1, 1, ring * fade);
+        });
+
+        /// <summary>Rows of pine silhouettes (opaque trees, clear sky); two variations for depth.</summary>
+        public static Sprite ForestNear => s_ForestNear != null ? s_ForestNear : s_ForestNear = MakeForest(9, 0.5f, 1f, 30);
+        public static Sprite ForestFar => s_ForestFar != null ? s_ForestFar : s_ForestFar = MakeForest(21, 0.45f, 0.85f, 44);
+
+        /// <summary>One dash of the pattern used for locked links (tiled along the link).</summary>
+        public static Sprite Dash
+        {
+            get
+            {
+                if (s_Dash != null) return s_Dash;
+                var tex = new Texture2D(16, 4, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Bilinear };
+                for (int x = 0; x < 16; x++)
+                for (int y = 0; y < 4; y++)
+                    tex.SetPixel(x, y, new Color(1, 1, 1, x < 9 ? Mathf.Clamp01(Mathf.Min(x + 0.5f, 9f - x - 0.5f)) : 0f));
+                tex.Apply();
+                return s_Dash = Sprite.Create(tex, new Rect(0, 0, 16, 4), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+            }
+        }
+
+        /// <summary>Square sprite from f(r, nx, ny): r = distance from the centre (1 = edge),
+        /// (nx, ny) = unit direction from the centre.</summary>
+        static Sprite MakeRadial(int size, Func<float, float, float, Color> f)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var px = new Color32[size * size];
+            float h = size / 2f;
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float dx = (x + 0.5f - h) / h, dy = (y + 0.5f - h) / h;
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                float inv = r > 1e-5f ? 1f / r : 0f;
+                px[y * size + x] = f(r, dx * inv, dy * inv);
+            }
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+        }
+
+        /// <summary>Wide strip of pine silhouettes standing on the bottom edge. Deterministic (seeded).</summary>
+        static Sprite MakeForest(int seed, float minH, float maxH, int trees)
+        {
+            const int w = 1024, h = 160;
+            var rng = new System.Random(seed);
+            var tops = new float[w];
+            for (int i = 0; i < trees; i++)
+            {
+                float cx = (float)rng.NextDouble() * w;
+                float height = Mathf.Lerp(minH, maxH, (float)rng.NextDouble()) * h;
+                float half = height * Mathf.Lerp(0.22f, 0.3f, (float)rng.NextDouble());
+                for (int x = Mathf.Max(0, (int)(cx - half)); x < Mathf.Min(w, (int)(cx + half)); x++)
+                {
+                    float t = 1f - Mathf.Abs(x - cx) / half;
+                    // Stepped edges read as tiers of branches.
+                    float tier = 0.85f + 0.15f * Mathf.Abs(Mathf.Sin((1f - t) * height * 0.18f));
+                    tops[x] = Mathf.Max(tops[x], height * t * tier);
+                }
+            }
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+            for (int x = 0; x < w; x++)
+                px[y * w + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(tops[x] - y + 0.5f) * 255));
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0f), 100f, 0, SpriteMeshType.FullRect);
+        }
 
         /// <summary>Soft blurred rounded rectangle for drop shadows (9-sliced).</summary>
         public static Sprite Shadow => s_Shadow != null ? s_Shadow : s_Shadow = MakeSliced(128, 40, (x, y, size) =>

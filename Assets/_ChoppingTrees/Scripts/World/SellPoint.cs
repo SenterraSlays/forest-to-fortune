@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ChoppingTrees
 {
-    /// <summary>The lumber market: sells everything in stock on E.</summary>
+    /// <summary>The lumber market: sells the backpack and the yard stock on E.</summary>
     public class SellPoint : MonoBehaviour, IInteractable
     {
         [SerializeField] Transform m_EffectPoint;
@@ -23,8 +23,11 @@ namespace ChoppingTrees
             get
             {
                 var m = Game.Instance.Model;
-                double value = m.Market.StockValue();
-                return value > 0 ? "Stock worth " + NumberUtil.Money(value) : "Nothing to sell yet";
+                double pack = m.Market.StockValue(backpack: true, yard: false);
+                double yard = m.Market.StockValue(backpack: false, yard: true);
+                if (pack + yard <= 0) return "Nothing to sell yet";
+                string where = pack > 0 && yard > 0 ? $"backpack {NumberUtil.Money(pack)} + yard {NumberUtil.Money(yard)}" : pack > 0 ? "backpack" : "yard";
+                return $"Stock worth {NumberUtil.Money(pack + yard)} ({where})";
             }
         }
 

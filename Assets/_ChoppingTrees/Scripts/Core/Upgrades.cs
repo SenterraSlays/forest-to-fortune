@@ -17,7 +17,7 @@ namespace ChoppingTrees
         int m_Version;
 
         // cached aggregates
-        int m_AxeTier;
+        int m_AxeTier, m_BackpackTier;
         float m_DamageMult, m_SpeedMult, m_AutoSellSeconds, m_OfflineHours, m_ProductionBonus;
         readonly Dictionary<string, int> m_MachineCounts = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_MachineMult = new Dictionary<string, double>();
@@ -112,6 +112,27 @@ namespace ChoppingTrees
             }
         }
 
+        public int BackpackTier { get { Refresh(); return m_BackpackTier; } }
+
+        /// <summary>How much the player can carry by hand (machines fill the yard instead).</summary>
+        public double BackpackCapacity => CapacityForTier(m_Db.config, BackpackTier);
+
+        public static double CapacityForTier(GameConfig cfg, int tier)
+        {
+            var c = cfg.backpackCapacity;
+            if (c == null || c.Length == 0) return double.MaxValue;
+            return c[Mathf.Clamp(tier, 0, c.Length - 1)];
+        }
+
+        public string BackpackName
+        {
+            get
+            {
+                var u = FirstWithEffect(UpgradeEffect.BackpackCapacity);
+                return (u != null ? u.LevelName(Level(u)) : null) ?? m_Db.config.baseBackpackName;
+            }
+        }
+
         public int MachineCount(string machineId) { Refresh(); return m_MachineCounts.TryGetValue(machineId, out var v) ? v : 0; }
         public int MachineTier(string machineId) { Refresh(); return m_MachineTier.TryGetValue(machineId, out var v) ? v : 0; }
 
@@ -149,6 +170,7 @@ namespace ChoppingTrees
             if (m_CachedVersion == m_Version) return;
             m_CachedVersion = m_Version;
             m_AxeTier = 0;
+            m_BackpackTier = 0;
             m_DamageMult = 1f;
             m_SpeedMult = 1f;
             m_AutoSellSeconds = 0f;
@@ -184,6 +206,7 @@ namespace ChoppingTrees
                         break;
                     case UpgradeEffect.OfflineHours: m_OfflineHours += e * lv; break;
                     case UpgradeEffect.ProductionBonus: m_ProductionBonus += e * lv; break;
+                    case UpgradeEffect.BackpackCapacity: m_BackpackTier = Math.Max(m_BackpackTier, lv); break;
                 }
             }
 

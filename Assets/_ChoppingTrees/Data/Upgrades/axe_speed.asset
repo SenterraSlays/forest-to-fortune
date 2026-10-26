@@ -28,5 +28,5 @@ MonoBehaviour:
   - upgradeId: axe_sharpen
     level: 1
   sortOrder: 2
-  treePosition: {x: -3.7, y: 3.2}
+  treePosition: {x: -2.75, y: 3.85}
   icon: bolt

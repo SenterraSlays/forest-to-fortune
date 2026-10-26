@@ -102,7 +102,7 @@ namespace ChoppingTrees
             Step = from + 1;
             m_Pulse = 1f;
             AudioManager.Ui("objective", 0.6f);
-            if (Step == StepCollect && m_Model.State.Get(GameModel.Wood) >= 1) Step = StepSell;
+            if (Step == StepCollect && m_Model.State.Carried(GameModel.Wood) >= 1) Step = StepSell;
             if (Step == StepUpgrade && AnyUpgradeOwned()) Step = StepChopper;
             if (Step == StepChopper && m_Model.Production.ProducesAnything) Step = StepDone;
             if (Step == StepDone) m_DoneTimer = 9f;
@@ -139,7 +139,7 @@ namespace ChoppingTrees
                     icon = "axe";
                     break;
                 case StepCollect:
-                    body = "Walk over the <b>logs</b> to collect the wood.";
+                    body = $"Walk over the <b>logs</b> to collect the wood. Your backpack holds <b>{NumberUtil.Format(m_Model.BackpackCapacity)}</b>.";
                     icon = "log";
                     break;
                 case StepSell:

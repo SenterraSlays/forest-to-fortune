@@ -44,7 +44,8 @@ namespace ChoppingTrees
             UpgradeCategory.Axe => new Color(0.93f, 0.50f, 0.32f),
             UpgradeCategory.Automation => new Color(0.97f, 0.73f, 0.27f),
             UpgradeCategory.Economy => new Color(0.42f, 0.80f, 0.62f),
-            _ => new Color(0.45f, 0.72f, 0.92f),
+            UpgradeCategory.Forest => new Color(0.45f, 0.72f, 0.92f),
+            _ => new Color(0.74f, 0.62f, 0.92f), // reserved for a fifth branch
         };
 
         public static string CategoryIcon(UpgradeCategory c) => c switch
@@ -52,8 +53,12 @@ namespace ChoppingTrees
             UpgradeCategory.Axe => "axe",
             UpgradeCategory.Automation => "gear",
             UpgradeCategory.Economy => "coin",
-            _ => "pine",
+            UpgradeCategory.Forest => "pine",
+            _ => "star",
         };
+
+        /// <summary>Heading for a skill tree branch.</summary>
+        public static string CategoryTitle(UpgradeCategory c) => c == UpgradeCategory.Forest ? "Forests" : c.ToString();
 
         public static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 

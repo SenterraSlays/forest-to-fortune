@@ -18,13 +18,6 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 81518cba99b304e4e954236af7d7d425, type: 3}
     - {fileID: 8300000, guid: 4bc959257463c034fba31755ff919ce1, type: 3}
     volume: 0.7
-  - name: axe_chop
-    clips:
-    - {fileID: 8300000, guid: a4a272d7e6bea304185b813865192a71, type: 3}
-    - {fileID: 8300000, guid: a33c917a2167a27459bd745298b875ee, type: 3}
-    - {fileID: 8300000, guid: d0a67ae5065e6da47be1bbcf9cda9220, type: 3}
-    - {fileID: 8300000, guid: 3ca57c2b640f01c409a1c6b6f4c9ead5, type: 3}
-    volume: 1
   - name: axe_thud
     clips:
     - {fileID: 8300000, guid: bc3fa596bc29c1f459631ee2905e51fd, type: 3}
@@ -32,14 +25,6 @@ MonoBehaviour:
   - name: axe_clang
     clips:
     - {fileID: 8300000, guid: a6302c5a2e49bcd499adc598b04127c4, type: 3}
-    volume: 1
-  - name: tree_crack
-    clips:
-    - {fileID: 8300000, guid: 2d989ed0383c42147b9dc441e7106118, type: 3}
-    volume: 1
-  - name: tree_fall
-    clips:
-    - {fileID: 8300000, guid: cac2db1c34bd6074193fd8b44f76d353, type: 3}
     volume: 1
   - name: log_break
     clips:
@@ -126,3 +111,15 @@ MonoBehaviour:
     - {fileID: 8300000, guid: a359910f487fd804c8b565d54b96fe40, type: 3}
     - {fileID: 8300000, guid: 6392e13001be36348af36c8f22319b3c, type: 3}
     volume: 0.6
+  - name: tree_hit
+    clips:
+    - {fileID: 8300000, guid: 57592461a4f5fc34eb6d3ec8dbfe9fb9, type: 3}
+    volume: 0.9
+  - name: tree_falling
+    clips:
+    - {fileID: 8300000, guid: 48325d769626e6f4cb498f344052964d, type: 3}
+    volume: 1
+  - name: tree_land
+    clips:
+    - {fileID: 8300000, guid: 8578277ba5a60d14bb1045058a814933, type: 3}
+    volume: 1

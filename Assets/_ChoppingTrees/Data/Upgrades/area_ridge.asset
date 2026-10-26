@@ -31,5 +31,5 @@ MonoBehaviour:
   - upgradeId: axe_tier
     level: 3
   sortOrder: 1
-  treePosition: {x: -2, y: 4.55}
+  treePosition: {x: -3.95, y: 4.15}
   icon: mountain

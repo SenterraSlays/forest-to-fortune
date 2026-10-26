@@ -28,5 +28,5 @@ MonoBehaviour:
   - upgradeId: chopper_count
     level: 1
   sortOrder: 4
-  treePosition: {x: 0.2, y: 2.75}
+  treePosition: {x: 0.5, y: 2.85}
   icon: chart

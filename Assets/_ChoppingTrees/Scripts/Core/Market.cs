@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace ChoppingTrees
 {
-    /// <summary>Sale prices and selling. Works for any resource in the database.</summary>
+    /// <summary>Sale prices and selling. Works for any resource in the database, from the yard
+    /// stock, the backpack or both.</summary>
     public class Market
     {
         public struct Sale
@@ -33,26 +34,34 @@ namespace ChoppingTrees
 
         public double Price(ResourceDef r) => r == null ? 0 : NumberUtil.SafePositive(r.basePrice * m_Upgrades.PriceMultiplier(r.id));
 
-        /// <summary>What everything in stock would sell for right now.</summary>
-        public double StockValue()
+        /// <summary>What the chosen stock would sell for right now.</summary>
+        public double StockValue(bool backpack = true, bool yard = true)
         {
             double v = 0;
             foreach (var r in m_Db.resources)
-                if (r != null) v += Math.Floor(m_State.Get(r.id)) * Price(r);
+            {
+                if (r == null) continue;
+                if (yard) v += Math.Floor(m_State.Get(r.id)) * Price(r);
+                if (backpack) v += Math.Floor(m_State.Carried(r.id)) * Price(r);
+            }
             return NumberUtil.SafePositive(v);
         }
 
-        /// <summary>Sells all whole units of every resource; fractions stay in stock.</summary>
-        public Receipt SellAll()
+        /// <summary>Sells all whole units of every resource from the chosen stock; fractions stay.
+        /// Each resource gets one receipt line, whichever stock it came from.</summary>
+        public Receipt SellAll(bool backpack = true, bool yard = true)
         {
             var receipt = new Receipt();
             foreach (var r in m_Db.resources)
             {
                 if (r == null) continue;
-                double whole = Math.Floor(m_State.Get(r.id));
+                double fromYard = yard ? Math.Floor(m_State.Get(r.id)) : 0;
+                double fromPack = backpack ? Math.Floor(m_State.Carried(r.id)) : 0;
+                double whole = fromYard + fromPack;
                 if (whole < 1) continue;
                 double money = whole * Price(r);
-                m_State.Add(r.id, -whole);
+                if (fromYard > 0) m_State.Add(r.id, -fromYard);
+                if (fromPack > 0) m_State.AddCarried(r.id, -fromPack);
                 receipt.lines.Add(new Sale { resourceId = r.id, amount = whole, money = money });
                 receipt.total = NumberUtil.Add(receipt.total, money);
             }

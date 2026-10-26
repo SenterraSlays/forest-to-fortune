@@ -33,6 +33,11 @@ namespace ChoppingTrees
         public float pickupAutoCollectSeconds = 25f;
         public int maxActivePickups = 48;
 
+        [Header("Backpack")]
+        [Tooltip("Wood the player can carry for each backpack tier (index = tier). Machine output goes to the yard instead.")]
+        public double[] backpackCapacity = { 50, 150, 400, 1000, 2500, 6000, 15000 };
+        public string baseBackpackName = "Burlap Sack";
+
         [Header("Economy")]
         public double startingMoney;
         public float autosaveSeconds = 30f;

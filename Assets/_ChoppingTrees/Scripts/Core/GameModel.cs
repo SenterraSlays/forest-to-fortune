@@ -21,8 +21,10 @@ namespace ChoppingTrees
         public event Action<UpgradeDef> Purchased;
         /// <summary>Resources were sold (bool = automatic sale).</summary>
         public event Action<Market.Receipt, bool> Sold;
-        /// <summary>The player collected resources by hand (id, amount).</summary>
+        /// <summary>The player collected resources by hand into the backpack (id, amount).</summary>
         public event Action<string, double> Collected;
+        /// <summary>The backpack just became full (raised once per fill, not on every refused log).</summary>
+        public event Action BackpackFilled;
         /// <summary>A tree was felled by the player.</summary>
         public event Action<TreeType> TreeFelled;
 
@@ -38,7 +40,8 @@ namespace ChoppingTrees
             Production = new Production(State, db, Upgrades);
         }
 
-        /// <summary>Real-time update: production, play time and automatic selling.</summary>
+        /// <summary>Real-time update: production, play time and automatic selling (the courier
+        /// only takes the yard stock; the backpack is sold by hand at the market).</summary>
         public void Tick(float dt)
         {
             if (dt <= 0) return;
@@ -59,13 +62,23 @@ namespace ChoppingTrees
 
         public float AutoSellProgress => Upgrades.AutoSellSeconds > 0 ? m_AutoSellTimer / Upgrades.AutoSellSeconds : 0;
 
-        public void Collect(string resourceId, double amount)
+        public double BackpackCapacity => Upgrades.BackpackCapacity;
+        public double BackpackFree => Math.Max(0, BackpackCapacity - State.CarriedTotal);
+        /// <summary>Less than one unit of room left.</summary>
+        public bool BackpackFull => BackpackFree < 1e-6;
+        public float BackpackFill => (float)Math.Min(1, State.CarriedTotal / Math.Max(1e-9, BackpackCapacity));
+
+        /// <summary>Puts hand-collected resources in the backpack, up to its capacity.
+        /// Returns the amount taken; the rest is left where it was.</summary>
+        public double Collect(string resourceId, double amount)
         {
-            amount = NumberUtil.SafePositive(amount);
-            if (amount <= 0) return;
-            State.Add(resourceId, amount);
+            amount = Math.Min(NumberUtil.SafePositive(amount), BackpackFree);
+            if (amount <= 0) return 0;
+            State.AddCarried(resourceId, amount);
             if (resourceId == Wood) State.TotalWoodChopped = NumberUtil.Add(State.TotalWoodChopped, amount);
             Collected?.Invoke(resourceId, amount);
+            if (BackpackFull) BackpackFilled?.Invoke();
+            return amount;
         }
 
         public void AddMoney(double amount)
@@ -88,9 +101,10 @@ namespace ChoppingTrees
             return true;
         }
 
+        /// <summary>Sells the yard stock, plus the backpack unless it's the courier selling.</summary>
         public Market.Receipt Sell(bool automatic = false)
         {
-            var r = Market.SellAll();
+            var r = Market.SellAll(backpack: !automatic, yard: true);
             if (!r.Empty) Sold?.Invoke(r, automatic);
             return r;
         }

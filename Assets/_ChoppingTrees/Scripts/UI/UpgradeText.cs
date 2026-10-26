@@ -53,7 +53,14 @@ namespace ChoppingTrees
                     return Pair((r != null ? r.displayName : "Price") + " price", NumberUtil.Money(now), NumberUtil.Money(next), maxed);
                 }
                 case UpgradeEffect.AutoSell:
-                    return lv > 0 ? $"Selling everything every {e:0}s" : $"Sells all your stock every {e:0}s, wherever you are";
+                    return lv > 0 ? $"Selling the yard stock every {e:0}s" : $"Sells everything in the yard every {e:0}s, wherever you are\n<color=#8F8A7C>Your backpack is still sold by hand</color>";
+                case UpgradeEffect.BackpackCapacity:
+                {
+                    var cfg = m.Db.config;
+                    string now = NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv));
+                    if (maxed) return $"Carries {now} wood";
+                    return Pair("Carries", now, NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv + 1)), false) + " wood";
+                }
                 case UpgradeEffect.OfflineHours:
                 {
                     float now = up.OfflineCapHours;

@@ -33,6 +33,8 @@ namespace ChoppingTrees
         ForestArea,
         /// <summary>+effectPerLevel output multiplier for every machine.</summary>
         ProductionBonus,
+        /// <summary>Level = backpack tier; the capacity per tier is <see cref="GameConfig.backpackCapacity"/>.</summary>
+        BackpackCapacity,
     }
 
     public enum MachineKind

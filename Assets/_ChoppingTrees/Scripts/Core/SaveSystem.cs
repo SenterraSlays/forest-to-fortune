@@ -62,8 +62,11 @@ namespace ChoppingTrees
         public static void Migrate(SaveData d)
         {
             if (d.version <= 0) d.version = 1;
-            // Future: if (d.version < 2) { ...; d.version = 2; }
+            // Version 1 had a single stock. It stays in the yard: moving it into the backpack
+            // could overflow the new capacity, and the market sells both anyway.
+            if (d.version < 2) d.version = 2;
             if (d.resources == null) d.resources = new System.Collections.Generic.List<SaveData.Amount>();
+            if (d.backpack == null) d.backpack = new System.Collections.Generic.List<SaveData.Amount>();
             if (d.upgrades == null) d.upgrades = new System.Collections.Generic.List<SaveData.UpgradeLevel>();
         }
 

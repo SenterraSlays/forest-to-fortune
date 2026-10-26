@@ -34,5 +34,5 @@ MonoBehaviour:
   - upgradeId: area_grove
     level: 1
   sortOrder: 5
-  treePosition: {x: -0.75, y: 4.1}
+  treePosition: {x: -0.55, y: 3.95}
   icon: crown

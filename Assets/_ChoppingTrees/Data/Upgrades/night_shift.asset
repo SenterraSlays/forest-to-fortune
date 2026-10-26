@@ -30,5 +30,5 @@ MonoBehaviour:
   - upgradeId: chopper_count
     level: 1
   sortOrder: 3
-  treePosition: {x: 3.65, y: 2}
+  treePosition: {x: 3.95, y: 2.55}
   icon: moon

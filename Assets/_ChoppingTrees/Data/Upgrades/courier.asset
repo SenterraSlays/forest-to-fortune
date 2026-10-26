@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
   id: courier
   displayName: Wood Courier
-  description: A courier collects and sells all your stock every 15 seconds, wherever you are.
+  description: A courier collects and sells everything your machines have stored in the yard every 15 seconds, wherever you are.
   category: 2
   effect: 7
   targetId: 
@@ -30,5 +30,5 @@ MonoBehaviour:
   - upgradeId: chopper_count
     level: 2
   sortOrder: 2
-  treePosition: {x: 3.45, y: 3.2}
+  treePosition: {x: 2.85, y: 2.75}
   icon: cart

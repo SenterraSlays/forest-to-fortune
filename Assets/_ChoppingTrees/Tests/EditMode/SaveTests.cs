@@ -29,6 +29,7 @@ namespace ChoppingTrees.Tests
             var s = new GameState { Money = 1234.5, TreesFelled = 42, TutorialStep = 3, HasPlayed = true, PlaySeconds = 99 };
             s.Set("wood", 77.25);
             s.Set("planks", 3);
+            s.SetCarried("wood", 12.5);
             s.SetLevel("axe_tier", 2);
             s.SetLevel("chopper_count", 3);
             return s;
@@ -44,6 +45,7 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(1234.5, loaded.Money, 1e-9);
             Assert.AreEqual(77.25, loaded.Get("wood"), 1e-9);
             Assert.AreEqual(3, loaded.Get("planks"), 1e-9);
+            Assert.AreEqual(12.5, loaded.Carried("wood"), 1e-9);
             Assert.AreEqual(2, loaded.Level("axe_tier"));
             Assert.AreEqual(3, loaded.Level("chopper_count"));
             Assert.AreEqual(42, loaded.TreesFelled);
@@ -106,6 +108,19 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(SaveData.CurrentVersion, d.version);
             Assert.IsNotNull(d.resources);
             Assert.IsNotNull(d.upgrades);
+            Assert.IsNotNull(d.backpack);
+        }
+
+        [Test]
+        public void VersionOneStockStaysInTheYard()
+        {
+            // 1.1 saves had one stock and no backpack; it all stays sellable in the yard.
+            Directory.CreateDirectory(m_Dir);
+            File.WriteAllText(SaveSystem.SavePath, "{\"version\":1,\"money\":10,\"resources\":[{\"id\":\"wood\",\"value\":500}],\"upgrades\":[]}");
+            var s = SaveSystem.Load(out var problem);
+            Assert.IsNull(problem);
+            Assert.AreEqual(500, s.Get("wood"), 1e-9);
+            Assert.AreEqual(0, s.CarriedTotal, 1e-9);
         }
 
         [Test]

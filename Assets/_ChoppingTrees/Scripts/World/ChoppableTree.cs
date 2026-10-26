@@ -128,7 +128,7 @@ namespace ChoppingTrees
             m_WobbleVel = 0f;
             if (m_Trunk != null) m_Trunk.enabled = false;
             if (m_Notch != null) m_Notch.gameObject.SetActive(false);
-            AudioManager.Sfx("tree_crack", m_Hinge.position, 1f, m_Type.soundPitch);
+            AudioManager.Sfx("tree_falling", m_Hinge.position, 1f, m_Type.soundPitch);
             enabled = true;
 
             var game = Game.Instance;
@@ -224,7 +224,7 @@ namespace ChoppingTrees
         void Land()
         {
             Vector3 mid = m_Pivot + m_FallDir * m_Type.trunkHeight * m_Scale * 0.5f;
-            AudioManager.Sfx("tree_fall", mid, Mathf.Clamp(m_Scale, 0.8f, 1.3f), m_Type.soundPitch);
+            AudioManager.Sfx("tree_land", mid, Mathf.Clamp(m_Scale, 0.8f, 1.3f), m_Type.soundPitch);
             float len = m_Type.trunkHeight * m_Scale;
             for (float d = 0.5f; d < len; d += 1.5f)
                 Effects.Dust(new Vector3(m_Pivot.x, transform.position.y, m_Pivot.z) + m_FallDir * d, 3, 0.6f);

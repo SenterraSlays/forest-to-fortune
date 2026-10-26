@@ -105,7 +105,7 @@ namespace ChoppingTrees.Tests
             m.Collect("wood", 10.6);
             var r = m.Sell();
             Assert.AreEqual(10, r.total, 1e-9);
-            Assert.AreEqual(0.6, m.State.Get("wood"), 1e-9);
+            Assert.AreEqual(0.6, m.State.Carried("wood"), 1e-9);
             m.State.Money = 1000;
             Assert.IsTrue(m.TryBuy(m_Db.Upgrade("wood_price"), out _));
             m.Collect("wood", 10);
@@ -138,7 +138,7 @@ namespace ChoppingTrees.Tests
                 model.TryBuy(m_Db.Upgrade("chopper_count"), out _);
                 model.TryBuy(m_Db.Upgrade("chopper_count"), out _);
                 model.TryBuy(m_Db.Upgrade("sawmill_count"), out _);
-                model.Collect("wood", 5);
+                model.State.Add("wood", 5);
             }
             a.Production.Advance(20);
             for (int i = 0; i < 2000; i++) b.Production.Advance(0.01);
@@ -206,13 +206,65 @@ namespace ChoppingTrees.Tests
             m.TryBuy(m_Db.Upgrade("wood_price"), out _);
             Assert.IsTrue(m.TryBuy(m_Db.Upgrade("courier"), out _));
             m.State.Money = 0;
-            m.Collect("wood", 50);
+            m.State.Add("wood", 50);
+            m.Collect("wood", 20);
             float interval = m.Upgrades.AutoSellSeconds;
             Assert.Greater(interval, 0f);
             m.Tick(interval * 0.5f);
             Assert.AreEqual(0, m.State.Money);
             m.Tick(interval * 0.6f);
             Assert.Greater(m.State.Money, 0);
+            Assert.Less(m.State.Get("wood"), 1, "the courier sells the yard stock");
+            Assert.AreEqual(20, m.State.Carried("wood"), 1e-9, "but never the backpack");
+        }
+
+        [Test]
+        public void BackpackLimitsWhatThePlayerCarries()
+        {
+            var m = NewModel(0);
+            double cap = m_Db.config.backpackCapacity[0];
+            Assert.AreEqual(cap, m.BackpackCapacity, 1e-9);
+            int filled = 0;
+            m.BackpackFilled += () => filled++;
+
+            Assert.AreEqual(cap, m.Collect("wood", cap + 25), 1e-9, "only what fits is taken");
+            Assert.IsTrue(m.BackpackFull);
+            Assert.AreEqual(0, m.Collect("wood", 5), "a full backpack takes nothing");
+            Assert.AreEqual(1, filled, "the full event fires once per fill");
+            Assert.AreEqual(0, m.State.Get("wood"), "hand-collected wood never goes to the yard");
+            Assert.AreEqual(cap, m.State.TotalWoodChopped, 1e-9);
+
+            var r = m.Sell();
+            Assert.AreEqual(cap * m.Market.Price(m_Db.Resource("wood")), r.total, 1e-6);
+            Assert.AreEqual(0, m.State.CarriedTotal, 1e-9);
+            Assert.IsFalse(m.BackpackFull);
+
+            m.State.Money = 1e9;
+            var pack = m_Db.Upgrade("backpack");
+            Assert.IsFalse(m.TryBuy(pack, out var why), "the backpack branches off the Steel Axe");
+            StringAssert.StartsWith("Requires", why);
+            m.TryBuy(m_Db.Upgrade("axe_tier"), out _);
+            Assert.IsTrue(m.TryBuy(pack, out _));
+            Assert.AreEqual(m_Db.config.backpackCapacity[1], m.BackpackCapacity, 1e-9);
+            Assert.AreEqual(pack.LevelName(1), m.Upgrades.BackpackName);
+            for (int i = 1; i < pack.maxLevel; i++) Assert.IsTrue(m.TryBuy(pack, out _));
+            Assert.AreEqual(m_Db.config.backpackCapacity[pack.maxLevel], m.BackpackCapacity, 1e-9, "every level has a capacity");
+        }
+
+        [Test]
+        public void MachinesFillTheYardNotTheBackpack()
+        {
+            var m = NewModel(1e9);
+            m.TryBuy(m_Db.Upgrade("chopper_count"), out _);
+            m.Collect("wood", 1e6);
+            Assert.IsTrue(m.BackpackFull);
+            m.Production.Advance(10);
+            Assert.AreEqual(m_Db.Machine("chopper").baseRate * 10, m.State.Get("wood"), 1e-9, "a full backpack doesn't stop the machines");
+            Assert.AreEqual(m.BackpackCapacity, m.State.CarriedTotal, 1e-9);
+            // Selling by hand empties both.
+            m.Sell();
+            Assert.Less(m.State.Get("wood"), 1);
+            Assert.Less(m.State.CarriedTotal, 1);
         }
 
         [Test]

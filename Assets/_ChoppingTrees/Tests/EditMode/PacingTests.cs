@@ -7,13 +7,16 @@ namespace ChoppingTrees.Tests
 {
     /// <summary>
     /// Plays the economy with a simple simulated player to check the progression pace:
-    /// the player chops the best tree they can (at half efficiency for walking, collecting and
-    /// selling), sells everything, and buys the cheapest available upgrade, preferring new axes,
+    /// the player chops the best tree they can (at half efficiency for walking between trees and
+    /// collecting), walks to the market whenever the backpack is full (selling everything, yard
+    /// stock included), and buys the cheapest available upgrade, preferring new axes, backpacks,
     /// machines and forests. Prints a milestone timeline to the test log.
     /// </summary>
     public class PacingTests
     {
         const float ChopEfficiency = 0.5f;
+        /// <summary>Walk to the market, sell and walk back.</summary>
+        const int TripSeconds = 20;
 
         static double ChopWoodPerSecond(GameModel m)
         {
@@ -45,9 +48,15 @@ namespace ChoppingTrees.Tests
             const float dt = 1f;
             for (double t = 0; t < 8 * 3600; t += dt)
             {
-                m.Collect("wood", ChopWoodPerSecond(m) * dt);
+                double want = ChopWoodPerSecond(m) * dt;
+                double got = m.Collect("wood", want);
                 m.Tick(dt);
-                m.Sell();
+                if (got + 1e-9 < want)
+                {
+                    // Backpack full: machines keep working during the trip to the market.
+                    for (int k = 0; k < TripSeconds; k++, t += 1) m.Tick(1f);
+                    m.Sell();
+                }
                 for (int guard = 0; guard < 5; guard++)
                 {
                     UpgradeDef pick = null;
