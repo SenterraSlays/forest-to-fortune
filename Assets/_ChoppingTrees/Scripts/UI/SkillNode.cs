@@ -9,7 +9,7 @@ namespace ChoppingTrees
     /// <summary>
     /// One upgrade in the skill tree: a metal-rimmed round node with icon, a progress arc for
     /// multi-level upgrades, a corner badge for its state, and a level counter and name beneath.
-    /// Milestones (new axes, machines, forests, harvesters, the courier) are larger and get a
+    /// Milestones (new axes, machines, forests, harvesters) are larger and get a
     /// second outer ring. States differ by shape as well as colour: a lock badge (locked), an
     /// up-arrow badge and a breathing ring (affordable), the progress arc (owned) and a gold check
     /// badge (maxed). Hover previews it in the detail panel, click selects it, double-click buys.
@@ -34,8 +34,8 @@ namespace ChoppingTrees
         float m_Pop, m_Hover, m_HoverTarget, m_SelectT, m_Phase;
         float m_LastClick = -10f;
 
-        /// <summary>Upgrades that open something new (a new axe, machine, forest, harvester or the
-        /// courier) rather than adding a percentage.</summary>
+        /// <summary>Upgrades that open something new (a new axe, machine, forest or harvester)
+        /// rather than adding a percentage.</summary>
         public static bool IsMilestone(UpgradeDef u) =>
             u.effect == UpgradeEffect.AxeTier || u.effect == UpgradeEffect.ForestArea || u.effect == UpgradeEffect.MachineTier
             || u.effect == UpgradeEffect.AutoSell || u.effect == UpgradeEffect.MachineCount;

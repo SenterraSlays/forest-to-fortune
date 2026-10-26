@@ -95,8 +95,29 @@ namespace ChoppingTrees.EditorTools
                 Up("wood_price", "Market Contacts", "Better buyers pay more for your wood.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "wood", 15, 100, 1.75, null, 0.2f, 0),
                 Up("plank_price", "Furniture Buyers", "Carpenters pay a premium for your planks.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "planks", 10, 7500, 1.9, null, 0.25f, 1,
                     null, Req("sawmill_count", 1)),
-                Up("courier", "Wood Courier", "A courier collects and sells everything your machines have stored in the yard every 15 seconds, wherever you are.", UpgradeCategory.Economy, UpgradeEffect.AutoSell, null, 1, 8000, 1, null, 15f, 2,
-                    null, Req("wood_price", 1), Req("chopper_count", 2)),
+                Up("magnet", "Log Magnet", "Logs fly into your backpack from further away. Each level adds range.", UpgradeCategory.Economy, UpgradeEffect.MagnetRange, null, 10, 1000, 1.7, null, 1.5f, 2,
+                    null, Req("wood_price", 1)),
+                Up("haggling", "Haggling", "Talk the buyers up: every sale pays a little more, wood and planks alike.", UpgradeCategory.Economy, UpgradeEffect.SellBonus, null, 8, 1500, 1.9, null, 0.05f, 4,
+                    null, Req("wood_price", 2)),
+                Up("lucky_finds", "Lucky Finds", "Sometimes a felled tree hides a forgotten stash of cash.", UpgradeCategory.Economy, UpgradeEffect.LuckyFind, null, 5, 5000, 2.3, null, 0.03f, 5,
+                    null, Req("haggling", 1)),
+
+                Up("clean_cuts", "Clean Cuts", "Less waste: every tree you fell gives more wood.", UpgradeCategory.Axe, UpgradeEffect.WoodYield, null, 10, 300, 1.9, null, 0.1f, 4,
+                    null, Req("backpack", 1)),
+                Up("trail_boots", "Trail Boots", "Sturdy boots for quicker trips between the trees and the market.", UpgradeCategory.Axe, UpgradeEffect.MoveSpeed, null, 5, 400, 2.2, null, 0.05f, 5,
+                    null, Req("clean_cuts", 1)),
+                Up("lucky_strike", "Lucky Strike", "A chance for any swing to land perfectly and deal double damage.", UpgradeCategory.Axe, UpgradeEffect.CritChance, null, 10, 800, 1.9, null, 0.03f, 6,
+                    null, Req("axe_speed", 1)),
+
+                Up("spare_parts", "Spare Parts", "A stock of parts makes every new machine cheaper to build.", UpgradeCategory.Automation, UpgradeEffect.MachineDiscount, null, 6, 3000, 2.0, null, 0.05f, 6,
+                    null, Req("foreman", 1)),
+                Up("precision_saws", "Precision Saws", "Thinner kerfs: sawmills get more planks out of the same wood.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "sawmill", 5, 25000, 2.1, null, 0.1f, 7,
+                    null, Req("sawmill_speed", 1)),
+
+                Up("fertile_soil", "Fertile Soil", "Felled trees grow back faster in every forest.", UpgradeCategory.Forest, UpgradeEffect.TreeRegrowth, null, 5, 6000, 2.2, null, 0.15f, 2,
+                    null, Req("area_grove", 1)),
+                Up("gold_prospector", "Gold Prospector", "Know where to look: Goldbark trees drop more cash.", UpgradeCategory.Forest, UpgradeEffect.TreeCashBonus, null, 5, 400000, 2.0, null, 0.25f, 3,
+                    null, Req("area_ridge", 1)),
                 Up("night_shift", "Night Shift", "Machines keep working longer while the game is closed.", UpgradeCategory.Economy, UpgradeEffect.OfflineHours, null, 5, 2000, 3, null, 2f, 3,
                     null, Req("wood_price", 1), Req("chopper_count", 1)),
 
@@ -111,25 +132,34 @@ namespace ChoppingTrees.EditorTools
             // from its first upgrade, with links curving between rows.
             var layout = new Dictionary<string, (float x, float y, string icon)>
             {
-                ["area_grove"] = (-3.95f, 2.75f, "pine"),
-                ["area_ridge"] = (-3.95f, 4.15f, "mountain"),
+                ["area_grove"] = (-4.2f, 2.75f, "pine"),
+                ["fertile_soil"] = (-5.25f, 3.75f, "sprout"),
+                ["area_ridge"] = (-4.2f, 4.2f, "mountain"),
+                ["gold_prospector"] = (-4.2f, 5.5f, "nugget"),
 
                 ["axe_tier"] = (-2.75f, 1.35f, "axe"),
                 ["axe_sharpen"] = (-2.75f, 2.6f, "gem"),
                 ["axe_speed"] = (-2.75f, 3.85f, "bolt"),
+                ["lucky_strike"] = (-2.75f, 5.1f, "target"),
                 ["backpack"] = (-1.65f, 2.5f, "backpack"),
+                ["clean_cuts"] = (-1.65f, 3.8f, "log"),
+                ["trail_boots"] = (-1.65f, 5.1f, "boot"),
 
                 ["chopper_count"] = (0.0f, 1.35f, "saw"),
                 ["chopper_speed"] = (-0.55f, 2.6f, "gear"),
                 ["chopper_tier"] = (-0.55f, 3.95f, "crown"),
                 ["foreman"] = (0.5f, 2.85f, "chart"),
+                ["spare_parts"] = (0.5f, 4.35f, "wrench"),
                 ["sawmill_count"] = (1.55f, 2.45f, "plank"),
                 ["sawmill_speed"] = (1.55f, 3.8f, "bolt"),
+                ["precision_saws"] = (1.55f, 5.15f, "saw"),
 
                 ["wood_price"] = (2.85f, 1.35f, "coin"),
-                ["courier"] = (2.85f, 2.75f, "cart"),
-                ["night_shift"] = (3.95f, 2.55f, "moon"),
+                ["magnet"] = (2.85f, 2.75f, "magnet"),
+                ["night_shift"] = (3.95f, 2.6f, "moon"),
                 ["plank_price"] = (2.75f, 4.1f, "star"),
+                ["haggling"] = (4.5f, 1.3f, "tag"),
+                ["lucky_finds"] = (5.3f, 2.6f, "clover"),
             };
             foreach (var u in ups)
                 if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }

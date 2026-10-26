@@ -28,15 +28,20 @@ namespace ChoppingTrees.Tests
                 foreach (var t in area.trees)
                 {
                     if (t.requiredAxeTier > up.AxeTier) continue;
-                    double hits = System.Math.Ceiling(t.maxHealth / up.AxeDamage);
-                    double seconds = hits * up.SwingSeconds + 3.0; // + walking to the next tree
-                    best = System.Math.Max(best, (t.woodReward + t.cashBonus / System.Math.Max(0.01, m.Market.Price(m.Db.Resource("wood")))) / seconds);
+                    // Perks: double-damage hits, faster walking, magnet range, more wood per tree, tree cash and lucky finds.
+                    double hits = System.Math.Ceiling(t.maxHealth / (up.AxeDamage * (1 + up.CritChance)));
+                    // + walking to the next tree and collecting; a longer log magnet range saves some of that.
+                    double walk = 3.0 / up.MoveSpeedMultiplier * System.Math.Sqrt(m.Db.config.pickupMagnetRadius / up.MagnetRadius);
+                    double seconds = hits * up.SwingSeconds + walk;
+                    double price = System.Math.Max(0.01, m.Market.Price(m.Db.Resource("wood")));
+                    double cash = t.cashBonus * up.TreeCashMultiplier + up.LuckyFindChance * t.woodReward * price * m.Db.config.luckyFindValue;
+                    best = System.Math.Max(best, (t.woodReward * up.WoodYieldMultiplier + cash / price) / seconds);
                 }
             }
             return best * ChopEfficiency;
         }
 
-        static readonly HashSet<string> s_Priority = new HashSet<string> { "axe_tier", "chopper_count", "sawmill_count", "area_grove", "area_ridge", "chopper_tier", "courier" };
+        static readonly HashSet<string> s_Priority = new HashSet<string> { "axe_tier", "chopper_count", "sawmill_count", "area_grove", "area_ridge", "chopper_tier" };
 
         [Test]
         public void ProgressionPaceIsReasonable()
@@ -54,7 +59,8 @@ namespace ChoppingTrees.Tests
                 if (got + 1e-9 < want)
                 {
                     // Backpack full: machines keep working during the trip to the market.
-                    for (int k = 0; k < TripSeconds; k++, t += 1) m.Tick(1f);
+                    int trip = (int)System.Math.Round(TripSeconds / m.Upgrades.MoveSpeedMultiplier);
+                    for (int k = 0; k < trip; k++, t += 1) m.Tick(1f);
                     m.Sell();
                 }
                 for (int guard = 0; guard < 5; guard++)

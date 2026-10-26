@@ -134,11 +134,21 @@ namespace ChoppingTrees
             var game = Game.Instance;
             if (game != null)
             {
+                var up = game.Model.Upgrades;
                 if (m_Type.cashBonus > 0)
                 {
-                    game.Model.AddMoney(m_Type.cashBonus);
-                    FloatingText.Show(m_Hinge.position + Vector3.up * 1.5f, "+" + NumberUtil.Money(m_Type.cashBonus), new Color(1f, 0.85f, 0.3f), 1.4f);
+                    double cash = m_Type.cashBonus * up.TreeCashMultiplier;
+                    game.Model.AddMoney(cash);
+                    FloatingText.Show(m_Hinge.position + Vector3.up * 1.5f, "+" + NumberUtil.Money(cash), new Color(1f, 0.85f, 0.3f), 1.4f);
                     Effects.Sparkle(m_Hinge.position + Vector3.up, new Color(1f, 0.85f, 0.3f), 30);
+                }
+                if (up.LuckyFindChance > 0f && Random.value < up.LuckyFindChance)
+                {
+                    double find = m_Type.woodReward * game.Model.Market.Price(game.Db.Resource(GameModel.Wood)) * game.Db.config.luckyFindValue;
+                    game.Model.AddMoney(find);
+                    FloatingText.Show(m_Hinge.position + Vector3.up * 2.2f, "Lucky find! +" + NumberUtil.Money(find), new Color(0.55f, 0.95f, 0.6f), 1.4f);
+                    Effects.Sparkle(m_Hinge.position + Vector3.up * 1.4f, new Color(0.6f, 1f, 0.6f), 24);
+                    AudioManager.Sfx("sell", m_Hinge.position, 0.6f, 1.2f);
                 }
                 game.Model.NotifyTreeFelled(m_Type);
             }
@@ -161,7 +171,7 @@ namespace ChoppingTrees
                     break;
                 case Phase.Waiting:
                     m_Timer += dt;
-                    if (m_Timer >= m_Type.respawnSeconds && !PlayerTooClose()) BeginRegrow();
+                    if (m_Timer >= m_Type.respawnSeconds * RegrowthMultiplier && !PlayerTooClose()) BeginRegrow();
                     break;
                 case Phase.Regrowing:
                     m_Timer += dt;
@@ -241,7 +251,8 @@ namespace ChoppingTrees
         {
             float len = m_Type.trunkHeight * m_Scale;
             int pieces = Mathf.Max(1, m_Type.logPieces);
-            double each = m_Type.woodReward / pieces;
+            double yield = Game.Instance != null ? Game.Instance.Model.Upgrades.WoodYieldMultiplier : 1f;
+            double each = m_Type.woodReward * yield / pieces;
             float groundY = transform.position.y;
             for (int i = 0; i < pieces; i++)
             {
@@ -256,6 +267,8 @@ namespace ChoppingTrees
             m_Phase = Phase.Waiting;
             m_Timer = 0f;
         }
+
+        static float RegrowthMultiplier => Game.Instance != null ? Game.Instance.Model.Upgrades.RegrowthTimeMultiplier : 1f;
 
         bool PlayerTooClose()
         {

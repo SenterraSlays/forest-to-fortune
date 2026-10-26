@@ -37,7 +37,7 @@ namespace ChoppingTrees
         public double RatePerMachine(MachineDef m)
         {
             double r = m.baseRate * m_Upgrades.MachineMultiplier(m.id);
-            return m.kind == MachineKind.Processor ? r / Math.Max(1e-9, m.inputPerOutput) : r;
+            return m.kind == MachineKind.Processor ? r * OutputPerInput(m) : r;
         }
 
         /// <summary>Advances production by <paramref name="seconds"/>; returns what was gained.</summary>
@@ -60,7 +60,7 @@ namespace ChoppingTrees
                     double available = m_State.Get(m.input.id);
                     double used = Math.Min(cap, available);
                     if (used <= 0) continue;
-                    double made = used / Math.Max(1e-9, m.inputPerOutput);
+                    double made = used * OutputPerInput(m);
                     m_State.Add(m.input.id, -used);
                     m_State.Add(m.output.id, made);
                     Accumulate(gained, m.input.id, -used);
@@ -76,7 +76,7 @@ namespace ChoppingTrees
             double r = 0;
             foreach (var m in m_Ordered)
                 if (m.output != null && m.output.id == resourceId)
-                    r += m.kind == MachineKind.Producer ? Capacity(m) : Capacity(m) / Math.Max(1e-9, m.inputPerOutput);
+                    r += m.kind == MachineKind.Producer ? Capacity(m) : Capacity(m) * OutputPerInput(m);
             return r;
         }
 
@@ -94,11 +94,14 @@ namespace ChoppingTrees
                     double inflow = rates.TryGetValue(m.input.id, out var v) ? v : 0;
                     double used = m_State.Get(m.input.id) > 1 ? cap : Math.Min(cap, Math.Max(0, inflow));
                     Accumulate(rates, m.input.id, -used);
-                    Accumulate(rates, m.output.id, used / Math.Max(1e-9, m.inputPerOutput));
+                    Accumulate(rates, m.output.id, used * OutputPerInput(m));
                 }
             }
             return rates.TryGetValue(resourceId, out var r) ? r : 0;
         }
+
+        /// <summary>Output per unit of input for a processor, including yield upgrades.</summary>
+        public double OutputPerInput(MachineDef m) => (1 + m_Upgrades.ProcessorYield(m.id)) / Math.Max(1e-9, m.inputPerOutput);
 
         public bool ProducesAnything
         {

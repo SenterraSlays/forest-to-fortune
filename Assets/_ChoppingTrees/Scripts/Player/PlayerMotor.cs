@@ -59,7 +59,7 @@ namespace ChoppingTrees
             input = Vector2.ClampMagnitude(input, 1f);
 
             bool grounded = m_Controller.isGrounded;
-            float speed = Sprinting ? m_Config.sprintSpeed : m_Config.walkSpeed;
+            float speed = (Sprinting ? m_Config.sprintSpeed : m_Config.walkSpeed) * Game.Instance.Model.Upgrades.MoveSpeedMultiplier;
             Vector3 wish = (transform.right * input.x + transform.forward * input.y) * speed;
             Vector3 horizontal = new Vector3(m_Velocity.x, 0f, m_Velocity.z);
             float accel = m_Config.acceleration * (grounded ? 1f : m_Config.airControl);

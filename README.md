@@ -33,7 +33,8 @@ System package. Gamepads aren't supported.
 2. **Collect.** Logs fly into your **backpack** when you get close. The backpack has a limit
    (50 wood in the starting Burlap Sack, up to 15,000 in the Hauler's Harness). When it's full, logs
    stay on the ground, a log that only partly fits is split, and the HUD tells you to go and sell.
-   Uncollected logs collect themselves after 25 s if there is room.
+   Uncollected logs collect themselves after 25 s if there is room. The **Log Magnet** perk
+   (10 levels, from $1,000) raises the pickup range from 4 m to 19 m.
 3. **Sell** at the Lumber Market (E): it buys your backpack and the **lumber yard** stock.
    Machines never fill your backpack. Their output goes to the yard (shown separately in the HUD),
    and the pile next to the market grows with it.
@@ -41,14 +42,16 @@ System package. Gamepads aren't supported.
    from a trunk into four colour-coded branches (Forests, Axe, Automation, Economy), with curved
    links following the prerequisites. Hover a node to see its effect, requirements and price, then
    click **Unlock**/**Upgrade** (or double-click the node). Milestones (new axes, machines, forests,
-   harvesters, the courier) are larger, double-ringed nodes. States are shown by shape as well as
+   harvesters) are larger, double-ringed nodes. States are shown by shape as well as
    colour: a lock badge (locked, with dashed links), an up-arrow badge and a breathing ring (can
    buy), a progress arc around the rim (owned levels) and a gold check (maxed). Owned paths glow
    and carry a slow flow of light, and buying sends a pulse along the link into the node.
-   - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness).
-   - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle; Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades / Furniture Buyers.
-   - **Economy:** Market Contacts (wood price) → Wood Courier (sells the yard stock every 15 s; your backpack you sell yourself) and Night Shift (longer offline time).
-   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe).
+   The tree is movable: drag it with any mouse button, scroll to zoom towards the cursor, and use
+   the buttons in the legend to zoom or go back to the whole-tree view.
+   - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed) → Lucky Strike (chance of double damage); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness) → Clean Cuts (more wood per tree) → Trail Boots (move speed).
+   - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers.
+   - **Economy:** Market Contacts (wood price) → Log Magnet (pickup range), Night Shift (longer offline time) and Haggling (every sale pays more) → Lucky Finds (felled trees sometimes drop cash).
+   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash).
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
@@ -213,7 +216,7 @@ long sessions (8+ machines with every upgrade maxed).
 ## Assumptions and design decisions
 
 - No existing project was provided, so this is a new project in `Games/ChoppingTrees`, set up the same way as the other projects in that folder.
-- Machines put wood straight into your stock. Hauling wood around would turn this into the factory game the brief rules out. Selling is still a trip to the market until the Wood Courier automates it.
+- Machines put wood straight into your stock. Hauling wood around would turn this into the factory game the brief rules out. Selling stays a trip to the market.
 - Sawmills automatically turn stock wood into planks, which are worth 75% more than the wood they use.
 - Offline production is 100% efficient but capped (2 h base) so idle time stays rewarding without making active play pointless.
 - Sounds are synthesised in code (no third-party audio). Fonts are Inter (SIL OFL, licence in `Art/Fonts/OFL.txt`).

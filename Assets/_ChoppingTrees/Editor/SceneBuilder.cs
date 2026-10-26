@@ -411,11 +411,20 @@ namespace ChoppingTrees.EditorTools
             Set(ag, "m_Sign", SignText(Find(gate.transform, "SignAnchor"), gate.transform, area.displayName, 2.6f, 0.55f));
             Block(0f, z, 4f);
             for (int side = -1; side <= 1; side += 2)
+            {
                 for (float x = 4.4f; x < WorldLayout.WallX + 2f; x += 4f)
                 {
                     var f = Place("Fence_Segment", parent, side * x, z, 0f);
                     SetStatic(f);
                 }
+                // The fence itself is only 1.6 m tall: an invisible wall along each side stops the
+                // player jumping over it (from flat ground or from a hill next to it).
+                var wall = new GameObject("FenceWall").AddComponent<BoxCollider>();
+                wall.transform.SetParent(parent);
+                float x0 = 2.4f, x1 = WorldLayout.WallX + 1f;
+                wall.transform.position = new Vector3(side * (x0 + x1) * 0.5f, 10f, z);
+                wall.size = new Vector3(x1 - x0, 40f, 0.6f);
+            }
             // Keep a corridor along the fence free of trees so it reads as a clear border.
             for (float x = -54f; x <= 54f; x += 6f) Block(x, z, 2.5f);
         }
@@ -586,15 +595,21 @@ namespace ChoppingTrees.EditorTools
                     if (!small && WorldLayout.DistToYard(x, z) < 2f) continue;
                     var go = Place(row.model, root, x, z, R(0f, 360f), R(row.minScale, row.maxScale), 0.03f);
                     SetStatic(go);
+                    // Rocks and fallen logs get convex mesh colliders that follow their shape
+                    // (a box from the world bounds didn't match rotated props, so you could walk into them).
+                    bool solid = row.collider || row.model.StartsWith("Rock_");
+                    if (solid)
+                        foreach (var mf in go.GetComponentsInChildren<MeshFilter>())
+                        {
+                            if (mf.sharedMesh == null) continue;
+                            var mc = mf.gameObject.AddComponent<MeshCollider>();
+                            mc.sharedMesh = mf.sharedMesh;
+                            mc.convex = true;
+                        }
                     if (row.collider)
                     {
                         var b = new Bounds(go.transform.position, Vector3.zero);
                         foreach (var rend in go.GetComponentsInChildren<Renderer>()) b.Encapsulate(rend.bounds);
-                        var c = go.AddComponent<BoxCollider>();
-                        c.center = go.transform.InverseTransformPoint(b.center);
-                        var ls = go.transform.lossyScale;
-                        var size = Quaternion.Inverse(go.transform.rotation) * b.size;
-                        c.size = new Vector3(Mathf.Abs(size.x) / ls.x, Mathf.Abs(size.y) / ls.y, Mathf.Abs(size.z) / ls.z) * 0.85f;
                         Block(x, z, Mathf.Max(b.extents.x, b.extents.z));
                     }
                     else NoShadows(go);

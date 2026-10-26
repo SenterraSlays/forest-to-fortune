@@ -7,7 +7,7 @@ namespace ChoppingTrees
     /// The player's progress in memory. Holds plain values only (no scene references), so it can
     /// be saved, loaded and rebuilt after a scene reload without duplicating anything.
     /// Resources are kept in two places: <see cref="Resources"/> is the yard stock that machines
-    /// fill (and the courier sells), <see cref="Backpack"/> is what the player carries by hand.
+    /// fill, <see cref="Backpack"/> is what the player carries by hand.
     /// </summary>
     public class GameState
     {

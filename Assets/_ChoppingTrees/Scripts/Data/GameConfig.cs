@@ -29,7 +29,10 @@ namespace ChoppingTrees
         public float reach = 2.7f;
 
         [Header("Pickups")]
+        [Tooltip("Log magnet range before Log Magnet upgrades.")]
         public float pickupMagnetRadius = 4f;
+        [Tooltip("A Lucky Find is worth this many times the felled tree's wood at the current price.")]
+        public float luckyFindValue = 3f;
         public float pickupAutoCollectSeconds = 25f;
         public int maxActivePickups = 48;
 

@@ -35,6 +35,26 @@ namespace ChoppingTrees
         ProductionBonus,
         /// <summary>Level = backpack tier; the capacity per tier is <see cref="GameConfig.backpackCapacity"/>.</summary>
         BackpackCapacity,
+        /// <summary>+effectPerLevel metres of log magnet (pickup) range per level.</summary>
+        MagnetRange,
+        /// <summary>+effectPerLevel wood multiplier for trees the player fells.</summary>
+        WoodYield,
+        /// <summary>+effectPerLevel chance per hit to deal double damage.</summary>
+        CritChance,
+        /// <summary>+effectPerLevel walking and sprinting speed multiplier.</summary>
+        MoveSpeed,
+        /// <summary>+effectPerLevel output multiplier for processor machine <c>targetId</c> (same input).</summary>
+        ProcessorYield,
+        /// <summary>-effectPerLevel price for every machine purchase (capped at 50%).</summary>
+        MachineDiscount,
+        /// <summary>+effectPerLevel sale price multiplier for every resource.</summary>
+        SellBonus,
+        /// <summary>+effectPerLevel chance that a felled tree also drops cash (see <see cref="GameConfig.luckyFindValue"/>).</summary>
+        LuckyFind,
+        /// <summary>+effectPerLevel regrowth speed for felled trees.</summary>
+        TreeRegrowth,
+        /// <summary>+effectPerLevel multiplier for the cash some trees (Goldbark) drop.</summary>
+        TreeCashBonus,
     }
 
     public enum MachineKind

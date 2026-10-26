@@ -10,25 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
-  m_Name: courier
+  m_Name: precision_saws
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
-  id: courier
-  displayName: Wood Courier
-  description: A courier collects and sells everything your machines have stored in the yard every 15 seconds, wherever you are.
-  category: 2
-  effect: 7
-  targetId: 
-  maxLevel: 1
-  baseCost: 8000
-  costGrowth: 1
+  id: precision_saws
+  displayName: Precision Saws
+  description: 'Thinner kerfs: sawmills get more planks out of the same wood.'
+  category: 1
+  effect: 16
+  targetId: sawmill
+  maxLevel: 5
+  baseCost: 25000
+  costGrowth: 2.1
   explicitCosts: []
-  effectPerLevel: 15
+  effectPerLevel: 0.1
   levelNames: []
   requires:
-  - upgradeId: wood_price
+  - upgradeId: sawmill_speed
     level: 1
-  - upgradeId: chopper_count
-    level: 2
-  sortOrder: 2
-  treePosition: {x: 2.85, y: 2.75}
-  icon: cart
+  sortOrder: 7
+  treePosition: {x: 1.55, y: 5.15}
+  icon: saw

@@ -54,6 +54,7 @@ namespace ChoppingTrees
 
         static float Union(float a, float b) => Mathf.Min(a, b);
         static float Cut(float a, float b) => Mathf.Max(a, -b);
+        static float Inter(float a, float b) => Mathf.Max(a, b);
         static Vector2 V(float x, float y) => new Vector2(x, y);
 
         // ---------------------------------------------------------------- icon shapes
@@ -124,6 +125,29 @@ namespace ChoppingTrees
                 float handle = Cut(RingD(p, V(.5f, .76f), .11f, .06f), Box(p, V(.5f, .66f), V(.2f, .08f)));
                 return Union(Cut(body, pocket), handle);
             },
+            ["magnet"] = p =>
+            {
+                float u = Union(Cut(RingD(p, V(.5f, .46f), .24f, .16f), Box(p, V(.5f, .7f), V(.45f, .24f))),
+                    Union(Box(p, V(.26f, .63f), V(.08f, .18f)), Box(p, V(.74f, .63f), V(.08f, .18f))));
+                return Cut(u, Box(p, V(.5f, .7f), V(.5f, .022f)));
+            },
+            ["boot"] = p =>
+            {
+                float leg = Box(p, V(.42f, .56f), V(.15f, .3f), -6f, .04f);
+                float foot = Union(Box(p, V(.5f, .22f), V(.23f, .1f), 0f, .05f), Circle(p, V(.72f, .25f), .13f));
+                return Cut(Cut(Union(leg, foot), Box(p, V(.55f, .1f), V(.4f, .02f))), Box(p, V(.43f, .74f), V(.2f, .018f), -6f));
+            },
+            ["target"] = p => Union(RingD(p, V(.5f, .5f), .33f, .08f), Union(Circle(p, V(.5f, .5f), .1f),
+                Union(Box(p, V(.5f, .9f), V(.035f, .08f)), Union(Box(p, V(.5f, .1f), V(.035f, .08f)), Union(Box(p, V(.1f, .5f), V(.08f, .035f)), Box(p, V(.9f, .5f), V(.08f, .035f))))))),
+            ["wrench"] = p => Union(Capsule(p, V(.24f, .2f), V(.6f, .58f), .07f), Cut(RingD(p, V(.68f, .68f), .14f, .12f), Box(p, V(.82f, .82f), V(.07f, .12f), 45f))),
+            ["nugget"] = p => Union(Poly(p, V(.16f, .34f), V(.38f, .2f), V(.7f, .24f), V(.82f, .44f), V(.64f, .64f), V(.32f, .62f)),
+                Union(Box(p, V(.8f, .8f), V(.025f, .11f)), Box(p, V(.8f, .8f), V(.11f, .025f)))),
+            ["tag"] = p => Cut(Poly(p, V(.12f, .5f), V(.38f, .2f), V(.86f, .2f), V(.86f, .8f), V(.38f, .8f)), Circle(p, V(.36f, .5f), .075f)),
+            ["clover"] = p => Union(Union(Union(Circle(p, V(.37f, .63f), .14f), Circle(p, V(.63f, .63f), .14f)), Union(Circle(p, V(.37f, .37f), .14f), Circle(p, V(.63f, .37f), .14f))),
+                Capsule(p, V(.5f, .4f), V(.66f, .08f), .035f)),
+            ["sprout"] = p => Union(Capsule(p, V(.5f, .1f), V(.5f, .52f), .045f),
+                Union(Inter(Circle(p, V(.46f, .48f), .22f), Circle(p, V(.24f, .72f), .22f)), Inter(Circle(p, V(.54f, .5f), .22f), Circle(p, V(.78f, .76f), .22f)))),
+            ["minus"] = p => Box(p, V(.5f, .5f), V(.32f, .075f), 0f, .04f),
             ["plus"] = p => Union(Box(p, V(.5f, .5f), V(.075f, .32f), 0f, .04f), Box(p, V(.5f, .5f), V(.32f, .075f), 0f, .04f)),
             ["arrow_up"] = p => Union(Capsule(p, V(.5f, .18f), V(.5f, .78f), .08f), Union(Capsule(p, V(.5f, .8f), V(.24f, .54f), .08f), Capsule(p, V(.5f, .8f), V(.76f, .54f), .08f))),
         };

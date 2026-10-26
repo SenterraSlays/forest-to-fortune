@@ -40,8 +40,8 @@ namespace ChoppingTrees
             Production = new Production(State, db, Upgrades);
         }
 
-        /// <summary>Real-time update: production, play time and automatic selling (the courier
-        /// only takes the yard stock; the backpack is sold by hand at the market).</summary>
+        /// <summary>Real-time update: production, play time and automatic selling (any AutoSell
+        /// upgrade; it only takes the yard stock, the backpack is sold by hand at the market).</summary>
         public void Tick(float dt)
         {
             if (dt <= 0) return;
@@ -101,7 +101,7 @@ namespace ChoppingTrees
             return true;
         }
 
-        /// <summary>Sells the yard stock, plus the backpack unless it's the courier selling.</summary>
+        /// <summary>Sells the yard stock, plus the backpack unless it's an automatic sale.</summary>
         public Market.Receipt Sell(bool automatic = false)
         {
             var r = Market.SellAll(backpack: !automatic, yard: true);

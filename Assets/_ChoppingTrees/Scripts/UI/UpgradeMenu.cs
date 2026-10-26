@@ -11,7 +11,8 @@ namespace ChoppingTrees
     /// (<see cref="UpgradeDef.treePosition"/>); curved links follow the prerequisites, so the tree
     /// grows from the trunk (your first axe, machine and buyer) up to the forests and harvesters.
     /// Branch headings are placed over each category's nodes, so a new category only needs data.
-    /// The tree fills the space it gets and only scales down when the window is too small for it.
+    /// The tree is laid out at a fixed size and can be dragged and zoomed (<see cref="SkillTreeView"/>);
+    /// zoom 1 fits the whole tree in the window.
     /// Owned paths carry a slow flow of light; buying an upgrade sends a pulse along its links.
     /// The detail panel shows the hovered or selected node with its effect, requirements and price.
     /// Everything refreshes immediately after a purchase and a few times a second otherwise.
@@ -20,10 +21,11 @@ namespace ChoppingTrees
     {
         public static UpgradeMenu Instance { get; private set; }
 
-        // Tree units covered by the canvas (positions are x = -4..4, y = 0..5) and the smallest
-        // spacing (canvas units per tree unit) before the whole tree is scaled down instead.
-        const float XMin = -4.55f, XMax = 4.55f, YMin = -0.55f, YMax = 5.4f;
-        const float MinUnitX = 128f, MinUnitY = 124f;
+        // Tree units covered by the content (positions are x = -5.5..5.5, y = 0..6) and its size
+        // in canvas units per tree unit. The band below the trunk leaves room for the overlays.
+        const float XMin = -5.95f, XMax = 5.95f, YMin = -1.25f, YMax = 6.35f;
+        const float UnitX = 136f, UnitY = 132f;
+        static readonly Vector2 ContentSize = new Vector2((XMax - XMin) * UnitX, (YMax - YMin) * UnitY);
         static readonly Vector2 RootPos = new Vector2(0f, 0.05f);
         static readonly Color Wood = new Color(0.62f, 0.45f, 0.27f);
 
@@ -50,6 +52,7 @@ namespace ChoppingTrees
         readonly Stack<Image[]> m_DotPool = new Stack<Image[]>();
         readonly List<Heading> m_Headings = new List<Heading>();
         RectTransform m_Window, m_WindowShadow, m_TreeArea, m_Content, m_LinkLayer, m_FxLayer, m_RootNode, m_RootRings, m_RootLight;
+        SkillTreeView m_View;
         Vector2 m_LastArea;
         SkillNode m_Selected, m_Hovered;
         float m_Refresh;
@@ -100,9 +103,12 @@ namespace ChoppingTrees
             m_TreeArea = treeArea.rectTransform;
             m_TreeArea.Stretch(28, 470, 18, 28);
             treeArea.gameObject.AddComponent<RectMask2D>().softness = new Vector2Int(6, 6);
+            treeArea.raycastTarget = true; // empty space takes the drags
             BuildBackground();
             m_Content = UIFactory.Rect("Content", m_TreeArea);
-            m_Content.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one);
+            m_Content.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, ContentSize);
+            m_View = treeArea.gameObject.AddComponent<SkillTreeView>();
+            m_View.Init(m_TreeArea, m_Content);
             BuildTree();
             UIFactory.Border(m_TreeArea, new Color(1f, 0.95f, 0.82f, 0.12f));
 
@@ -121,14 +127,10 @@ namespace ChoppingTrees
 
         // ------------------------------------------------------------------ layout
 
-        Vector2 ToCanvas(Vector2 tree)
-        {
-            var size = m_Content.rect.size;
-            return new Vector2((tree.x - XMin) / (XMax - XMin) * size.x, (tree.y - YMin) / (YMax - YMin) * size.y);
-        }
+        static Vector2 ToCanvas(Vector2 tree) => new Vector2((tree.x - XMin) * UnitX, (tree.y - YMin) * UnitY);
 
-        /// <summary>Sizes the window to the screen, then places everything for the tree area's size.
-        /// Cheap (a few dozen rects), and only runs when the size changes.</summary>
+        /// <summary>Sizes the window to the screen, places the tree and fits the view to the tree
+        /// area. Cheap (a few dozen rects), and only runs when the size changes.</summary>
         void Relayout()
         {
             var screen = Root.rect.size;
@@ -140,9 +142,7 @@ namespace ChoppingTrees
             Vector2 area = m_TreeArea.rect.size;
             m_LastArea = area;
             Vector2 avail = area - new Vector2(16f, 16f);
-            float scale = Mathf.Min(1f, avail.x / ((XMax - XMin) * MinUnitX), avail.y / ((YMax - YMin) * MinUnitY));
-            m_Content.localScale = Vector3.one * scale;
-            m_Content.sizeDelta = avail / scale;
+            m_View.Configure(ContentSize, Mathf.Min(1f, avail.x / ContentSize.x, avail.y / ContentSize.y));
 
             foreach (var n in m_Nodes) n.Rect.anchoredPosition = ToCanvas(n.Def.treePosition);
             foreach (var l in m_Links) l.SetEnds(ToCanvas(l.From.treePosition), ToCanvas(l.To.treePosition));
@@ -158,13 +158,11 @@ namespace ChoppingTrees
                 h.rect.anchoredPosition = ToCanvas(new Vector2(count > 0 ? sum / count : 0f, YMax - 0.3f));
             }
 
-            // Background pieces that follow the trunk.
-            Vector2 root = m_Content.localPosition;
-            root += (ToCanvas(RootPos) - m_Content.rect.size * 0.5f) * scale;
-            m_RootRings.anchoredPosition = root;
-            m_RootRings.sizeDelta = Vector2.one * area.y * 1.9f;
-            m_RootLight.anchoredPosition = root + new Vector2(0f, 40f);
-            m_RootLight.sizeDelta = new Vector2(area.x * 0.85f, area.y * 0.75f);
+            // Growth rings and lantern light sit in the content, centred on the trunk.
+            m_RootRings.anchoredPosition = ToCanvas(RootPos);
+            m_RootRings.sizeDelta = Vector2.one * ContentSize.y * 1.9f;
+            m_RootLight.anchoredPosition = ToCanvas(RootPos) + new Vector2(0f, 40f);
+            m_RootLight.sizeDelta = new Vector2(ContentSize.x * 0.75f, ContentSize.y * 0.7f);
         }
 
         // ------------------------------------------------------------------ background
@@ -179,16 +177,6 @@ namespace ChoppingTrees
             top.sprite = UIIcons.GradientV;
             top.rectTransform.Stretch();
             top.rectTransform.localRotation = Quaternion.Euler(0, 0, 180f);
-
-            // Growth rings of a cut log centred on the trunk, very faint.
-            m_RootRings = UIFactory.Panel(bg, "Rings", new Color(1f, 0.88f, 0.66f, 0.011f), false).rectTransform;
-            ((Image)m_RootRings.GetComponent<Image>()).sprite = UIIcons.TreeRings;
-            m_RootRings.anchorMin = m_RootRings.anchorMax = new Vector2(0.5f, 0.5f);
-
-            // Warm lantern light around the trunk.
-            m_RootLight = UIFactory.Panel(bg, "Light", new Color(1f, 0.68f, 0.3f, 0.09f), false).rectTransform;
-            ((Image)m_RootLight.GetComponent<Image>()).sprite = UIIcons.Glow;
-            m_RootLight.anchorMin = m_RootLight.anchorMax = new Vector2(0.5f, 0.5f);
 
             // Two rows of forest silhouettes along the bottom for depth.
             Silhouette(bg, UIIcons.ForestFar, new Color(0.10f, 0.15f, 0.12f, 0.55f), 210f, 0f);
@@ -224,6 +212,15 @@ namespace ChoppingTrees
             var db = Game.Instance.Db;
             var byId = new Dictionary<string, UpgradeDef>();
             foreach (var u in db.upgrades) if (u != null) byId[u.id] = u;
+
+            // Growth rings of a cut log and a warm lantern light, centred on the trunk (they move
+            // with the tree; the gradient, silhouettes and vignette stay put behind it).
+            m_RootRings = UIFactory.Panel(m_Content, "Rings", new Color(1f, 0.88f, 0.66f, 0.011f), false).rectTransform;
+            m_RootRings.GetComponent<Image>().sprite = UIIcons.TreeRings;
+            m_RootRings.anchorMin = m_RootRings.anchorMax = Vector2.zero;
+            m_RootLight = UIFactory.Panel(m_Content, "Light", new Color(1f, 0.68f, 0.3f, 0.09f), false).rectTransform;
+            m_RootLight.GetComponent<Image>().sprite = UIIcons.Glow;
+            m_RootLight.anchorMin = m_RootLight.anchorMax = Vector2.zero;
 
             // Branch headings, one per category in use.
             var headingLayer = UIFactory.Rect("Headings", m_Content);
@@ -325,13 +322,14 @@ namespace ChoppingTrees
             m_FlowPhase[l] = Random.value;
         }
 
-        // ------------------------------------------------------------------ legend and production
+        // ------------------------------------------------------------------ overlays
 
+        /// <summary>State legend plus the view controls (zoom out, zoom in, show the whole tree).</summary>
         void BuildLegend()
         {
             var legend = UIFactory.Surface(m_TreeArea, "Legend", new Color(0.04f, 0.05f, 0.04f, 0.82f));
             legend.rectTransform.Place(Vector2.zero, Vector2.zero, new Vector2(16, 16), Vector2.zero);
-            UIFactory.HStack(legend, 16f, new RectOffset(14, 16, 7, 8));
+            UIFactory.HStack(legend, 14f, new RectOffset(14, 6, 5, 5));
             UIFactory.Fit(legend, true, true);
             void Item(string icon, Color bg, Color fg, string text)
             {
@@ -347,8 +345,16 @@ namespace ChoppingTrees
             }
             Item("lock", new Color(0.16f, 0.17f, 0.15f), UIStyle.Muted, "Locked");
             Item("arrow_up", UIStyle.Accent, UIStyle.AccentDark, "Can buy");
-            Item("dot", new Color(0.16f, 0.17f, 0.15f), UIStyle.Text, "Owned (ring shows level)");
+            Item("dot", new Color(0.16f, 0.17f, 0.15f), UIStyle.Text, "Owned");
             Item("check", UIStyle.Money, UIStyle.AccentDark, "Maxed");
+            var hint = UIFactory.Text(legend.transform, "Drag to move  ·  Scroll to zoom", 15, UIStyle.Dim);
+            hint.textWrappingMode = TextWrappingModes.NoWrap;
+            var buttons = UIFactory.Rect("View", legend.transform);
+            UIFactory.HStack(buttons, 4f);
+            void Btn(string icon, UnityEngine.Events.UnityAction a) => UIFactory.Button(buttons, "", a, 15, ButtonStyle.Ghost, icon).Layout(34, 30);
+            Btn("minus", () => m_View.ZoomBy(1f / 1.25f, Vector2.zero));
+            Btn("plus", () => m_View.ZoomBy(1.25f, Vector2.zero));
+            Btn("refresh", () => m_View.ResetView());
         }
 
         void BuildProduction()

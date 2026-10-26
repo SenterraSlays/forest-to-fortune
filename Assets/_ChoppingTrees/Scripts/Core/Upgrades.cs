@@ -19,6 +19,8 @@ namespace ChoppingTrees
         // cached aggregates
         int m_AxeTier, m_BackpackTier;
         float m_DamageMult, m_SpeedMult, m_AutoSellSeconds, m_OfflineHours, m_ProductionBonus;
+        float m_MagnetBonus, m_WoodYield, m_CritChance, m_MoveSpeed, m_Discount, m_SellBonus, m_LuckyChance, m_Regrowth, m_TreeCash;
+        readonly Dictionary<string, double> m_ProcessorYield = new Dictionary<string, double>();
         readonly Dictionary<string, int> m_MachineCounts = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_MachineMult = new Dictionary<string, double>();
         readonly Dictionary<string, int> m_MachineTier = new Dictionary<string, int>();
@@ -33,7 +35,8 @@ namespace ChoppingTrees
         public int Level(UpgradeDef u) => u == null ? 0 : Mathf.Min(m_State.Level(u.id), u.maxLevel);
         public int Level(string id) => Level(m_Db.Upgrade(id));
 
-        public double NextCost(UpgradeDef u) => u.CostForLevel(Level(u));
+        /// <summary>Price of the next level, after discounts (Spare Parts lowers machine prices).</summary>
+        public double NextCost(UpgradeDef u) => NumberUtil.Safe(u.CostForLevel(Level(u)) * (u.effect == UpgradeEffect.MachineCount ? 1.0 - MachineDiscount : 1.0));
 
         /// <summary>Why the upgrade can't be bought right now (null when it can).</summary>
         public string Blocker(UpgradeDef u, bool checkMoney = true)
@@ -133,6 +136,24 @@ namespace ChoppingTrees
             }
         }
 
+        /// <summary>How close (metres) logs must be before they fly to the player.</summary>
+        public float MagnetRadius { get { Refresh(); return m_Db.config.pickupMagnetRadius + m_MagnetBonus; } }
+        /// <summary>Wood multiplier for trees the player fells.</summary>
+        public float WoodYieldMultiplier { get { Refresh(); return 1f + m_WoodYield; } }
+        /// <summary>Chance (0..1) that a hit deals double damage.</summary>
+        public float CritChance { get { Refresh(); return Mathf.Clamp01(m_CritChance); } }
+        public float MoveSpeedMultiplier { get { Refresh(); return 1f + m_MoveSpeed; } }
+        /// <summary>Extra output share for a processor (0.2 = 20% more planks from the same wood).</summary>
+        public double ProcessorYield(string machineId) { Refresh(); return m_ProcessorYield.TryGetValue(machineId, out var v) ? v : 0; }
+        /// <summary>Share taken off machine prices (0..0.5).</summary>
+        public double MachineDiscount { get { Refresh(); return Mathf.Clamp(m_Discount, 0f, 0.5f); } }
+        public double SellMultiplier { get { Refresh(); return 1 + m_SellBonus; } }
+        /// <summary>Chance (0..1) that a felled tree also drops cash.</summary>
+        public float LuckyFindChance { get { Refresh(); return Mathf.Clamp01(m_LuckyChance); } }
+        /// <summary>Respawn time multiplier for felled trees (smaller = faster).</summary>
+        public float RegrowthTimeMultiplier { get { Refresh(); return 1f / (1f + m_Regrowth); } }
+        public float TreeCashMultiplier { get { Refresh(); return 1f + m_TreeCash; } }
+
         public int MachineCount(string machineId) { Refresh(); return m_MachineCounts.TryGetValue(machineId, out var v) ? v : 0; }
         public int MachineTier(string machineId) { Refresh(); return m_MachineTier.TryGetValue(machineId, out var v) ? v : 0; }
 
@@ -176,6 +197,8 @@ namespace ChoppingTrees
             m_AutoSellSeconds = 0f;
             m_OfflineHours = 0f;
             m_ProductionBonus = 0f;
+            m_MagnetBonus = m_WoodYield = m_CritChance = m_MoveSpeed = m_Discount = m_SellBonus = m_LuckyChance = m_Regrowth = m_TreeCash = 0f;
+            m_ProcessorYield.Clear();
             m_MachineCounts.Clear();
             m_MachineMult.Clear();
             m_MachineTier.Clear();
@@ -207,6 +230,16 @@ namespace ChoppingTrees
                     case UpgradeEffect.OfflineHours: m_OfflineHours += e * lv; break;
                     case UpgradeEffect.ProductionBonus: m_ProductionBonus += e * lv; break;
                     case UpgradeEffect.BackpackCapacity: m_BackpackTier = Math.Max(m_BackpackTier, lv); break;
+                    case UpgradeEffect.MagnetRange: m_MagnetBonus += e * lv; break;
+                    case UpgradeEffect.WoodYield: m_WoodYield += e * lv; break;
+                    case UpgradeEffect.CritChance: m_CritChance += e * lv; break;
+                    case UpgradeEffect.MoveSpeed: m_MoveSpeed += e * lv; break;
+                    case UpgradeEffect.ProcessorYield: m_ProcessorYield[t] = (m_ProcessorYield.TryGetValue(t, out var py) ? py : 0) + e * lv; break;
+                    case UpgradeEffect.MachineDiscount: m_Discount += e * lv; break;
+                    case UpgradeEffect.SellBonus: m_SellBonus += e * lv; break;
+                    case UpgradeEffect.LuckyFind: m_LuckyChance += e * lv; break;
+                    case UpgradeEffect.TreeRegrowth: m_Regrowth += e * lv; break;
+                    case UpgradeEffect.TreeCashBonus: m_TreeCash += e * lv; break;
                 }
             }
 

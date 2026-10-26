@@ -41,6 +41,7 @@ MonoBehaviour:
   minSwingSeconds: 0.22
   reach: 2.7
   pickupMagnetRadius: 4
+  luckyFindValue: 3
   pickupAutoCollectSeconds: 25
   maxActivePickups: 48
   backpackCapacity:

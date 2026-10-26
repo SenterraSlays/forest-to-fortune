@@ -197,25 +197,90 @@ namespace ChoppingTrees.Tests
         }
 
         [Test]
-        public void AutoSellRunsOnItsInterval()
+        public void LogMagnetAddsRangePerLevel()
         {
+            Assert.IsNull(m_Db.Upgrade("courier"), "the Wood Courier was replaced by the Log Magnet");
+            var magnet = m_Db.Upgrade("magnet");
+            Assert.AreEqual(10, magnet.maxLevel);
+            Assert.AreEqual(1000, magnet.CostForLevel(0), 1e-9);
             var m = NewModel(1e9);
-            m.TryBuy(m_Db.Upgrade("chopper_count"), out _);
-            m.TryBuy(m_Db.Upgrade("chopper_count"), out _);
-            Assert.IsFalse(m.TryBuy(m_Db.Upgrade("courier"), out _), "the courier branches off Market Contacts");
+            float baseRange = m_Db.config.pickupMagnetRadius;
+            Assert.AreEqual(baseRange, m.Upgrades.MagnetRadius, 1e-5);
+            Assert.IsFalse(m.TryBuy(magnet, out _), "the magnet branches off Market Contacts");
             m.TryBuy(m_Db.Upgrade("wood_price"), out _);
-            Assert.IsTrue(m.TryBuy(m_Db.Upgrade("courier"), out _));
-            m.State.Money = 0;
-            m.State.Add("wood", 50);
-            m.Collect("wood", 20);
-            float interval = m.Upgrades.AutoSellSeconds;
-            Assert.Greater(interval, 0f);
-            m.Tick(interval * 0.5f);
-            Assert.AreEqual(0, m.State.Money);
-            m.Tick(interval * 0.6f);
-            Assert.Greater(m.State.Money, 0);
-            Assert.Less(m.State.Get("wood"), 1, "the courier sells the yard stock");
-            Assert.AreEqual(20, m.State.Carried("wood"), 1e-9, "but never the backpack");
+            for (int i = 0; i < 10; i++) Assert.IsTrue(m.TryBuy(magnet, out _));
+            Assert.AreEqual(baseRange + 10 * magnet.effectPerLevel, m.Upgrades.MagnetRadius, 1e-4);
+            Assert.IsFalse(m.TryBuy(magnet, out _), "10 levels at most");
+            Assert.AreEqual(0, m.Upgrades.AutoSellSeconds, "nothing sells automatically any more");
+        }
+
+        static void Buy(GameModel m, GameDatabase db, string id, int levels = 1)
+        {
+            for (int i = 0; i < levels; i++) Assert.IsTrue(m.TryBuy(db.Upgrade(id), out var why), $"{id}: {why}");
+        }
+
+        [Test]
+        public void NewPerksChangeTheirNumbers()
+        {
+            var m = NewModel(1e12);
+            Buy(m, m_Db, "axe_tier", 4);
+            Buy(m, m_Db, "axe_sharpen");
+            Buy(m, m_Db, "axe_speed");
+            Buy(m, m_Db, "backpack");
+
+            Buy(m, m_Db, "clean_cuts", 2);
+            Assert.AreEqual(1 + 2 * m_Db.Upgrade("clean_cuts").effectPerLevel, m.Upgrades.WoodYieldMultiplier, 1e-5);
+            Buy(m, m_Db, "trail_boots");
+            Assert.AreEqual(1 + m_Db.Upgrade("trail_boots").effectPerLevel, m.Upgrades.MoveSpeedMultiplier, 1e-5);
+            Buy(m, m_Db, "lucky_strike", 3);
+            Assert.AreEqual(3 * m_Db.Upgrade("lucky_strike").effectPerLevel, m.Upgrades.CritChance, 1e-5);
+
+            // Haggling raises every price on top of the per-resource buyers.
+            double before = m.Market.Price(m_Db.Resource("wood"));
+            Buy(m, m_Db, "wood_price", 2);
+            double withContacts = m.Market.Price(m_Db.Resource("wood"));
+            Buy(m, m_Db, "haggling", 2);
+            Assert.AreEqual(withContacts * (1 + 2 * m_Db.Upgrade("haggling").effectPerLevel), m.Market.Price(m_Db.Resource("wood")), 1e-6);
+            Assert.Greater(withContacts, before);
+            Buy(m, m_Db, "lucky_finds");
+            Assert.AreEqual(m_Db.Upgrade("lucky_finds").effectPerLevel, m.Upgrades.LuckyFindChance, 1e-5);
+
+            // Spare Parts discounts machines, and only machines.
+            var chopper = m_Db.Upgrade("chopper_count");
+            Buy(m, m_Db, "chopper_count");
+            Buy(m, m_Db, "foreman");
+            double full = chopper.CostForLevel(1);
+            Buy(m, m_Db, "spare_parts", 2);
+            Assert.AreEqual(full * (1 - 2 * m_Db.Upgrade("spare_parts").effectPerLevel), m.Upgrades.NextCost(chopper), 1e-3);
+            var stone = m_Db.Upgrade("axe_sharpen");
+            Assert.AreEqual(stone.CostForLevel(m.Upgrades.Level(stone)), m.Upgrades.NextCost(stone), 1e-6);
+            double money = m.State.Money;
+            Buy(m, m_Db, "chopper_count");
+            Assert.AreEqual(full * (1 - 2 * m_Db.Upgrade("spare_parts").effectPerLevel), money - m.State.Money, 1e-3, "the discounted price is what you pay");
+
+            Buy(m, m_Db, "area_grove");
+            Buy(m, m_Db, "fertile_soil");
+            Assert.AreEqual(1f / (1f + m_Db.Upgrade("fertile_soil").effectPerLevel), m.Upgrades.RegrowthTimeMultiplier, 1e-5);
+            Buy(m, m_Db, "area_ridge");
+            Buy(m, m_Db, "gold_prospector");
+            Assert.AreEqual(1 + m_Db.Upgrade("gold_prospector").effectPerLevel, m.Upgrades.TreeCashMultiplier, 1e-5);
+        }
+
+        [Test]
+        public void PrecisionSawsGetMorePlanksFromTheSameWood()
+        {
+            var m = NewModel(1e12);
+            Buy(m, m_Db, "chopper_count");
+            Buy(m, m_Db, "sawmill_count");
+            Buy(m, m_Db, "sawmill_speed");
+            m.State.Set("wood", 1e6);
+            m.Production.Advance(10);
+            double plain = m.State.Get("planks");
+            m.State.Set("planks", 0);
+            Buy(m, m_Db, "precision_saws", 2);
+            m.Production.Advance(10);
+            Assert.AreEqual(plain * (1 + 2 * m_Db.Upgrade("precision_saws").effectPerLevel), m.State.Get("planks"), 1e-6);
+            Assert.AreEqual(m.Production.GrossRate("planks") * 10, m.State.Get("planks"), 1e-6, "rates match what is produced");
         }
 
         [Test]
@@ -275,8 +340,8 @@ namespace ChoppingTrees.Tests
             {
                 Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
-                Assert.That(u.treePosition.x, Is.InRange(-4.4f, 4.4f), u.id);
-                Assert.That(u.treePosition.y, Is.InRange(0f, 5.2f), u.id);
+                Assert.That(u.treePosition.x, Is.InRange(-5.5f, 5.5f), u.id);
+                Assert.That(u.treePosition.y, Is.InRange(0f, 5.8f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.
             var roots = System.Array.FindAll(m_Db.upgrades, u => u.requires == null || u.requires.Length == 0);

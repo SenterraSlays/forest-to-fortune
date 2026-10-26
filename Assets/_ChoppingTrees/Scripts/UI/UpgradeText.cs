@@ -48,12 +48,38 @@ namespace ChoppingTrees
                 {
                     var r = m.Db.Resource(u.targetId);
                     double baseP = r != null ? r.basePrice : 1;
-                    double now = baseP * up.PriceMultiplier(u.targetId);
-                    double next = now + baseP * e;
+                    double now = baseP * up.PriceMultiplier(u.targetId) * up.SellMultiplier;
+                    double next = now + baseP * e * up.SellMultiplier;
                     return Pair((r != null ? r.displayName : "Price") + " price", NumberUtil.Money(now), NumberUtil.Money(next), maxed);
                 }
                 case UpgradeEffect.AutoSell:
                     return lv > 0 ? $"Selling the yard stock every {e:0}s" : $"Sells everything in the yard every {e:0}s, wherever you are\n<color=#8F8A7C>Your backpack is still sold by hand</color>";
+                case UpgradeEffect.MagnetRange:
+                {
+                    float now = up.MagnetRadius;
+                    return Pair("Pickup range", now.ToString("0.#") + " m", (now + e).ToString("0.#") + " m", maxed) + "\n<color=#8F8A7C>Logs fly to you from this far (when your backpack has room)</color>";
+                }
+                case UpgradeEffect.WoodYield:
+                    return Pair("Wood per tree", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                case UpgradeEffect.CritChance:
+                    return Pair("Double-damage chance", Pct(e * lv, false), Pct(e * (lv + 1), false), maxed);
+                case UpgradeEffect.MoveSpeed:
+                    return Pair("Move speed", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                case UpgradeEffect.ProcessorYield:
+                {
+                    var def = m.Db.Machine(u.targetId);
+                    return Pair((def != null ? Out(def) : "Output") + " per cut", Pct(e * lv), Pct(e * (lv + 1)), maxed) + "\n<color=#8F8A7C>Same wood in, more out</color>";
+                }
+                case UpgradeEffect.MachineDiscount:
+                    return Pair("Machine prices", "-" + Pct(e * lv, false), "-" + Pct(e * (lv + 1), false), maxed);
+                case UpgradeEffect.SellBonus:
+                    return Pair("All sale prices", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                case UpgradeEffect.LuckyFind:
+                    return Pair("Lucky find chance", Pct(e * lv, false), Pct(e * (lv + 1), false), maxed) + $"\n<color=#8F8A7C>A find pays {m.Db.config.luckyFindValue:0}x the tree's wood value</color>";
+                case UpgradeEffect.TreeRegrowth:
+                    return Pair("Regrowth speed", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                case UpgradeEffect.TreeCashBonus:
+                    return Pair("Goldbark cash", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.BackpackCapacity:
                 {
                     var cfg = m.Db.config;
@@ -77,6 +103,9 @@ namespace ChoppingTrees
             }
             return "";
         }
+
+        /// <summary>0.15 -> "+15%" (or "15%" without the sign).</summary>
+        static string Pct(float v, bool sign = true) => (sign ? "+" : "") + (v * 100f).ToString("0") + "%";
 
         static string Out(MachineDef d) => d.output != null ? d.output.displayName.ToLower() : "";
         static int Clamp(int i, int len) => i < 0 ? 0 : i >= len ? len - 1 : i;

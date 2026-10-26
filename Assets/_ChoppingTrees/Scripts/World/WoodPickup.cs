@@ -106,7 +106,7 @@ namespace ChoppingTrees
                 {
                     Vector3 d = cam.transform.position - transform.position;
                     d.y *= 0.5f;
-                    if (d.magnitude < cfg.pickupMagnetRadius && UIState.GameplayInput)
+                    if (d.magnitude < Game.Instance.Model.Upgrades.MagnetRadius && UIState.GameplayInput)
                     {
                         if (room) m_Flying = true;
                         else LastRefusedTime = Time.unscaledTime;
