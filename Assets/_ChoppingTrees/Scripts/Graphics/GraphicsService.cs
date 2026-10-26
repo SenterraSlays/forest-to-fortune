@@ -36,6 +36,7 @@ namespace ChoppingTrees
                 m_OrigRenderScale = m_Asset.renderScale;
             }
             else Debug.LogWarning("[Graphics] The active render pipeline is not URP; upscaling is unavailable.");
+            Debug.Log("[Display] " + DisplayModes.Describe());
             Application.logMessageReceived += OnLog;
             GameSettings.Changed += Apply;
             Apply();

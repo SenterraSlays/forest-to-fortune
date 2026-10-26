@@ -45,13 +45,21 @@ namespace ChoppingTrees
     [Serializable]
     public class SettingsData
     {
+        public const int CurrentVersion = 2;
+
+        /// <summary>0 for files from 1.1 and earlier (JsonUtility keeps this default when the key
+        /// is missing); <see cref="GameSettings.Migrate"/> brings it up to date.</summary>
+        public int version;
         public float mouseSensitivity = 1f;
         public bool invertY;
         public float fieldOfView = 72f;
         public float masterVolume = 0.8f;
-        public int displayMode = 1; // FullScreenMode index into GameSettings.DisplayModes
+        public int displayMode = 1; // index into GameSettings.WindowModes (0 fullscreen, 1 borderless, 2 windowed)
+        /// <summary>0 = the monitor's native resolution.</summary>
         public int resolutionWidth;
         public int resolutionHeight;
+        /// <summary>Monitor name to run on; empty = wherever the window opens.</summary>
+        public string monitor = "";
         public bool vSync = true;
         public bool showTutorial = true;
 

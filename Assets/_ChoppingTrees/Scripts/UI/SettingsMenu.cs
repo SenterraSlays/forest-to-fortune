@@ -14,8 +14,7 @@ namespace ChoppingTrees
     {
         public static SettingsMenu Instance { get; private set; }
 
-        List<Vector2Int> m_Resolutions;
-        int m_ResIndex;
+        TextMeshProUGUI m_DisplayNote;
         TextMeshProUGUI m_UpscalerNote, m_Quality, m_Scale, m_Aa;
         /// <summary>Every selector label with its source, refreshed whenever the menu opens or a value changes.</summary>
         static readonly List<(TextMeshProUGUI label, Func<string> get)> s_Cyclers = new List<(TextMeshProUGUI, Func<string>)>();
@@ -28,7 +27,7 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            UIFactory.Window(Root, "Settings", "gear", new Vector2(1320, 900), out var body);
+            UIFactory.Window(Root, "Settings", "gear", new Vector2(1320, 960), out var body);
 
             var cols = UIFactory.Rect("Columns", body);
             cols.Stretch(32, 32, 24, 104);
@@ -52,20 +51,12 @@ namespace ChoppingTrees
                 d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
 
             var display = Section(right, "Display", "chart");
-            CyclerRow(display, "Display mode", () => GameSettings.DisplayModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
-                d => { S.displayMode = Cycle(S.displayMode, d, GameSettings.DisplayModes.Length); GameSettings.Apply(); });
-            m_Resolutions = GameSettings.Resolutions();
-            m_ResIndex = m_Resolutions.FindIndex(r => r.x == (S.resolutionWidth > 0 ? S.resolutionWidth : Screen.currentResolution.width) && r.y == (S.resolutionHeight > 0 ? S.resolutionHeight : Screen.currentResolution.height));
-            if (m_ResIndex < 0) m_ResIndex = m_Resolutions.Count - 1;
-            CyclerRow(display, "Resolution", ResText, d =>
-            {
-                if (m_Resolutions.Count == 0) return;
-                m_ResIndex = Cycle(m_ResIndex, d, m_Resolutions.Count);
-                S.resolutionWidth = m_Resolutions[m_ResIndex].x;
-                S.resolutionHeight = m_Resolutions[m_ResIndex].y;
-                GameSettings.Apply();
-            });
+            CyclerRow(display, "Monitor", MonitorText, StepMonitor);
+            CyclerRow(display, "Display mode", () => GameSettings.WindowModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
+                d => { S.displayMode = Cycle(S.displayMode, d, GameSettings.WindowModes.Length); GameSettings.Apply(); });
+            CyclerRow(display, "Resolution", ResText, StepResolution);
             ToggleRow(display, "V-Sync", () => S.vSync, v => { S.vSync = v; GameSettings.Apply(); });
+            m_DisplayNote = UIFactory.Text(display, "", 16, UIStyle.Accent);
             CyclerRow(display, "Frame rate cap", () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
             {
                 int[] caps = { 0, 30, 60, 120, 144, 165, 240 };
@@ -112,7 +103,41 @@ namespace ChoppingTrees
 
         static int Cycle(int value, int dir, int count) => ((value + dir) % count + count) % count;
 
-        string ResText() => m_Resolutions.Count > 0 ? $"{m_Resolutions[m_ResIndex].x} x {m_Resolutions[m_ResIndex].y}" : "Default";
+        static string ResText()
+        {
+            var r = GameSettings.ResolvedResolution(S);
+            return r == DisplayModes.Native ? $"{r.x} x {r.y} (native)" : $"{r.x} x {r.y}";
+        }
+
+        static void StepResolution(int d)
+        {
+            // Built from the monitor's native size, not only the modes the signal chain reports.
+            var list = DisplayModes.Resolutions();
+            if (list.Count == 0) return;
+            int i = list.IndexOf(GameSettings.ResolvedResolution(S));
+            var next = list[Cycle(i < 0 ? list.Count - 1 : i, d, list.Count)];
+            bool native = next == DisplayModes.Native;
+            S.resolutionWidth = native ? 0 : next.x;
+            S.resolutionHeight = native ? 0 : next.y;
+            GameSettings.Apply();
+        }
+
+        static string MonitorText()
+        {
+            return DisplayModes.Name(DisplayModes.Current);
+        }
+
+        static void StepMonitor(int d)
+        {
+            var list = DisplayModes.Monitors();
+            if (list.Count < 2) return;
+            string cur = string.IsNullOrEmpty(S.monitor) ? DisplayModes.Current.name : S.monitor;
+            int i = list.FindIndex(m => m.name == cur);
+            S.monitor = list[Cycle(i < 0 ? 0 : i, d, list.Count)].name;
+            // A new monitor may have a different native size: go back to native there.
+            S.resolutionWidth = S.resolutionHeight = 0;
+            GameSettings.Apply();
+        }
 
         static string QualityText() => S.upscaler == UpscalerSetting.Off ? "-" : S.upscaleQuality switch
         {
@@ -140,6 +165,11 @@ namespace ChoppingTrees
         void RefreshLabels()
         {
             foreach (var (label, get) in s_Cyclers) if (label != null) label.text = get();
+            if (m_DisplayNote != null)
+            {
+                m_DisplayNote.text = GameSettings.DisplayNotice;
+                m_DisplayNote.gameObject.SetActive(!string.IsNullOrEmpty(GameSettings.DisplayNotice));
+            }
             if (m_UpscalerNote == null) return;
             var missing = new List<string>();
             foreach (UpscalerSetting u in Enum.GetValues(typeof(UpscalerSetting)))

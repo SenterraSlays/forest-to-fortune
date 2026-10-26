@@ -109,6 +109,24 @@ namespace ChoppingTrees.Tests
         }
 
         [Test]
+        public void OldSettingsGoBackToNativeResolution()
+        {
+            // A 1.1 settings file has no version field and may hold a resolution capped at 1080p.
+            var old = UnityEngine.JsonUtility.FromJson<SettingsData>("{\"resolutionWidth\":1920,\"resolutionHeight\":1080,\"upscaler\":3}");
+            Assert.AreEqual(0, old.version);
+            var d = GameSettings.Migrate(old);
+            Assert.AreEqual(0, d.resolutionWidth);
+            Assert.AreEqual(0, d.resolutionHeight);
+            Assert.AreEqual(UpscalerSetting.DLSS, d.upscaler, "other settings are kept");
+            Assert.AreEqual(SettingsData.CurrentVersion, d.version);
+
+            // A size chosen in the new version is kept.
+            var fresh = new SettingsData { version = SettingsData.CurrentVersion, resolutionWidth = 1920, resolutionHeight = 1080 };
+            GameSettings.Migrate(fresh);
+            Assert.AreEqual(1920, fresh.resolutionWidth);
+        }
+
+        [Test]
         public void DeleteRemovesSaveAndBackup()
         {
             SaveSystem.Save(Sample());

@@ -7,15 +7,32 @@ namespace ChoppingTrees
     /// <summary>Player settings: loading, applying to the engine and saving.</summary>
     public static class GameSettings
     {
-        public static readonly FullScreenMode[] DisplayModes = { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
-        public static readonly string[] DisplayModeNames = { "Fullscreen", "Borderless", "Windowed" };
+        public static readonly FullScreenMode[] WindowModes = { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
+        public static readonly string[] WindowModeNames = { "Fullscreen", "Borderless", "Windowed" };
 
         static SettingsData s_Data;
 
-        public static SettingsData Data => s_Data ??= SaveSystem.LoadSettings();
+        public static SettingsData Data => s_Data ??= Migrate(SaveSystem.LoadSettings());
+
+        /// <summary>Upgrades settings saved by older versions.</summary>
+        public static SettingsData Migrate(SettingsData d)
+        {
+            if (d.version < 2)
+            {
+                // Before 1.2 the resolution list came only from the modes the signal chain
+                // reported, which capture cards can cap at 1080p, so a saved size may not have
+                // been a real choice. Start from the monitor's native resolution instead.
+                d.resolutionWidth = d.resolutionHeight = 0;
+                d.version = 2;
+            }
+            return d;
+        }
 
         /// <summary>Raised after settings change (camera FOV, sensitivity readers listen).</summary>
         public static event Action Changed;
+
+        /// <summary>Why the display didn't do exactly what was asked (shown in Settings), or empty.</summary>
+        public static string DisplayNotice { get; private set; } = "";
 
         public static void Apply()
         {
@@ -23,40 +40,72 @@ namespace ChoppingTrees
             d.mouseSensitivity = Mathf.Clamp(d.mouseSensitivity, 0.1f, 4f);
             d.fieldOfView = Mathf.Clamp(d.fieldOfView, 55f, 100f);
             d.masterVolume = Mathf.Clamp01(d.masterVolume);
-            d.displayMode = Mathf.Clamp(d.displayMode, 0, DisplayModes.Length - 1);
+            d.displayMode = Mathf.Clamp(d.displayMode, 0, WindowModes.Length - 1);
             AudioListener.volume = d.masterVolume;
             d.renderScale = Mathf.Clamp(d.renderScale, 0.5f, 1f);
             d.frameRateCap = Mathf.Clamp(d.frameRateCap, 0, 360);
             QualitySettings.vSyncCount = d.vSync ? 1 : 0;
             Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
-            if (!Application.isEditor)
-            {
-                var mode = DisplayModes[d.displayMode];
-                if (d.resolutionWidth > 0 && d.resolutionHeight > 0)
-                    Screen.SetResolution(d.resolutionWidth, d.resolutionHeight, mode);
-                else
-                    Screen.fullScreenMode = mode;
-            }
+            ApplyDisplay(d);
             Changed?.Invoke();
+        }
+
+        /// <summary>Size the game will use: the chosen resolution, or the monitor's native size when
+        /// none was chosen (or the choice doesn't fit this monitor).</summary>
+        public static Vector2Int ResolvedResolution(SettingsData d)
+        {
+            var native = DisplayModes.Native;
+            if (d.resolutionWidth <= 0 || d.resolutionHeight <= 0) return native;
+            if (d.resolutionWidth > native.x || d.resolutionHeight > native.y) return native;
+            return new Vector2Int(d.resolutionWidth, d.resolutionHeight);
+        }
+
+        static bool SizeFromCommandLine()
+        {
+            foreach (var a in Environment.GetCommandLineArgs())
+                if (a == "-screen-width" || a == "-screen-height" || a == "-screen-fullscreen") return true;
+            return false;
+        }
+
+        static void ApplyDisplay(SettingsData d)
+        {
+            DisplayNotice = "";
+            // Unity remembers the last window size in the registry; the game always sets its own
+            // so it starts at the monitor's native resolution. Command-line sizes (tests) win.
+            if (Application.isEditor || SizeFromCommandLine()) return;
+
+            if (!string.IsNullOrEmpty(d.monitor) && d.monitor != DisplayModes.Current.name)
+            {
+                foreach (var m in DisplayModes.Monitors())
+                {
+                    if (m.name != d.monitor) continue;
+                    var op = Screen.MoveMainWindowTo(m, Vector2Int.zero);
+                    op.completed += _ => ApplyResolution(d);
+                    return;
+                }
+            }
+            ApplyResolution(d);
+        }
+
+        static void ApplyResolution(SettingsData d)
+        {
+            var mode = WindowModes[d.displayMode];
+            var size = ResolvedResolution(d);
+            if (mode == FullScreenMode.ExclusiveFullScreen && !DisplayModes.ExclusiveSupports(size))
+            {
+                // Some signal chains (capture cards, virtual displays) don't advertise the monitor's
+                // real modes; exclusive fullscreen can't switch to them, borderless can.
+                DisplayNotice = $"Exclusive fullscreen can't use {size.x}x{size.y} on this monitor, so borderless is used.";
+                mode = FullScreenMode.FullScreenWindow;
+            }
+            if (Screen.width != size.x || Screen.height != size.y || Screen.fullScreenMode != mode)
+                Screen.SetResolution(size.x, size.y, mode);
         }
 
         public static void Save()
         {
             // Automated runs (-ct-nosave) must not overwrite the player's settings either.
             if (Game.SavingEnabled) SaveSystem.SaveSettings(Data);
-        }
-
-        /// <summary>Distinct resolutions the display supports (largest last).</summary>
-        public static List<Vector2Int> Resolutions()
-        {
-            var list = new List<Vector2Int>();
-            foreach (var r in Screen.resolutions)
-            {
-                var v = new Vector2Int(r.width, r.height);
-                if (v.x >= 800 && !list.Contains(v)) list.Add(v);
-            }
-            if (list.Count == 0) list.Add(new Vector2Int(Screen.width, Screen.height));
-            return list;
         }
     }
 }

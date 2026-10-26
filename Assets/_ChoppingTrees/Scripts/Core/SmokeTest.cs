@@ -133,7 +133,8 @@ namespace ChoppingTrees
             Debug.Log($"[Smoke] trees={s.TreesFelled} wood={s.TotalWoodChopped:0} money={s.Money:0.0} earned={s.TotalEarned:0.0} purchases={m_Purchases} " +
                       $"axe={model.Upgrades.AxeName} choppers={model.Upgrades.MachineCount("chopper")} woodPerSec={model.Production.GrossRate(GameModel.Wood):0.00} " +
                       $"pickupsActive={WoodPickup.ActiveCount} avgFps={fps:0} worstFrameMs={m_WorstFrame * 1000f:0} errors={m_Errors} " +
-                      $"upscaler={GraphicsService.Describe()} gpu={SystemInfo.graphicsDeviceName} notice='{GraphicsService.Notice}'");
+                      $"upscaler={GraphicsService.Describe()} gpu={SystemInfo.graphicsDeviceName} notice='{GraphicsService.Notice}' " +
+                      $"screen={Screen.width}x{Screen.height} {Screen.fullScreenMode} native={DisplayModes.Native.x}x{DisplayModes.Native.y} resolutions={DisplayModes.Resolutions().Count}");
             Debug.Log(m_Errors == 0 && s.TreesFelled > 0 && s.TotalEarned > 0 ? "[Smoke] PASS" : "[Smoke] FAIL");
             Application.Quit(m_Errors == 0 ? 0 : 1);
         }

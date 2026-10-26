@@ -419,6 +419,10 @@ namespace ChoppingTrees
             Arrow("chevron_left", -1);
             label = Text(root.transform, get(), 20, UIStyle.Text, true, TextAlignmentOptions.Center);
             label.textWrappingMode = TextWrappingModes.NoWrap;
+            // Long values (monitor names, "2560 x 1440 (native)") shrink to fit between the arrows.
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 13f;
+            label.fontSizeMax = 20f;
             label.Layout(-1, 36, 1);
             Arrow("chevron_right", 1);
             label.transform.SetSiblingIndex(2);

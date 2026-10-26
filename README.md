@@ -71,7 +71,14 @@ Each upscaler is only offered when the hardware check passes; unavailable ones a
 listed with the reason. If an upscaler throws an error while rendering, the game switches back
 to native rendering by itself and says so. Temporal upscalers (DLSS, FSR 2, STP) do their own
 anti-aliasing; otherwise choose SMAA (default), FXAA, TAA or off, plus a render scale (50–100%).
-Also: display mode, resolution, V-Sync and a frame rate cap (30–240 or unlimited).
+Also: monitor, display mode, resolution, V-Sync and a frame rate cap (30–240 or unlimited).
+
+The game starts at the monitor's native resolution (rather than the size Unity last saved in
+the registry). The resolution list is built from the monitor's native size plus common 16:9
+sizes, because the modes Windows reports for exclusive fullscreen can be capped by devices in
+the signal chain. For example, an Elgato HD60 S limits them to 1080p. If exclusive fullscreen
+can't switch to the chosen size, the game uses borderless and says so in Settings. Resolutions
+saved by version 1.1 (which could only offer the capped list) reset to native once.
 
 The FPS counter (*Settings > Interface* or F3) shows FPS; *Detailed* adds frame time, the
 worst frame, CPU/GPU times (when the platform reports them), the active upscaler and the
