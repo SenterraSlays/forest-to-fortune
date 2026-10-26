@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 111b777bb23a8d74fb160cfcfd2611b8, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.GameDatabase
+  config: {fileID: 11400000, guid: 44c8eaa79293d6c4dbdefc3056f94afc, type: 2}
+  resources:
+  - {fileID: 11400000, guid: 77101522e4ffbc143a199e7c30444706, type: 2}
+  - {fileID: 11400000, guid: 545e8c321f5d9e6469fea82fbb720860, type: 2}
+  trees:
+  - {fileID: 11400000, guid: d387d90a2e957a04fa23f58c42f63c92, type: 2}
+  - {fileID: 11400000, guid: e5a46cabb5296414e86fe977deea3944, type: 2}
+  - {fileID: 11400000, guid: 64edfa3008b64ee4aba7c927fb784c00, type: 2}
+  - {fileID: 11400000, guid: 53d167a28e97c89408b00914529fa473, type: 2}
+  - {fileID: 11400000, guid: 90441abdd5633c24d851054b342d35f6, type: 2}
+  - {fileID: 11400000, guid: 51cacbf1a4734524aa9ce690790260d7, type: 2}
+  - {fileID: 11400000, guid: dd1fb779d8a589a4da046525fa46a826, type: 2}
+  machines:
+  - {fileID: 11400000, guid: fc195c9930da7164fb083e33a17830b0, type: 2}
+  - {fileID: 11400000, guid: 48d3a1ea3bf38bf4588833664088a6ed, type: 2}
+  areas:
+  - {fileID: 11400000, guid: 475f36df3ca8d0546807af8f58c91cb6, type: 2}
+  - {fileID: 11400000, guid: 9039536696899df4b9c5f5681636d857, type: 2}
+  - {fileID: 11400000, guid: bba8bdbfbe8982848b4c26156cd79c4f, type: 2}
+  upgrades:
+  - {fileID: 11400000, guid: 1ac4f91d926af5a4697d9569190bb886, type: 2}
+  - {fileID: 11400000, guid: 09accb12ed4514c47aeaed08f0595bec, type: 2}
+  - {fileID: 11400000, guid: 2da391699e9a3d245bbb1b4559de6336, type: 2}
+  - {fileID: 11400000, guid: 9e139ca21405cc143bcbcc7ac2a4e430, type: 2}
+  - {fileID: 11400000, guid: ef37ec217e02f56479252807b2cd8f79, type: 2}
+  - {fileID: 11400000, guid: f94f9a6b5642e494d9385d57790bd959, type: 2}
+  - {fileID: 11400000, guid: fb266386263c8734cb252b0ccf7b2a80, type: 2}
+  - {fileID: 11400000, guid: 6ab4f1899082e2a4dbf9c49cc8d5dbc9, type: 2}
+  - {fileID: 11400000, guid: fb6e393cd2ad98f4d90640ade364343f, type: 2}
+  - {fileID: 11400000, guid: a1890acc24be3b14899ebf9736bea7b3, type: 2}
+  - {fileID: 11400000, guid: 6cdfbbf24b7f8f74caacf6337fba3086, type: 2}
+  - {fileID: 11400000, guid: 80dbf89d7f6b0ab44b82a34e71df3a2d, type: 2}
+  - {fileID: 11400000, guid: 06f1b78c9ef78c0498ebb04355ab4ea3, type: 2}
+  - {fileID: 11400000, guid: 9edf0a1b298c466408c4ba39b7c6f214, type: 2}
+  - {fileID: 11400000, guid: 65e406764542faa4a805d484389cbe10, type: 2}
+  bodyFont: {fileID: 11400000, guid: d6a527b4ab1217e4c829f7fa22d0d6a3, type: 2}
+  boldFont: {fileID: 11400000, guid: 4422150f6cbd5a3468caebf52d1aa769, type: 2}
+  audio: {fileID: 11400000, guid: 935e5a871063826428523b033e53e55b, type: 2}

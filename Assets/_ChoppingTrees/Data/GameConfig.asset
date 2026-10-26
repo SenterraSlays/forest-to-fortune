@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4a2a19a2dfb1e641af1af2109a00d1c, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.GameConfig
+  walkSpeed: 4.6
+  sprintSpeed: 7.4
+  jumpHeight: 1.1
+  gravity: -22
+  acceleration: 14
+  airControl: 0.35
+  axeTierDamage:
+  - 1
+  - 2.5
+  - 6
+  - 16
+  - 45
+  axeTierSpeed:
+  - 1
+  - 1.05
+  - 1.1
+  - 1.15
+  - 1.2
+  axeModels:
+  - Axe_0
+  - Axe_1
+  - Axe_2
+  - Axe_3
+  - Axe_4
+  baseAxeName: Rusty Hatchet
+  swingSeconds: 0.55
+  minSwingSeconds: 0.22
+  reach: 2.7
+  pickupMagnetRadius: 4
+  pickupAutoCollectSeconds: 25
+  maxActivePickups: 48
+  startingMoney: 0
+  autosaveSeconds: 30
+  baseOfflineHours: 2
+  offlineEfficiency: 1
+  minOfflineSecondsToReport: 60

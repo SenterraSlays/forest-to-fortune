@@ -1,0 +1,14 @@
+var player = UnityEngine.Object.FindAnyObjectByType<ChoppingTrees.PlayerMotor>();
+ChoppingTrees.ChoppableTree best = null; float bd = 1e9f;
+foreach (var t in UnityEngine.Object.FindObjectsByType<ChoppingTrees.ChoppableTree>(FindObjectsSortMode.None)) {
+  if (!t.Standing || t.Type.id != "TREEID") continue;
+  float d = Vector3.Distance(t.transform.position, player.transform.position);
+  if (d < bd) { bd = d; best = t; }
+}
+Vector3 tp = best.transform.position;
+Vector3 dir = (player.transform.position - tp); dir.y = 0; dir.Normalize();
+Vector3 pos = tp + dir * (best.Type.trunkRadius * best.Scale + 1.3f);
+pos.y = tp.y + 0.1f;
+player.Teleport(pos, Quaternion.LookRotation(-dir).eulerAngles.y);
+player.GetComponent<ChoppingTrees.PlayerLook>().SetPitch(18f);
+return best.name + " hp " + best.Health + " dist " + bd;

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d42d507ce0959f48a7c3374de32e139, type: 3}
+  m_Name: Pinewood Clearing
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.ForestAreaDef
+  id: clearing
+  displayName: Pinewood Clearing
+  description: Where it all begins.
+  unlockedByDefault: 1
+  trees:
+  - {fileID: 11400000, guid: d387d90a2e957a04fa23f58c42f63c92, type: 2}
+  - {fileID: 11400000, guid: e5a46cabb5296414e86fe977deea3944, type: 2}
+  - {fileID: 11400000, guid: 64edfa3008b64ee4aba7c927fb784c00, type: 2}
+  weights:
+  - 0.5
+  - 0.32
+  - 0.18
+  sortOrder: 0

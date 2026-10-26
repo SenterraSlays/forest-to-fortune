@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ce12b823a921eb468d3a10d0d2ca8fe, type: 3}
+  m_Name: Pine
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.TreeType
+  id: pine
+  displayName: Pine
+  modelName: Tree_Pine
+  stumpModel: Stump_Bark
+  maxHealth: 3
+  woodReward: 4
+  cashBonus: 0
+  requiredAxeTier: 0
+  respawnSeconds: 25
+  trunkRadius: 0.28
+  trunkHeight: 7
+  notchHeight: 0.55
+  scaleRange: {x: 0.85, y: 1.2}
+  logPieces: 2
+  soundPitch: 1.1
+  chipColor: {r: 0.9, g: 0.75, b: 0.5, a: 1}
+  leafColor: {r: 0.16, g: 0.38, b: 0.25, a: 1}

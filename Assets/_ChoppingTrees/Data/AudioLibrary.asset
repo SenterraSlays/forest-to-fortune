@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fb3654a62f5d5849974c1d2e726de95, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.AudioLibrary
+  entries:
+  - name: axe_swing
+    clips:
+    - {fileID: 8300000, guid: 81518cba99b304e4e954236af7d7d425, type: 3}
+    - {fileID: 8300000, guid: 4bc959257463c034fba31755ff919ce1, type: 3}
+    volume: 0.7
+  - name: axe_chop
+    clips:
+    - {fileID: 8300000, guid: a4a272d7e6bea304185b813865192a71, type: 3}
+    - {fileID: 8300000, guid: a33c917a2167a27459bd745298b875ee, type: 3}
+    - {fileID: 8300000, guid: d0a67ae5065e6da47be1bbcf9cda9220, type: 3}
+    - {fileID: 8300000, guid: 3ca57c2b640f01c409a1c6b6f4c9ead5, type: 3}
+    volume: 1
+  - name: axe_thud
+    clips:
+    - {fileID: 8300000, guid: bc3fa596bc29c1f459631ee2905e51fd, type: 3}
+    volume: 1
+  - name: axe_clang
+    clips:
+    - {fileID: 8300000, guid: a6302c5a2e49bcd499adc598b04127c4, type: 3}
+    volume: 1
+  - name: tree_crack
+    clips:
+    - {fileID: 8300000, guid: 2d989ed0383c42147b9dc441e7106118, type: 3}
+    volume: 1
+  - name: tree_fall
+    clips:
+    - {fileID: 8300000, guid: cac2db1c34bd6074193fd8b44f76d353, type: 3}
+    volume: 1
+  - name: log_break
+    clips:
+    - {fileID: 8300000, guid: 6331fb13c859a6d4485d5460d31d294f, type: 3}
+    volume: 1
+  - name: collect
+    clips:
+    - {fileID: 8300000, guid: 7cbaa98e7c9c92045bf477b50136daa4, type: 3}
+    volume: 1
+  - name: sell
+    clips:
+    - {fileID: 8300000, guid: 0b1d6bc25304b5d4386dd43259a365f1, type: 3}
+    volume: 1
+  - name: purchase
+    clips:
+    - {fileID: 8300000, guid: c2be775ff08ba1641a40fc2382727496, type: 3}
+    volume: 1
+  - name: unlock
+    clips:
+    - {fileID: 8300000, guid: f14802c556596d24e84fa341f7b39435, type: 3}
+    volume: 1
+  - name: objective
+    clips:
+    - {fileID: 8300000, guid: c52d24c15d6f15c45b134e7c7a8a2d08, type: 3}
+    volume: 1
+  - name: error
+    clips:
+    - {fileID: 8300000, guid: 5be755ad75465fb4190d33ed4d99d03c, type: 3}
+    volume: 1
+  - name: ui_click
+    clips:
+    - {fileID: 8300000, guid: 22db1b4704c45ef4dba9e925a986b230, type: 3}
+    volume: 1
+  - name: ui_hover
+    clips:
+    - {fileID: 8300000, guid: a855565d690f9584db410cc5226260c0, type: 3}
+    volume: 1
+  - name: menu_open
+    clips:
+    - {fileID: 8300000, guid: f2f1bc8664a5dc844835d594fc52a7e0, type: 3}
+    volume: 1
+  - name: footstep
+    clips:
+    - {fileID: 8300000, guid: 649ed90e7973da44490da9ea19c3d0d1, type: 3}
+    - {fileID: 8300000, guid: ca87c1c87e8499b4c95fec8870d76e66, type: 3}
+    - {fileID: 8300000, guid: b7a333e516f0627419daa84c4a8f7154, type: 3}
+    - {fileID: 8300000, guid: e32f53228d9e1d244b436bfe51ca3ade, type: 3}
+    volume: 0.8
+  - name: jump
+    clips:
+    - {fileID: 8300000, guid: 97edf2aa690179940b1f9693ea966932, type: 3}
+    volume: 1
+  - name: land
+    clips:
+    - {fileID: 8300000, guid: 4b4752a5e9287f1448b1a7794703a9ee, type: 3}
+    volume: 1
+  - name: chopper_loop
+    clips:
+    - {fileID: 8300000, guid: 76564142e3d6b9248a19b1bf29042c52, type: 3}
+    volume: 0.8
+  - name: sawmill_loop
+    clips:
+    - {fileID: 8300000, guid: c0191cd47ca334648a25a5c501b0ec29, type: 3}
+    volume: 0.8
+  - name: machine_cut
+    clips:
+    - {fileID: 8300000, guid: ef85f965c622fae4bb58930cbc27261e, type: 3}
+    volume: 1
+  - name: build
+    clips:
+    - {fileID: 8300000, guid: dc076d19b03af2641809188d31e723f4, type: 3}
+    volume: 1
+  - name: gate_open
+    clips:
+    - {fileID: 8300000, guid: 03a2c59a1ea70df49b9f46650ec87faa, type: 3}
+    volume: 1
+  - name: wind
+    clips:
+    - {fileID: 8300000, guid: 5f0e4709011f9c640b0f9ff75e123c5d, type: 3}
+    volume: 0.5
+  - name: bird
+    clips:
+    - {fileID: 8300000, guid: f0a8e1b4129c76e45a1160340ae7ea8f, type: 3}
+    - {fileID: 8300000, guid: a359910f487fd804c8b565d54b96fe40, type: 3}
+    - {fileID: 8300000, guid: 6392e13001be36348af36c8f22319b3c, type: 3}
+    volume: 0.6

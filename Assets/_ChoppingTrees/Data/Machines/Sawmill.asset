@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8895cea00a1d044bb239767228a0096, type: 3}
+  m_Name: Sawmill
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.MachineDef
+  id: sawmill
+  displayName: Sawmill
+  description: Turns wood into planks, which sell for more.
+  kind: 1
+  baseRate: 2.5
+  input: {fileID: 11400000, guid: 77101522e4ffbc143a199e7c30444706, type: 2}
+  inputPerOutput: 2
+  output: {fileID: 11400000, guid: 545e8c321f5d9e6469fea82fbb720860, type: 2}
+  tierModels:
+  - Sawmill
+  order: 1

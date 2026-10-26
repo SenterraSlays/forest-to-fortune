@@ -1,0 +1,45 @@
+using UnityEngine;
+
+namespace ChoppingTrees
+{
+    /// <summary>Tunable gameplay numbers that aren't tied to a single tree, upgrade or machine.</summary>
+    [CreateAssetMenu(menuName = "Chopping Trees/Game Config", fileName = "GameConfig")]
+    public class GameConfig : ScriptableObject
+    {
+        [Header("Movement")]
+        public float walkSpeed = 4.6f;
+        public float sprintSpeed = 7.4f;
+        public float jumpHeight = 1.1f;
+        public float gravity = -22f;
+        public float acceleration = 14f;
+        public float airControl = 0.35f;
+
+        [Header("Chopping")]
+        [Tooltip("Base damage per hit for each axe tier (index = tier).")]
+        public float[] axeTierDamage = { 1f, 2.5f, 6f, 16f, 45f };
+        [Tooltip("Swing speed multiplier for each axe tier.")]
+        public float[] axeTierSpeed = { 1f, 1.05f, 1.1f, 1.15f, 1.2f };
+        [Tooltip("Axe model per tier (index = tier).")]
+        public string[] axeModels = { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4" };
+        public string baseAxeName = "Rusty Hatchet";
+        [Tooltip("Seconds per full swing at speed multiplier 1.")]
+        public float swingSeconds = 0.55f;
+        [Tooltip("Fastest allowed swing, whatever the upgrades.")]
+        public float minSwingSeconds = 0.22f;
+        public float reach = 2.7f;
+
+        [Header("Pickups")]
+        public float pickupMagnetRadius = 4f;
+        public float pickupAutoCollectSeconds = 25f;
+        public int maxActivePickups = 48;
+
+        [Header("Economy")]
+        public double startingMoney;
+        public float autosaveSeconds = 30f;
+        public float baseOfflineHours = 2f;
+        [Tooltip("Share of normal machine output earned while the game is closed.")]
+        [Range(0f, 1f)] public float offlineEfficiency = 1f;
+        [Tooltip("Offline time shorter than this isn't reported.")]
+        public float minOfflineSecondsToReport = 60f;
+    }
+}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ce12b823a921eb468d3a10d0d2ca8fe, type: 3}
+  m_Name: Ironwood
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.TreeType
+  id: ironwood
+  displayName: Ironwood
+  modelName: Tree_Ironwood
+  stumpModel: Stump_Iron
+  maxHealth: 650
+  woodReward: 560
+  cashBonus: 0
+  requiredAxeTier: 3
+  respawnSeconds: 60
+  trunkRadius: 0.75
+  trunkHeight: 10.5
+  notchHeight: 0.75
+  scaleRange: {x: 0.9, y: 1.15}
+  logPieces: 4
+  soundPitch: 0.8
+  chipColor: {r: 0.62, g: 0.64, b: 0.68, a: 1}
+  leafColor: {r: 0.22, g: 0.54, b: 0.56, a: 1}
