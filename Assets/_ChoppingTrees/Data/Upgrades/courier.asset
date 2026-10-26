@@ -25,6 +25,10 @@ MonoBehaviour:
   effectPerLevel: 15
   levelNames: []
   requires:
+  - upgradeId: wood_price
+    level: 1
   - upgradeId: chopper_count
     level: 2
   sortOrder: 2
+  treePosition: {x: 3.45, y: 3.2}
+  icon: cart

@@ -3,6 +3,9 @@
 P="C:/Users/lunal/Desktop/VSCoded/Games/ChoppingTrees"
 name=${1:-shot}
 mkdir -p "$P/Temp/shots"
+# The game view only redraws when repainted; force it so the capture is current.
+bash "$(dirname "$0")/eval.sh" 'UnityEditorInternal.InternalEditorUtility.RepaintAllViews(); UnityEditor.EditorApplication.QueuePlayerLoopUpdate(); return "";' >/dev/null 2>&1
+sleep 0.5
 unity command game_view --width ${2:-1280} --height ${3:-720} --format json --project-path $P --caller plugin --skill unity-cli --no-banner > "$P/Temp/shots/$name.json" 2>&1
 python - "$P/Temp/shots/$name.json" "$P/Temp/shots/$name.png" <<'PY'
 import json,sys,base64,re

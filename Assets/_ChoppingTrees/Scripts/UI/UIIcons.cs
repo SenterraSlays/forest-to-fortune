@@ -1,0 +1,216 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace ChoppingTrees
+{
+    /// <summary>
+    /// Icons drawn in code with signed distance functions (white shapes, tinted by the Image),
+    /// plus the soft shadow, outline ring and gradient sprites the interface uses. Everything is
+    /// generated once and cached, so the UI needs no texture assets.
+    /// </summary>
+    public static class UIIcons
+    {
+        const int Size = 96;
+        static readonly Dictionary<string, Sprite> s_Cache = new Dictionary<string, Sprite>();
+
+        // ---------------------------------------------------------------- SDF primitives (unit square, y up, centre 0.5)
+
+        static float Circle(Vector2 p, Vector2 c, float r) => (p - c).magnitude - r;
+
+        static float RingD(Vector2 p, Vector2 c, float r, float w) => Mathf.Abs((p - c).magnitude - r) - w * 0.5f;
+
+        static float Box(Vector2 p, Vector2 c, Vector2 half, float angleDeg = 0f, float round = 0f)
+        {
+            Vector2 d = p - c;
+            if (angleDeg != 0f)
+            {
+                float a = -angleDeg * Mathf.Deg2Rad, cs = Mathf.Cos(a), sn = Mathf.Sin(a);
+                d = new Vector2(d.x * cs - d.y * sn, d.x * sn + d.y * cs);
+            }
+            Vector2 q = new Vector2(Mathf.Abs(d.x), Mathf.Abs(d.y)) - half + Vector2.one * round;
+            return new Vector2(Mathf.Max(q.x, 0f), Mathf.Max(q.y, 0f)).magnitude + Mathf.Min(Mathf.Max(q.x, q.y), 0f) - round;
+        }
+
+        static float Capsule(Vector2 p, Vector2 a, Vector2 b, float r)
+        {
+            Vector2 pa = p - a, ba = b - a;
+            float h = Mathf.Clamp01(Vector2.Dot(pa, ba) / ba.sqrMagnitude);
+            return (pa - ba * h).magnitude - r;
+        }
+
+        /// <summary>Convex polygon (counter-clockwise points).</summary>
+        static float Poly(Vector2 p, params Vector2[] v)
+        {
+            float d = float.MinValue;
+            for (int i = 0; i < v.Length; i++)
+            {
+                Vector2 a = v[i], b = v[(i + 1) % v.Length];
+                Vector2 n = new Vector2(b.y - a.y, a.x - b.x).normalized; // outward for CCW
+                d = Mathf.Max(d, Vector2.Dot(p - a, n));
+            }
+            return d;
+        }
+
+        static float Union(float a, float b) => Mathf.Min(a, b);
+        static float Cut(float a, float b) => Mathf.Max(a, -b);
+        static Vector2 V(float x, float y) => new Vector2(x, y);
+
+        // ---------------------------------------------------------------- icon shapes
+
+        static readonly Dictionary<string, Func<Vector2, float>> s_Shapes = new Dictionary<string, Func<Vector2, float>>
+        {
+            ["coin"] = p => Cut(Circle(p, V(.5f, .5f), .42f), Union(RingD(p, V(.5f, .5f), .3f, .05f), Box(p, V(.5f, .5f), V(.035f, .14f)))),
+            ["log"] = p => Cut(Circle(p, V(.5f, .5f), .42f), Union(RingD(p, V(.5f, .5f), .28f, .045f), RingD(p, V(.5f, .5f), .14f, .045f))),
+            ["plank"] = p => Cut(Union(Box(p, V(.5f, .62f), V(.4f, .09f), -12f, .03f), Box(p, V(.5f, .36f), V(.4f, .09f), -12f, .03f)),
+                Box(p, V(.42f, .63f), V(.16f, .012f), -12f)),
+            ["axe"] = p => Union(Capsule(p, V(.24f, .14f), V(.7f, .82f), .05f),
+                Poly(p, V(.5f, .64f), V(.66f, .5f), V(.9f, .6f), V(.86f, .9f), V(.66f, .92f))),
+            ["gear"] = p =>
+            {
+                float d = Circle(p, V(.5f, .5f), .3f);
+                for (int i = 0; i < 8; i++) d = Union(d, Box(p, V(.5f, .5f) + new Vector2(Mathf.Cos(i * Mathf.PI / 4), Mathf.Sin(i * Mathf.PI / 4)) * .33f, V(.07f, .07f), i * 45f, .02f));
+                return Cut(d, Circle(p, V(.5f, .5f), .12f));
+            },
+            ["saw"] = p =>
+            {
+                float d = Circle(p, V(.5f, .5f), .32f);
+                for (int i = 0; i < 12; i++)
+                {
+                    float a = i * Mathf.PI / 6;
+                    Vector2 c = V(.5f, .5f) + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * .36f;
+                    d = Union(d, Box(p, c, V(.06f, .04f), a * Mathf.Rad2Deg + 30f));
+                }
+                return Cut(d, Circle(p, V(.5f, .5f), .08f));
+            },
+            ["bolt"] = p => Union(Poly(p, V(.58f, .92f), V(.3f, .46f), V(.5f, .46f), V(.62f, .62f)), Poly(p, V(.5f, .54f), V(.38f, .38f), V(.42f, .08f), V(.7f, .54f))),
+            ["gem"] = p => Poly(p, V(.5f, .1f), V(.86f, .58f), V(.7f, .8f), V(.3f, .8f), V(.14f, .58f)),
+            ["pine"] = p => Union(Union(Poly(p, V(.5f, .92f), V(.26f, .58f), V(.74f, .58f)), Poly(p, V(.5f, .74f), V(.18f, .3f), V(.82f, .3f))),
+                Box(p, V(.5f, .2f), V(.07f, .12f))),
+            ["mountain"] = p => Union(Poly(p, V(.36f, .78f), V(.06f, .18f), V(.66f, .18f)), Poly(p, V(.68f, .62f), V(.42f, .18f), V(.94f, .18f))),
+            ["crown"] = p => Union(Union(Box(p, V(.5f, .3f), V(.38f, .1f), 0f, .02f), Poly(p, V(.12f, .36f), V(.34f, .36f), V(.12f, .78f))),
+                Union(Poly(p, V(.32f, .36f), V(.68f, .36f), V(.5f, .86f)), Poly(p, V(.66f, .36f), V(.88f, .36f), V(.88f, .78f)))),
+            ["clock"] = p => Union(RingD(p, V(.5f, .5f), .36f, .08f), Union(Capsule(p, V(.5f, .5f), V(.5f, .74f), .045f), Capsule(p, V(.5f, .5f), V(.68f, .44f), .045f))),
+            ["moon"] = p => Cut(Circle(p, V(.5f, .5f), .38f), Circle(p, V(.66f, .62f), .3f)),
+            ["cart"] = p => Union(Union(Box(p, V(.48f, .58f), V(.32f, .16f), 0f, .03f), Box(p, V(.86f, .66f), V(.07f, .03f))),
+                Union(Circle(p, V(.3f, .3f), .09f), Circle(p, V(.66f, .3f), .09f))),
+            ["star"] = p =>
+            {
+                Vector2 c = V(.5f, .5f);
+                float d = float.MaxValue;
+                for (int i = 0; i < 5; i++)
+                {
+                    float a0 = Mathf.PI / 2 + i * Mathf.PI * 2 / 5, a1 = a0 + Mathf.PI / 5, a2 = a0 - Mathf.PI / 5;
+                    d = Union(d, Poly(p, c + new Vector2(Mathf.Cos(a0), Mathf.Sin(a0)) * .42f, c + new Vector2(Mathf.Cos(a1), Mathf.Sin(a1)) * .17f, c, c + new Vector2(Mathf.Cos(a2), Mathf.Sin(a2)) * .17f));
+                }
+                return d;
+            },
+            ["lock"] = p => Union(Box(p, V(.5f, .36f), V(.26f, .2f), 0f, .05f), Cut(RingD(p, V(.5f, .58f), .17f, .07f), Box(p, V(.5f, .42f), V(.3f, .16f)))),
+            ["check"] = p => Union(Capsule(p, V(.2f, .52f), V(.42f, .3f), .07f), Capsule(p, V(.42f, .3f), V(.82f, .72f), .07f)),
+            ["play"] = p => Poly(p, V(.3f, .16f), V(.84f, .5f), V(.3f, .84f)),
+            ["power"] = p => Union(Cut(RingD(p, V(.5f, .46f), .3f, .08f), Box(p, V(.5f, .8f), V(.12f, .2f))), Capsule(p, V(.5f, .5f), V(.5f, .88f), .05f)),
+            ["chevron_left"] = p => Union(Capsule(p, V(.6f, .2f), V(.32f, .5f), .07f), Capsule(p, V(.32f, .5f), V(.6f, .8f), .07f)),
+            ["chevron_right"] = p => Union(Capsule(p, V(.4f, .2f), V(.68f, .5f), .07f), Capsule(p, V(.68f, .5f), V(.4f, .8f), .07f)),
+            ["close"] = p => Union(Capsule(p, V(.24f, .24f), V(.76f, .76f), .07f), Capsule(p, V(.24f, .76f), V(.76f, .24f), .07f)),
+            ["save"] = p => Cut(Box(p, V(.5f, .5f), V(.36f, .36f), 0f, .06f), Union(Box(p, V(.5f, .72f), V(.2f, .1f)), Circle(p, V(.5f, .38f), .1f))),
+            ["refresh"] = p => Union(Cut(RingD(p, V(.5f, .5f), .3f, .08f), Poly(p, V(.5f, .5f), V(.95f, .5f), V(.95f, .95f), V(.5f, .95f))), Poly(p, V(.5f, .9f), V(.5f, .64f), V(.76f, .78f))),
+            ["leaf"] = p => Union(Cut(Circle(p, V(.4f, .4f), .38f), Union(Circle(p, V(.04f, .82f), .4f), Circle(p, V(.82f, .04f), .4f))), Capsule(p, V(.14f, .14f), V(.4f, .4f), .03f)),
+            ["chart"] = p => Union(Union(Box(p, V(.26f, .32f), V(.08f, .16f)), Box(p, V(.5f, .42f), V(.08f, .26f))), Box(p, V(.74f, .54f), V(.08f, .38f))),
+            ["dot"] = p => Circle(p, V(.5f, .5f), .4f),
+        };
+
+        public static Sprite Get(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            if (s_Cache.TryGetValue(name, out var s) && s != null) return s;
+            if (!s_Shapes.TryGetValue(name, out var shape)) shape = s_Shapes["dot"];
+            var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, true) { name = "Icon_" + name, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[Size * Size];
+            float aa = 1.2f / Size;
+            for (int y = 0; y < Size; y++)
+            for (int x = 0; x < Size; x++)
+            {
+                var p = new Vector2((x + 0.5f) / Size, (y + 0.5f) / Size);
+                float d = shape(p);
+                byte a = (byte)(Mathf.Clamp01(0.5f - d / aa) * 255f);
+                px[y * Size + x] = new Color32(255, 255, 255, a);
+            }
+            tex.SetPixels32(px);
+            tex.Apply(true);
+            s = Sprite.Create(tex, new Rect(0, 0, Size, Size), new Vector2(0.5f, 0.5f), 100f);
+            s.name = name;
+            s_Cache[name] = s;
+            return s;
+        }
+
+        // ---------------------------------------------------------------- panel sprites
+
+        static Sprite s_Shadow, s_Ring, s_GradientH, s_GradientV, s_Glow;
+
+        /// <summary>Soft blurred rounded rectangle for drop shadows (9-sliced).</summary>
+        public static Sprite Shadow => s_Shadow != null ? s_Shadow : s_Shadow = MakeSliced(128, 40, (x, y, size) =>
+        {
+            float d = RoundedDist(x, y, size, 40f, 18f);
+            return Mathf.Clamp01(1f - (d + 22f) / 30f) * 0.9f;
+        });
+
+        /// <summary>1.5 px rounded outline for panel borders (9-sliced).</summary>
+        public static Sprite Ring => s_Ring != null ? s_Ring : s_Ring = MakeSliced(64, 18, (x, y, size) =>
+        {
+            float d = RoundedDist(x, y, size, 0f, 14f);
+            return Mathf.Clamp01(1.6f - Mathf.Abs(d + 1f));
+        });
+
+        /// <summary>Radial glow (used behind affordable skill nodes).</summary>
+        public static Sprite Glow => s_Glow != null ? s_Glow : s_Glow = MakeSliced(128, 0, (x, y, size) =>
+        {
+            float r = new Vector2(x - size / 2f, y - size / 2f).magnitude / (size / 2f);
+            float a = Mathf.Clamp01(1f - r);
+            return a * a;
+        });
+
+        /// <summary>Horizontal fade: opaque on the left, clear on the right.</summary>
+        public static Sprite GradientH => s_GradientH != null ? s_GradientH : s_GradientH = MakeGradient(true);
+        /// <summary>Vertical fade: clear at the top, opaque at the bottom.</summary>
+        public static Sprite GradientV => s_GradientV != null ? s_GradientV : s_GradientV = MakeGradient(false);
+
+        /// <summary>Distance (in pixels, negative inside) to a rounded rect inset by margin.</summary>
+        static float RoundedDist(float x, float y, int size, float margin, float radius)
+        {
+            float half = size / 2f - margin;
+            float qx = Mathf.Abs(x - size / 2f) - half + radius, qy = Mathf.Abs(y - size / 2f) - half + radius;
+            return new Vector2(Mathf.Max(qx, 0), Mathf.Max(qy, 0)).magnitude + Mathf.Min(Mathf.Max(qx, qy), 0) - radius;
+        }
+
+        static Sprite MakeSliced(int size, int border, Func<float, float, int, float> alpha)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+                px[y * size + x] = new Color32(255, 255, 255, (byte)(Mathf.Clamp01(alpha(x + 0.5f, y + 0.5f, size)) * 255));
+            tex.SetPixels32(px);
+            tex.Apply();
+            int b = border > 0 ? border + 8 : 0;
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(b, b, b, b));
+        }
+
+        static Sprite MakeGradient(bool horizontal)
+        {
+            const int n = 256;
+            var tex = new Texture2D(horizontal ? n : 4, horizontal ? 4 : n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)(n - 1);
+                float a = horizontal ? Mathf.SmoothStep(1f, 0f, t) : Mathf.SmoothStep(1f, 0f, t);
+                for (int j = 0; j < 4; j++)
+                {
+                    if (horizontal) tex.SetPixel(i, j, new Color(1, 1, 1, a));
+                    else tex.SetPixel(j, i, new Color(1, 1, 1, a));
+                }
+            }
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+        }
+    }
+}

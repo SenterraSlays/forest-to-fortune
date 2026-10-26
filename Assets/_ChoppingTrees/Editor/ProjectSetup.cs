@@ -61,9 +61,19 @@ namespace ChoppingTrees.EditorTools
             PlayerSettings.defaultIsNativeResolution = true;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.usePlayerLog = true;
+            // CPU/GPU frame times for the detailed FPS counter.
+            PlayerSettings.enableFrameTimingStats = true;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
             // Full domain reload on play so static state (settings, UI state) always starts fresh.
             EditorSettings.enterPlayModeOptionsEnabled = false;
+            // URP's upscaler framework (DLSS / FSR 2 / STP options) is compiled only with this define.
+            string defines = PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.Standalone);
+            if (!defines.Split(';').Contains("ENABLE_UPSCALER_FRAMEWORK"))
+            {
+                PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.Standalone, string.IsNullOrEmpty(defines) ? "ENABLE_UPSCALER_FRAMEWORK" : defines + ";ENABLE_UPSCALER_FRAMEWORK");
+                // Player settings aren't written by SaveAssets alone; without this the define is lost on the next reload.
+                EditorApplication.ExecuteMenuItem("File/Save Project");
+            }
         }
 
         static string Urp()
@@ -71,7 +81,12 @@ namespace ChoppingTrees.EditorTools
             var asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelinePath);
             if (asset == null) return "URP asset missing";
             asset.supportsHDR = true;
-            asset.msaaSampleCount = 4;
+            // Anti-aliasing is done per camera (SMAA/FXAA/TAA) or by the temporal upscalers.
+            asset.msaaSampleCount = 1;
+            // Keeps the STP shaders in builds; the graphics settings pick the real upscaler at runtime.
+#if ENABLE_UPSCALER_FRAMEWORK
+            asset.upscalerName = "Spatial-Temporal Post-Processing";
+#endif
             asset.renderScale = 1f;
             asset.shadowDistance = 90f;
             asset.shadowCascadeCount = 3;

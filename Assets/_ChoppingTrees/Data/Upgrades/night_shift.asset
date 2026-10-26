@@ -25,6 +25,10 @@ MonoBehaviour:
   effectPerLevel: 2
   levelNames: []
   requires:
+  - upgradeId: wood_price
+    level: 1
   - upgradeId: chopper_count
     level: 1
   sortOrder: 3
+  treePosition: {x: 3.65, y: 2}
+  icon: moon

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ChoppingTrees
 {
@@ -53,5 +54,20 @@ namespace ChoppingTrees
         public int resolutionHeight;
         public bool vSync = true;
         public bool showTutorial = true;
+
+        [Header("Graphics")]
+        public UpscalerSetting upscaler = UpscalerSetting.Off;
+        public UpscaleQuality upscaleQuality = UpscaleQuality.Quality;
+        [Tooltip("Render scale when no upscaler (or a spatial one) is used.")]
+        public float renderScale = 1f;
+        public AntiAliasingSetting antiAliasing = AntiAliasingSetting.SMAA;
+        /// <summary>0 = unlimited (only used with V-Sync off).</summary>
+        public int frameRateCap;
+        public FpsCounterMode fpsCounter = FpsCounterMode.Off;
     }
+
+    public enum UpscalerSetting { Off, FSR1, STP, DLSS, FSR2 }
+    public enum UpscaleQuality { NativeAA, Quality, Balanced, Performance }
+    public enum AntiAliasingSetting { Off, FXAA, SMAA, TAA }
+    public enum FpsCounterMode { Off, Fps, Detailed }
 }

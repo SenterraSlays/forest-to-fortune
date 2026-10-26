@@ -202,6 +202,8 @@ namespace ChoppingTrees.Tests
             var m = NewModel(1e9);
             m.TryBuy(m_Db.Upgrade("chopper_count"), out _);
             m.TryBuy(m_Db.Upgrade("chopper_count"), out _);
+            Assert.IsFalse(m.TryBuy(m_Db.Upgrade("courier"), out _), "the courier branches off Market Contacts");
+            m.TryBuy(m_Db.Upgrade("wood_price"), out _);
             Assert.IsTrue(m.TryBuy(m_Db.Upgrade("courier"), out _));
             m.State.Money = 0;
             m.Collect("wood", 50);
@@ -211,6 +213,22 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(0, m.State.Money);
             m.Tick(interval * 0.6f);
             Assert.Greater(m.State.Money, 0);
+        }
+
+        [Test]
+        public void SkillTreeIsConnectedAndLaidOut()
+        {
+            var seen = new System.Collections.Generic.HashSet<Vector2>();
+            foreach (var u in m_Db.upgrades)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
+                Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
+                Assert.That(u.treePosition.x, Is.InRange(-4.4f, 4.4f), u.id);
+                Assert.That(u.treePosition.y, Is.InRange(0f, 5.2f), u.id);
+            }
+            // Roots (no prerequisites) are the trunk's three branches.
+            var roots = System.Array.FindAll(m_Db.upgrades, u => u.requires == null || u.requires.Length == 0);
+            CollectionAssert.AreEquivalent(new[] { "axe_tier", "chopper_count", "wood_price" }, System.Array.ConvertAll(roots, u => u.id));
         }
 
         [Test]

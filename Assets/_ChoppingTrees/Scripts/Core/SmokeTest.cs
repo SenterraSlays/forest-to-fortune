@@ -20,6 +20,7 @@ namespace ChoppingTrees
         int m_Frames;
         float m_FpsTime, m_WorstFrame;
         int m_Purchases;
+        UpscalerSetting? m_Upscaler;
 
         public static void StartIfRequested()
         {
@@ -31,6 +32,7 @@ namespace ChoppingTrees
             {
                 if (args[i] == "-ct-quit-after" && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var q)) s.m_Quit = q;
                 if (args[i] == "-ct-screenshot") s.m_Shot = args[i + 1];
+                if (args[i] == "-ct-upscaler" && Enum.TryParse(args[i + 1], true, out UpscalerSetting u)) s.m_Upscaler = u;
             }
         }
 
@@ -50,6 +52,13 @@ namespace ChoppingTrees
         {
             Debug.Log("[Smoke] start");
             yield return null;
+            GameSettings.Data.fpsCounter = FpsCounterMode.Detailed;
+            if (m_Upscaler.HasValue)
+            {
+                GameSettings.Data.upscaler = m_Upscaler.Value;
+                GameSettings.Data.upscaleQuality = UpscaleQuality.Quality;
+                GameSettings.Apply();
+            }
             var game = Game.Instance;
             game.StartPlaying();
             var motor = FindAnyObjectByType<PlayerMotor>();
@@ -99,13 +108,32 @@ namespace ChoppingTrees
                 yield return new WaitForSeconds(3f);
                 ScreenCapture.CaptureScreenshot(m_Shot);
                 yield return new WaitForSeconds(1f);
+                // The skill tree and settings at full resolution, for visual review.
+                model.AddMoney(5000);
+                if (UpgradeMenu.Instance != null)
+                {
+                    UpgradeMenu.Instance.Open();
+                    yield return new WaitForSeconds(1.5f);
+                    ScreenCapture.CaptureScreenshot(m_Shot.Replace(".png", "_tree.png"));
+                    yield return new WaitForSeconds(1f);
+                    UpgradeMenu.Instance.Close();
+                }
+                if (SettingsMenu.Instance != null)
+                {
+                    SettingsMenu.Instance.Open();
+                    yield return new WaitForSeconds(1.5f);
+                    ScreenCapture.CaptureScreenshot(m_Shot.Replace(".png", "_settings.png"));
+                    yield return new WaitForSeconds(1f);
+                    SettingsMenu.Instance.Close();
+                }
             }
 
             var s = model.State;
             float fps = m_FpsTime > 0 ? m_Frames / m_FpsTime : 0;
             Debug.Log($"[Smoke] trees={s.TreesFelled} wood={s.TotalWoodChopped:0} money={s.Money:0.0} earned={s.TotalEarned:0.0} purchases={m_Purchases} " +
                       $"axe={model.Upgrades.AxeName} choppers={model.Upgrades.MachineCount("chopper")} woodPerSec={model.Production.GrossRate(GameModel.Wood):0.00} " +
-                      $"pickupsActive={WoodPickup.ActiveCount} avgFps={fps:0} worstFrameMs={m_WorstFrame * 1000f:0} errors={m_Errors}");
+                      $"pickupsActive={WoodPickup.ActiveCount} avgFps={fps:0} worstFrameMs={m_WorstFrame * 1000f:0} errors={m_Errors} " +
+                      $"upscaler={GraphicsService.Describe()} gpu={SystemInfo.graphicsDeviceName} notice='{GraphicsService.Notice}'");
             Debug.Log(m_Errors == 0 && s.TreesFelled > 0 && s.TotalEarned > 0 ? "[Smoke] PASS" : "[Smoke] FAIL");
             Application.Quit(m_Errors == 0 ? 0 : 1);
         }

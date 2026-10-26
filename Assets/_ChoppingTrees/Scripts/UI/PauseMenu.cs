@@ -13,18 +13,14 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            var panel = UIFactory.Panel(Root, "Panel", UIStyle.Panel);
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(460, 0));
-            panel.raycastTarget = true;
-            UIFactory.VStack(panel, 12f, new RectOffset(40, 40, 32, 36));
-            UIFactory.Fit(panel, false, true);
-            UIFactory.Text(panel.transform, "Paused", 44, UIStyle.Text, true, TMPro.TextAlignmentOptions.Center).Layout(-1, 70);
-            UIFactory.Button(panel.transform, "Resume", Close, 28, new Color(0.34f, 0.47f, 0.24f)).Layout(-1, 64);
-            UIFactory.Button(panel.transform, "Settings", () => SettingsMenu.Instance.Open(), 26).Layout(-1, 58);
-            UIFactory.Button(panel.transform, "Save Game", SaveNow, 26).Layout(-1, 58);
-            UIFactory.Button(panel.transform, "Reset Progress", ResetProgress, 26).Layout(-1, 58);
-            UIFactory.Button(panel.transform, "Main Menu", () => Game.Instance.ReturnToMenu(), 26).Layout(-1, 58);
-            UIFactory.Button(panel.transform, "Quit to Desktop", () => Game.Instance.Quit(), 26).Layout(-1, 58);
+            UIFactory.Window(Root, "Paused", "clock", new Vector2(500, 566), out var body);
+            UIFactory.VStack(body, 12f, new RectOffset(36, 36, 26, 32));
+            UIFactory.Button(body, "Resume", Close, 26, ButtonStyle.Primary, "play").Layout(-1, 64);
+            UIFactory.Button(body, "Settings", () => SettingsMenu.Instance.Open(), 22, ButtonStyle.Ghost, "gear").Layout(-1, 56);
+            UIFactory.Button(body, "Save Game", SaveNow, 22, ButtonStyle.Ghost, "save").Layout(-1, 56);
+            UIFactory.Button(body, "Main Menu", () => Game.Instance.ReturnToMenu(), 22, ButtonStyle.Ghost, "leaf").Layout(-1, 56);
+            UIFactory.Button(body, "Reset Progress", ResetProgress, 22, ButtonStyle.Danger, "refresh").Layout(-1, 56);
+            UIFactory.Button(body, "Quit to Desktop", () => Game.Instance.Quit(), 22, ButtonStyle.Ghost, "power").Layout(-1, 56);
             Game.Instance.PhaseChanged += _ => Close();
         }
 
@@ -33,7 +29,12 @@ namespace ChoppingTrees
             if (Instance == this) Instance = null;
         }
 
-        protected override void OnOpened() => Time.timeScale = 0f;
+        protected override void OnOpened()
+        {
+            Time.timeScale = 0f;
+            AudioManager.Ui("menu_open", 0.5f);
+        }
+
         protected override void OnClosed() => Time.timeScale = 1f;
 
         void SaveNow()

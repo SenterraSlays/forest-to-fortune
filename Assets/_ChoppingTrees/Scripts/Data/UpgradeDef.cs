@@ -29,6 +29,12 @@ namespace ChoppingTrees
         public Requirement[] requires;
         public int sortOrder;
 
+        [Header("Skill tree")]
+        [Tooltip("Node position in tree units: x = -4..4 (left to right), y = 0..5 (trunk to crown).")]
+        public Vector2 treePosition;
+        [Tooltip("Icon name from UIIcons (axe, saw, coin, pine...).")]
+        public string icon = "dot";
+
         [Serializable]
         public struct Requirement
         {

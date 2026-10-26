@@ -19,6 +19,7 @@ rebuild it with *Tools > Chopping Trees > Build Windows Player*.
 | Chop (hold to keep swinging) | Left mouse button |
 | Use (sell, workbench, gates) | E |
 | Hide tutorial hints | H |
+| Cycle the FPS counter (off / FPS / detailed) | F3 |
 | Pause menu / close menus | Esc |
 
 No input setup is needed: the game reads the keyboard and mouse directly through the Input
@@ -32,11 +33,14 @@ System package. Gamepads aren't supported.
 2. **Collect.** Logs fly to you when you get close. Uncollected logs collect themselves after
    25 s, so wood is never lost.
 3. **Sell** everything at the Lumber Market (E). The pile next to it grows with your stock.
-4. **Upgrade** at the Workbench (E). There are four tabs:
-   - **Axe:** 5 axe tiers (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker), Whetstone (damage) and Grip Training (speed).
-   - **Automation:** Auto-Choppers (up to 8), Chopper Motors, Sawmills (up to 3, turn 2 wood into 1 plank), Sawmill Blades, Foreman's Whistle, and the Harvester Line, which rebuilds every chopper as a Heavy and then a Titan Harvester with a new model.
-   - **Economy:** Market Contacts (wood price), Furniture Buyers (plank price), Wood Courier (sells automatically every 15 s) and Night Shift (longer offline time).
-   - **Forest:** Old Grove ($25,000; maples and redwoods) and Ironwood Ridge ($350,000; ironwood and the rare Goldbark, which also pays a cash bonus).
+4. **Grow the skill tree** at the Workbench (E). Upgrades are nodes on a tree that grows
+   from a trunk into four colour-coded branches, with links following the prerequisites.
+   Hover a node to see its effect, requirements and price, then click **Unlock**/**Upgrade**
+   (or double-click the node). Glowing nodes are affordable, grey ones are locked, gold ones are maxed.
+   - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed).
+   - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle; Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades / Furniture Buyers.
+   - **Economy:** Market Contacts (wood price) → Wood Courier (sells every 15 s) and Night Shift (longer offline time).
+   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe).
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
@@ -50,6 +54,28 @@ System package. Gamepads aren't supported.
 | Redwood | Grove / Ridge | Lumberjack's Axe | 170 | 150 |
 | Ironwood | Ironwood Ridge | Tempered Broadaxe | 650 | 560 |
 | Goldbark | Ironwood Ridge | Ironbreaker | 2,600 | 1,500 + $12,000 |
+
+### Graphics and performance
+
+*Settings > Graphics* offers four upscalers through URP's upscaler framework, each with a
+quality level (Native/DLAA, Quality, Balanced, Performance):
+
+| Upscaler | Needs |
+| --- | --- |
+| NVIDIA DLSS 4 | NVIDIA RTX GPU with a current driver |
+| AMD FSR 2 | DirectX 11/12 or Vulkan with compute shaders |
+| Unity STP (Spatial-Temporal Post-Processing) | Compute shader support |
+| AMD FSR 1 | Any GPU |
+
+Each upscaler is only offered when the hardware check passes; unavailable ones are skipped and
+listed with the reason. If an upscaler throws an error while rendering, the game switches back
+to native rendering by itself and says so. Temporal upscalers (DLSS, FSR 2, STP) do their own
+anti-aliasing; otherwise choose SMAA (default), FXAA, TAA or off, plus a render scale (50–100%).
+Also: display mode, resolution, V-Sync and a frame rate cap (30–240 or unlimited).
+
+The FPS counter (*Settings > Interface* or F3) shows FPS; *Detailed* adds frame time, the
+worst frame, CPU/GPU times (when the platform reports them), the active upscaler and the
+resolution.
 
 ### Saving
 
@@ -109,7 +135,8 @@ project materials on import. `COL_*` boxes become BoxColliders. Empties (`WorkPo
 | `Player/` | `PlayerMotor`, `PlayerLook`, `CameraFx` (bob, kicks, FOV), `AxeController` (swing animation and a single spherecast per swing), `Interactor` |
 | `World/` | `ChoppableTree`, `WoodPickup` (pooled), `MachineYard` + `MachineAnimator` (visuals only), `SellPoint`, `UpgradeStation`, `AreaGate`, `StockPileDisplay`, `AmbientAudio`, `MenuCamera` |
 | `FX/` | `AudioManager` (pooled sources), `Effects` (four particle systems emitted into; no per-burst objects) |
-| `UI/` | Built in code with one style: `UIRoot`, `Hud`, `UpgradeMenu`, `MainMenu`, `PauseMenu`, `SettingsMenu`, `ConfirmDialog`, `OfflinePopup`, `Tutorial`, `Toasts`, `FloatingText` |
+| `Graphics/` | `GraphicsService` (upscaler and render scale, with automatic fallback), `GraphicsCapabilities` (hardware checks), `CameraGraphics` (per-camera anti-aliasing), `PerfStats` (measured FPS and frame times) |
+| `UI/` | Built in code with one style kit (`UIFactory`, `UIButton`, and `UIIcons` for icons and sprites drawn with distance fields, so there are no texture assets): `UIRoot`, `Hud`, `UpgradeMenu` (the skill tree) + `SkillNode`, `MainMenu`, `PauseMenu`, `SettingsMenu`, `ConfirmDialog`, `OfflinePopup`, `Tutorial`, `Toasts`, `FloatingText` |
 
 Adding content is data-only. For example, a new resource is a `ResourceDef`, and a new machine
 is a `MachineDef` plus `MachineCount`/`MachineSpeed` upgrades and slots in the yard. The economy,
@@ -117,10 +144,10 @@ HUD, upgrade menu and saving pick it up automatically.
 
 ## Testing
 
-**Automated (EditMode, 21 tests, all passing):** formatting and overflow safety, costs,
+**Automated (EditMode, 22 tests, all passing):** formatting and overflow safety, costs,
 purchase rules and prerequisites, selling, exact machine output, frame-rate-independent
 production, sawmill supply limits, the offline cap and backwards clocks, area unlocks,
-auto-sell, data validation, save round-trips, backup fallback, garbage and invalid files, and
+auto-sell, data validation, skill-tree layout and connectivity, save round-trips, backup fallback, garbage and invalid files, and
 migration. A pacing simulation plays the economy with a cautious simulated player at half
 chopping efficiency:
 
@@ -145,15 +172,18 @@ bash Tools/test.sh
 upgrade code, then prints a `[Smoke]` summary and PASS/FAIL to the log:
 
 ```bash
-Builds/Windows/ChoppingTrees.exe -ct-smoke -ct-quit-after 90 -ct-nosave -logFile smoke.log
+Builds/Windows/ChoppingTrees.exe -ct-smoke -ct-quit-after 90 -ct-nosave -ct-upscaler DLSS -ct-screenshot shot.png -logFile smoke.log
 ```
 
-The last run felled 14 trees, sold the wood and bought an upgrade with 0 errors, at roughly
-650 FPS average (RTX 5060).
+`-ct-upscaler` forces DLSS, FSR2, STP, FSR1 or Off. `-ct-screenshot` also saves
+`shot_tree.png` and `shot_settings.png`. `-ct-nosave` neither loads nor writes progress or
+settings. Latest runs on an RTX 5060 at 1080p, all PASS with 0 errors: DLSS Quality ~500 FPS,
+FSR 2 Quality ~590 FPS, STP Quality ~610 FPS.
 
 ### Verified vs. not verified
 
-Verified in play mode (editor screenshots) or the built player: menus, the HUD, the tutorial
+Verified in play mode (editor screenshots) or the built player: the redesigned menus, the skill
+tree, settings, the FPS counter, all four upscalers activating without errors, the HUD, the tutorial
 and its marker, chopping and cut marks, falling trees, log pickup, selling, the upgrade menu,
 buying axes and machines, chopper and sawmill animation and output, gate unlocking, save and
 reload, the offline summary, pause and settings.
@@ -170,4 +200,5 @@ long sessions (8+ machines with every upgrade maxed).
 - Sawmills automatically turn stock wood into planks, which are worth 75% more than the wood they use.
 - Offline production is 100% efficient but capped (2 h base) so idle time stays rewarding without making active play pointless.
 - Sounds are synthesised in code (no third-party audio). Fonts are Inter (SIL OFL, licence in `Art/Fonts/OFL.txt`).
-- Only packages that ship with the template (URP, Input System, uGUI/TextMesh Pro, Test Framework) plus Unity's automation package are used. No paid assets.
+- Only packages that ship with the template (URP, Input System, uGUI/TextMesh Pro, Test Framework), Unity's built-in NVIDIA and AMD modules (for DLSS and FSR), and Unity's automation package are used. No paid assets.
+- The upscaler framework needs the `ENABLE_UPSCALER_FRAMEWORK` scripting define (set by *Setup Project*). The NVIDIA and AMD code paths are switched on by version defines in `ChoppingTrees.asmdef`.

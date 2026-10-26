@@ -18,22 +18,36 @@ namespace ChoppingTrees
         protected override void Build()
         {
             Instance = this;
-            var backdrop = UIFactory.Panel(Root, "Backdrop", new Color(0, 0, 0, 0.6f), false);
+            var backdrop = UIFactory.Panel(Root, "Backdrop", new Color(0, 0, 0, 0.66f), false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            var panel = UIFactory.Panel(Root, "Panel", UIStyle.PanelLight);
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(620, 0));
+            var panel = UIFactory.Surface(Root, "Panel", UIStyle.Panel);
             panel.raycastTarget = true;
-            UIFactory.VStack(panel, 18f, new RectOffset(36, 36, 30, 30));
+            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(640, 0));
+            UIFactory.VStack(panel, 16f, new RectOffset(36, 36, 32, 32));
             UIFactory.Fit(panel, false, true);
-            m_Title = UIFactory.Text(panel.transform, "", 34, UIStyle.Text, true);
-            m_Message = UIFactory.Text(panel.transform, "", 23, UIStyle.Muted);
+            var head = UIFactory.Rect("Head", panel.transform);
+            UIFactory.HStack(head, 14f);
+            var badge = UIFactory.Panel(head, "Badge", UIStyle.Bad);
+            badge.sprite = UIStyle.Circle;
+            badge.Layout(46, 46);
+            var ic = UIFactory.Icon(badge.transform, "refresh", UIStyle.Text, 26f);
+            ic.rectTransform.anchoredPosition = Vector2.zero;
+            ic.GetComponent<UnityEngine.UI.LayoutElement>().ignoreLayout = true;
+            m_Title = UIFactory.Text(head, "", 32, UIStyle.Text, true);
+            m_Title.Layout(-1, -1, 1);
+            m_Message = UIFactory.Text(panel.transform, "", 22, UIStyle.Muted);
             var row = UIFactory.Rect("Buttons", panel.transform);
-            UIFactory.HStack(row, 14f, null, TextAnchor.MiddleRight);
-            var no = UIFactory.Button(row, "Cancel", Close, 24);
-            no.Layout(180, 56);
-            m_Yes = UIFactory.Button(row, "Confirm", () => { Close(); m_OnYes?.Invoke(); }, 24, UIStyle.Bad * 0.8f + new Color(0, 0, 0, 0.2f));
-            m_Yes.Layout(200, 56);
+            UIFactory.HStack(row, 14f, new RectOffset(0, 0, 10, 0), TextAnchor.MiddleRight);
+            UIFactory.Button(row, "Cancel", Close, 22, ButtonStyle.Ghost).Layout(180, 56);
+            m_Yes = UIFactory.Button(row, "Confirm", () => { Close(); m_OnYes?.Invoke(); }, 22, ButtonStyle.Danger);
+            m_Yes.Layout(230, 56);
+        }
+
+        protected override void OnOpened()
+        {
+            // Sits above everything, including the shadow of the window that opened it.
+            transform.SetAsLastSibling();
         }
 
         void OnDestroy()

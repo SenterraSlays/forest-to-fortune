@@ -24,5 +24,9 @@ MonoBehaviour:
   explicitCosts: []
   effectPerLevel: 0.08
   levelNames: []
-  requires: []
+  requires:
+  - upgradeId: axe_sharpen
+    level: 1
   sortOrder: 2
+  treePosition: {x: -3.7, y: 3.2}
+  icon: bolt

@@ -55,6 +55,8 @@ namespace ChoppingTrees.EditorTools
             var fx = systems.AddComponent<Effects>();
             Set(fx, "m_ParticleMaterial", MaterialLibrary.Get("M_Particle"));
             systems.AddComponent<AmbientAudio>();
+            systems.AddComponent<GraphicsService>();
+            systems.AddComponent<PerfStats>();
             var pickups = new GameObject("Pickups").AddComponent<PickupSpawner>();
             Set(pickups, "m_Prefab", prefabs["LogPickup"]);
 
@@ -126,6 +128,7 @@ namespace ChoppingTrees.EditorTools
             mc.nearClipPlane = 0.3f;
             mc.farClipPlane = 700f;
             mc.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            menuCam.AddComponent<CameraGraphics>();
             var menu = menuCam.AddComponent<MenuCamera>();
             Set(menu, "m_PlayerCamera", playerCam);
             Set(menu, "m_Focus", new Vector3(0f, 3f, -6f));
@@ -828,6 +831,7 @@ namespace ChoppingTrees.EditorTools
             cam.fieldOfView = 72f;
             var camData = cam.GetUniversalAdditionalCameraData();
             camData.renderPostProcessing = true;
+            cameraGo.AddComponent<CameraGraphics>();
             var fx = cameraGo.AddComponent<CameraFx>();
             Set(fx, "m_Motor", motor);
 

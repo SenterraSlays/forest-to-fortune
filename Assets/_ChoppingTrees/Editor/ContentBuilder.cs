@@ -71,8 +71,10 @@ namespace ChoppingTrees.EditorTools
             {
                 Up("axe_tier", "Better Axe", "Forge a stronger axe. Each one hits harder and can cut tougher trees.", UpgradeCategory.Axe, UpgradeEffect.AxeTier, null, 4, 0, 1, new double[] { 50, 600, 7500, 120000 }, 1, 0,
                     new[] { "Steel Axe", "Lumberjack's Axe", "Tempered Broadaxe", "Ironbreaker" }),
-                Up("axe_sharpen", "Whetstone", "Keep the edge keen: more damage with every swing.", UpgradeCategory.Axe, UpgradeEffect.AxeDamage, null, 15, 25, 1.55, null, 0.2f, 1),
-                Up("axe_speed", "Grip Training", "Faster, steadier swings.", UpgradeCategory.Axe, UpgradeEffect.AxeSpeed, null, 10, 60, 1.7, null, 0.08f, 2),
+                Up("axe_sharpen", "Whetstone", "Keep the edge keen: more damage with every swing.", UpgradeCategory.Axe, UpgradeEffect.AxeDamage, null, 15, 25, 1.55, null, 0.2f, 1,
+                    null, Req("axe_tier", 1)),
+                Up("axe_speed", "Grip Training", "Faster, steadier swings.", UpgradeCategory.Axe, UpgradeEffect.AxeSpeed, null, 10, 60, 1.7, null, 0.08f, 2,
+                    null, Req("axe_sharpen", 1)),
 
                 Up("chopper_count", "Auto-Chopper", "A petrol-powered saw that cuts logs on its own. More machines, more wood.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "chopper", 8, 0, 2.4,
                     new double[] { 200, 1200, 3200, 7500, 16000, 36000, 80000, 180000 }, 1, 0),
@@ -85,21 +87,43 @@ namespace ChoppingTrees.EditorTools
                 Up("foreman", "Foreman's Whistle", "Every machine works a little harder.", UpgradeCategory.Automation, UpgradeEffect.ProductionBonus, null, 10, 2500, 2.3, null, 0.1f, 4,
                     null, Req("chopper_count", 1)),
                 Up("chopper_tier", "Harvester Line", "Rebuild every Auto-Chopper as a heavier, faster model.", UpgradeCategory.Automation, UpgradeEffect.MachineTier, "chopper", 2, 0, 16,
-                    new double[] { 40000, 650000 }, 3, 5, new[] { "Heavy Harvester", "Titan Harvester" }, Req("chopper_count", 2), Req("area_grove", 1)),
+                    new double[] { 40000, 650000 }, 3, 5, new[] { "Heavy Harvester", "Titan Harvester" }, Req("chopper_speed", 1), Req("area_grove", 1)),
 
                 Up("wood_price", "Market Contacts", "Better buyers pay more for your wood.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "wood", 15, 100, 1.75, null, 0.2f, 0),
                 Up("plank_price", "Furniture Buyers", "Carpenters pay a premium for your planks.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "planks", 10, 7500, 1.9, null, 0.25f, 1,
                     null, Req("sawmill_count", 1)),
                 Up("courier", "Wood Courier", "A courier collects and sells all your stock every 15 seconds, wherever you are.", UpgradeCategory.Economy, UpgradeEffect.AutoSell, null, 1, 8000, 1, null, 15f, 2,
-                    null, Req("chopper_count", 2)),
+                    null, Req("wood_price", 1), Req("chopper_count", 2)),
                 Up("night_shift", "Night Shift", "Machines keep working longer while the game is closed.", UpgradeCategory.Economy, UpgradeEffect.OfflineHours, null, 5, 2000, 3, null, 2f, 3,
-                    null, Req("chopper_count", 1)),
+                    null, Req("wood_price", 1), Req("chopper_count", 1)),
 
                 Up("area_grove", "Old Grove", "Open the gate to the Old Grove: maples and towering redwoods.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "grove", 1, 0, 1, new double[] { 25000 }, 1, 0,
                     null, Req("axe_tier", 2)),
                 Up("area_ridge", "Ironwood Ridge", "Open the gate to Ironwood Ridge: iron-hard trees and the legendary Goldbark.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "ridge", 1, 0, 1, new double[] { 350000 }, 1, 1,
                     null, Req("area_grove", 1), Req("axe_tier", 3)),
             };
+
+            // ---- skill tree layout (x = -4..4 left to right, y = 0..5 from the trunk up) and icons
+            var layout = new Dictionary<string, (float x, float y, string icon)>
+            {
+                ["axe_tier"] = (-2.3f, 1.0f, "axe"),
+                ["axe_sharpen"] = (-3.5f, 1.95f, "gem"),
+                ["axe_speed"] = (-3.7f, 3.2f, "bolt"),
+                ["area_grove"] = (-2.1f, 3.0f, "pine"),
+                ["area_ridge"] = (-2.0f, 4.55f, "mountain"),
+                ["chopper_count"] = (0.15f, 1.3f, "saw"),
+                ["chopper_speed"] = (-0.75f, 2.5f, "gear"),
+                ["foreman"] = (0.2f, 2.75f, "chart"),
+                ["chopper_tier"] = (-0.75f, 4.1f, "crown"),
+                ["sawmill_count"] = (1.3f, 2.45f, "plank"),
+                ["sawmill_speed"] = (0.95f, 3.85f, "bolt"),
+                ["plank_price"] = (2.2f, 3.7f, "star"),
+                ["wood_price"] = (2.45f, 1.0f, "coin"),
+                ["night_shift"] = (3.65f, 2.0f, "moon"),
+                ["courier"] = (3.45f, 3.2f, "cart"),
+            };
+            foreach (var u in ups)
+                if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }
 
             // ---- config and database
             var cfg = Asset<GameConfig>($"{Data}/GameConfig.asset");

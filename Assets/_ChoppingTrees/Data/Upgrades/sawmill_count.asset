@@ -31,3 +31,5 @@ MonoBehaviour:
   - upgradeId: chopper_count
     level: 1
   sortOrder: 2
+  treePosition: {x: 1.3, y: 2.45}
+  icon: plank

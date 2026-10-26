@@ -1,27 +1,45 @@
-using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ChoppingTrees
 {
     /// <summary>"While you were away" summary of offline production, shown once after loading.</summary>
     public class OfflinePopup : UIScreen
     {
-        TextMeshProUGUI m_Body;
+        TextMeshProUGUI m_Away, m_Note;
+        RectTransform m_List;
 
         protected override void Build()
         {
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            var panel = UIFactory.Panel(Root, "Panel", UIStyle.PanelLight);
-            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(600, 0));
+            var panel = UIFactory.Surface(Root, "Panel", UIStyle.Panel);
             panel.raycastTarget = true;
-            UIFactory.VStack(panel, 16f, new RectOffset(40, 40, 32, 32));
+            panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(620, 0));
+            UIFactory.VStack(panel, 14f, new RectOffset(36, 36, 32, 32));
             UIFactory.Fit(panel, false, true);
-            UIFactory.Text(panel.transform, "Welcome back!", 40, UIStyle.Text, true);
-            m_Body = UIFactory.Text(panel.transform, "", 24, UIStyle.Muted);
-            UIFactory.Button(panel.transform, "Collect", Close, 28, new Color(0.34f, 0.47f, 0.24f)).Layout(-1, 64);
+
+            var head = UIFactory.Rect("Head", panel.transform);
+            UIFactory.HStack(head, 14f);
+            var badge = UIFactory.Panel(head, "Badge", UIStyle.CategoryColor(UpgradeCategory.Forest));
+            badge.sprite = UIStyle.Circle;
+            badge.Layout(52, 52);
+            var ic = UIFactory.Icon(badge.transform, "moon", UIStyle.AccentDark, 30f);
+            ic.rectTransform.anchoredPosition = Vector2.zero;
+            ic.GetComponent<LayoutElement>().ignoreLayout = true;
+            var titles = UIFactory.Rect("Titles", head);
+            UIFactory.VStack(titles, 0f);
+            titles.Layout(-1, -1, 1);
+            UIFactory.Text(titles, "Welcome back!", 34, UIStyle.Text, true);
+            m_Away = UIFactory.Text(titles, "", 19, UIStyle.Muted);
+
+            UIFactory.Caption(panel.transform, "Your machines made", UIStyle.Dim, 14f);
+            m_List = UIFactory.Rect("List", panel.transform);
+            UIFactory.VStack(m_List, 8f);
+            m_Note = UIFactory.Text(panel.transform, "", 17, UIStyle.Muted);
+            UIFactory.Button(panel.transform, "Collect", Close, 26, ButtonStyle.Primary, "check").Layout(-1, 64);
             Game.Instance.PhaseChanged += p => { if (p == GamePhase.Playing) TryShow(); };
         }
 
@@ -31,17 +49,22 @@ namespace ChoppingTrees
             var r = g.PendingOffline;
             if (r == null) return;
             g.ConsumeOfflineReport();
-            var sb = new StringBuilder();
-            sb.Append($"You were away for <color=#F5EFE0>{NumberUtil.Duration(r.awaySeconds)}</color>. Your machines kept working:\n\n");
+            foreach (Transform c in m_List) Destroy(c.gameObject);
+            m_Away.text = $"You were away for {NumberUtil.Duration(r.awaySeconds)}";
             foreach (var kv in r.gained)
             {
                 var res = g.Db.Resource(kv.Key);
                 if (res == null || kv.Value <= 0.5) continue;
-                sb.Append($"<size=120%><color=#FBBD52>+{NumberUtil.Format(kv.Value)}</color></size>  {res.displayName}\n");
+                var row = UIFactory.Surface(m_List, res.id, UIStyle.Card);
+                UIFactory.HStack(row, 12f, new RectOffset(16, 18, 10, 10));
+                UIFactory.Icon(row.transform, res.id == "planks" ? "plank" : "log", res.color, 30f);
+                UIFactory.Text(row.transform, res.displayName, 22, UIStyle.Text).Layout(-1, -1, 1);
+                var v = UIFactory.Text(row.transform, "+" + NumberUtil.Format(kv.Value), 28, UIStyle.Accent, true, TextAlignmentOptions.Right);
+                v.textWrappingMode = TextWrappingModes.NoWrap;
             }
-            if (r.Capped)
-                sb.Append($"\n<size=85%>Production is limited to {NumberUtil.Duration(r.creditedSeconds)} while away. The Night Shift upgrade raises the limit.</size>");
-            m_Body.text = sb.ToString();
+            m_Note.text = r.Capped
+                ? $"Production is limited to {NumberUtil.Duration(r.creditedSeconds)} while away. The <color=#6BCC9E>Night Shift</color> upgrade raises the limit."
+                : "Sell it at the Lumber Market.";
             Open();
             AudioManager.Ui("purchase", 0.7f);
         }

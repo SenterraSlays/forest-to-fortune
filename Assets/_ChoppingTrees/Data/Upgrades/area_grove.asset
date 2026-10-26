@@ -29,3 +29,5 @@ MonoBehaviour:
   - upgradeId: axe_tier
     level: 2
   sortOrder: 0
+  treePosition: {x: -2.1, y: 3}
+  icon: pine

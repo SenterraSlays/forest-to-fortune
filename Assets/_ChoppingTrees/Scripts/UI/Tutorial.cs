@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace ChoppingTrees
 {
@@ -14,12 +15,15 @@ namespace ChoppingTrees
         const int StepChop = 0, StepCollect = 1, StepSell = 2, StepUpgrade = 3, StepChopper = 4, StepDone = 5;
 
         RectTransform m_Panel, m_Marker;
-        TextMeshProUGUI m_Title, m_Body, m_MarkerText;
+        TextMeshProUGUI m_Step, m_Body, m_MarkerText;
+        Image m_StepIcon;
+        readonly Image[] m_Dots = new Image[5];
         CanvasGroup m_Group;
         float m_DoneTimer;
         bool m_Hidden;
         GameModel m_Model;
         float m_Pulse;
+        int m_LastStep = -1;
 
         public void Create(RectTransform parent)
         {
@@ -30,24 +34,54 @@ namespace ChoppingTrees
             m_Group.blocksRaycasts = false;
             m_Group.interactable = false;
 
-            var panel = UIFactory.Panel(rt, "Objective", UIStyle.Hud);
+            var panel = UIFactory.Surface(rt, "Objective", UIStyle.Hud);
             m_Panel = panel.rectTransform;
-            m_Panel.Place(new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -22), new Vector2(560, 0));
-            UIFactory.VStack(panel, 4f, new RectOffset(22, 22, 12, 14), TextAnchor.UpperCenter);
+            m_Panel.Place(new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -22), new Vector2(600, 0));
+            UIFactory.HStack(panel, 16f, new RectOffset(16, 22, 14, 14), TextAnchor.MiddleLeft);
             UIFactory.Fit(panel, false, true);
-            m_Title = UIFactory.Text(panel.transform, "", 19, UIStyle.Accent, true, TextAlignmentOptions.Center);
-            m_Title.characterSpacing = 4f;
-            m_Body = UIFactory.Text(panel.transform, "", 25, UIStyle.Text, false, TextAlignmentOptions.Center);
-            var hint = UIFactory.Text(panel.transform, "H to hide hints", 15, new Color(1, 1, 1, 0.4f), false, TextAlignmentOptions.Center);
 
-            var marker = UIFactory.Panel(rt, "Marker", UIStyle.Accent);
-            marker.sprite = UIStyle.Circle;
-            m_Marker = marker.rectTransform;
-            m_Marker.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(22, 22));
-            m_MarkerText = UIFactory.Text(m_Marker, "", 18, UIStyle.Text, true, TextAlignmentOptions.Center);
-            m_MarkerText.rectTransform.Place(new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0, -6), new Vector2(200, 30));
-            m_MarkerText.outlineWidth = 0.2f;
-            m_MarkerText.outlineColor = new Color32(0, 0, 0, 180);
+            var badge = UIFactory.Panel(panel.transform, "Badge", UIStyle.Accent);
+            badge.sprite = UIStyle.Circle;
+            badge.Layout(52, 52);
+            m_StepIcon = UIFactory.Icon(badge.transform, "axe", UIStyle.AccentDark, 30f);
+            m_StepIcon.rectTransform.anchoredPosition = Vector2.zero;
+            m_StepIcon.GetComponent<LayoutElement>().ignoreLayout = true;
+
+            var col = UIFactory.Rect("Col", panel.transform);
+            UIFactory.VStack(col, 5f);
+            col.Layout(-1, -1, 1);
+            var top = UIFactory.Rect("Top", col);
+            UIFactory.HStack(top, 8f);
+            m_Step = UIFactory.Caption(top, "", UIStyle.Accent, 14f);
+            m_Step.Layout(-1, -1, 1);
+            for (int i = 0; i < 5; i++)
+            {
+                var d = UIFactory.Panel(top, "Dot", UIStyle.Dim);
+                d.sprite = UIStyle.Circle;
+                d.Layout(9, 9);
+                m_Dots[i] = d;
+            }
+            m_Body = UIFactory.Text(col, "", 22, UIStyle.Text);
+            var hint = UIFactory.Rect("Hint", col);
+            UIFactory.HStack(hint, 6f);
+            UIFactory.KeyCap(hint, "H", 20f);
+            UIFactory.Text(hint, "hide hints", 14, UIStyle.Dim).textWrappingMode = TextWrappingModes.NoWrap;
+
+            var marker = UIFactory.Rect("Marker", rt);
+            m_Marker = marker;
+            marker.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(40, 40));
+            var ring = UIFactory.Panel(marker, "Ring", UIStyle.Accent, false);
+            ring.sprite = UIStyle.Circle;
+            ring.rectTransform.Stretch();
+            var inner = UIFactory.Panel(marker, "Inner", UIStyle.AccentDark, false);
+            inner.sprite = UIStyle.Circle;
+            inner.rectTransform.Stretch(4, 4, 4, 4);
+            var arrow = UIFactory.Icon(marker, "star", UIStyle.Accent, 22f);
+            arrow.rectTransform.anchoredPosition = Vector2.zero;
+            m_MarkerText = UIFactory.Text(marker, "", 17, UIStyle.Text, true, TextAlignmentOptions.Center);
+            m_MarkerText.rectTransform.Place(new Vector2(0.5f, 0f), new Vector2(0.5f, 1f), new Vector2(0, -6), new Vector2(200, 26));
+            m_MarkerText.outlineWidth = 0.22f;
+            m_MarkerText.outlineColor = new Color32(0, 0, 0, 200);
 
             m_Model = Game.Instance.Model;
             m_Model.TreeFelled += _ => Advance(StepChop);
@@ -68,7 +102,6 @@ namespace ChoppingTrees
             Step = from + 1;
             m_Pulse = 1f;
             AudioManager.Ui("objective", 0.6f);
-            // Skip steps the player already did out of order.
             if (Step == StepCollect && m_Model.State.Get(GameModel.Wood) >= 1) Step = StepSell;
             if (Step == StepUpgrade && AnyUpgradeOwned()) Step = StepChopper;
             if (Step == StepChopper && m_Model.Production.ProducesAnything) Step = StepDone;
@@ -97,41 +130,48 @@ namespace ChoppingTrees
             }
 
             Transform target = null;
-            string title, body;
+            string body, icon;
             var cost = m_Model.Db.CountUpgradeFor("chopper");
             switch (Step)
             {
                 case StepChop:
-                    title = "STEP 1 OF 5";
                     body = "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
+                    icon = "axe";
                     break;
                 case StepCollect:
-                    title = "STEP 2 OF 5";
                     body = "Walk over the <b>logs</b> to collect the wood.";
+                    icon = "log";
                     break;
                 case StepSell:
-                    title = "STEP 3 OF 5";
                     body = "Take your wood to the <b>Lumber Market</b> and press <b>E</b> to sell it.";
+                    icon = "coin";
                     target = SellPoint.Instance != null ? SellPoint.Instance.transform : null;
                     break;
                 case StepUpgrade:
-                    title = "STEP 4 OF 5";
-                    body = "Use the <b>Workbench</b> (E) to buy an upgrade. The <b>Steel Axe</b> is a good start.";
+                    body = "Open the <b>Workbench</b> skill tree (E) and unlock the <b>Steel Axe</b>.";
+                    icon = "leaf";
                     target = UpgradeStation.Instance != null ? UpgradeStation.Instance.transform : null;
                     break;
                 case StepChopper:
                     double price = cost != null ? m_Model.Upgrades.NextCost(cost) : 200;
-                    title = "STEP 5 OF 5";
-                    body = $"Save up and buy your first <b>Auto-Chopper</b> at the Workbench.\n<size=80%><color=#FBD661>{NumberUtil.Money(m_Model.State.Money)} / {NumberUtil.Money(price)}</color></size>";
+                    body = $"Save up for your first <b>Auto-Chopper</b>.  <color=#FFD466>{NumberUtil.Money(m_Model.State.Money)} / {NumberUtil.Money(price)}</color>";
+                    icon = "saw";
                     if (m_Model.State.Money >= price && UpgradeStation.Instance != null) target = UpgradeStation.Instance.transform;
                     break;
                 default:
-                    title = "AUTOMATION ONLINE";
-                    body = "Machines now make wood for you, even while you're away. Keep chopping, upgrading and expanding into new forests!";
+                    body = "Machines now make wood for you, even while you're away. Keep chopping and grow the skill tree!";
+                    icon = "check";
                     break;
             }
-            m_Title.text = title;
+            int shown = Mathf.Min(Step, StepDone);
+            m_Step.text = Step >= StepDone ? "AUTOMATION ONLINE" : $"STEP {Step + 1} OF 5";
             m_Body.text = body;
+            if (shown != m_LastStep)
+            {
+                m_LastStep = shown;
+                m_StepIcon.sprite = UIIcons.Get(icon);
+            }
+            for (int i = 0; i < 5; i++) m_Dots[i].color = i < Step ? UIStyle.Good : i == Step ? UIStyle.Accent : UIStyle.Dim;
             m_Pulse = Mathf.MoveTowards(m_Pulse, 0f, Time.unscaledDeltaTime * 1.5f);
             m_Panel.localScale = Vector3.one * (1f + 0.05f * Mathf.Sin(m_Pulse * Mathf.PI));
             PlaceMarker(target);
@@ -151,15 +191,14 @@ namespace ChoppingTrees
             var parent = (RectTransform)transform;
             bool behind = sp.z < 0f;
             if (behind) sp = new Vector3(Screen.width - sp.x, Screen.height - sp.y, 0f);
-            // Clamp to the screen edge so the marker always shows the direction.
-            float margin = 60f;
+            float margin = 70f;
             Vector2 clamped = new Vector2(Mathf.Clamp(sp.x, margin, Screen.width - margin), Mathf.Clamp(sp.y, margin, Screen.height - margin));
             if (behind) clamped.y = margin;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, clamped, null, out var local);
             m_Marker.anchoredPosition = local;
             float dist = Vector3.Distance(cam.transform.position, target.position);
             m_MarkerText.text = $"{dist:0} m";
-            m_Marker.localScale = Vector3.one * (1f + 0.15f * Mathf.Sin(Time.unscaledTime * 5f));
+            m_Marker.localScale = Vector3.one * (1f + 0.12f * Mathf.Sin(Time.unscaledTime * 5f));
         }
     }
 }

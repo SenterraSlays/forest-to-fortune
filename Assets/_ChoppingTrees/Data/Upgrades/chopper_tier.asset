@@ -29,8 +29,10 @@ MonoBehaviour:
   - Heavy Harvester
   - Titan Harvester
   requires:
-  - upgradeId: chopper_count
-    level: 2
+  - upgradeId: chopper_speed
+    level: 1
   - upgradeId: area_grove
     level: 1
   sortOrder: 5
+  treePosition: {x: -0.75, y: 4.1}
+  icon: crown

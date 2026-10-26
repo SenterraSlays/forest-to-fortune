@@ -25,8 +25,10 @@ namespace ChoppingTrees
             d.masterVolume = Mathf.Clamp01(d.masterVolume);
             d.displayMode = Mathf.Clamp(d.displayMode, 0, DisplayModes.Length - 1);
             AudioListener.volume = d.masterVolume;
+            d.renderScale = Mathf.Clamp(d.renderScale, 0.5f, 1f);
+            d.frameRateCap = Mathf.Clamp(d.frameRateCap, 0, 360);
             QualitySettings.vSyncCount = d.vSync ? 1 : 0;
-            if (!d.vSync) Application.targetFrameRate = 240;
+            Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
             if (!Application.isEditor)
             {
                 var mode = DisplayModes[d.displayMode];
@@ -38,7 +40,11 @@ namespace ChoppingTrees
             Changed?.Invoke();
         }
 
-        public static void Save() => SaveSystem.SaveSettings(Data);
+        public static void Save()
+        {
+            // Automated runs (-ct-nosave) must not overwrite the player's settings either.
+            if (Game.SavingEnabled) SaveSystem.SaveSettings(Data);
+        }
 
         /// <summary>Distinct resolutions the display supports (largest last).</summary>
         public static List<Vector2Int> Resolutions()

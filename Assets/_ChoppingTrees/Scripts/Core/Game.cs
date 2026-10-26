@@ -51,7 +51,9 @@ namespace ChoppingTrees
             if (Environment.CommandLine.Contains("-ct-nosave")) SavingEnabled = false;
 
             GameSettings.Apply();
-            var state = SaveSystem.Load(out string problem);
+            // With saving off (automated runs) start from a clean slate instead of the player's save.
+            string problem = null;
+            GameState state = SavingEnabled ? SaveSystem.Load(out problem) : null;
             LoadProblem = problem;
             HadSave = state != null;
             Model = new GameModel(m_Database, state);
