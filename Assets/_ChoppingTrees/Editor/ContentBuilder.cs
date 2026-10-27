@@ -169,6 +169,10 @@ namespace ChoppingTrees.EditorTools
             // Wood carried by hand per backpack tier (machine output goes to the yard instead).
             cfg.backpackCapacity = new double[] { 50, 150, 400, 1000, 2500, 6000, 15000 };
             cfg.baseBackpackName = "Burlap Sack";
+            // Rebirths: first one $5,000, each next one x1.08; every rebirth adds +10% to all earnings.
+            cfg.rebirthBaseCost = 5000;
+            cfg.rebirthCostGrowth = 1.08;
+            cfg.rebirthBonus = 0.1;
             var db = Asset<GameDatabase>(DatabasePath);
             db.config = cfg;
             db.resources = new[] { wood, planks };

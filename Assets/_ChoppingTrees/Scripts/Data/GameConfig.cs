@@ -41,6 +41,14 @@ namespace ChoppingTrees
         public double[] backpackCapacity = { 50, 150, 400, 1000, 2500, 6000, 15000 };
         public string baseBackpackName = "Burlap Sack";
 
+        [Header("Rebirth")]
+        [Tooltip("Price of the first rebirth.")]
+        public double rebirthBaseCost = 5000;
+        [Tooltip("Each rebirth costs this many times the previous one.")]
+        public double rebirthCostGrowth = 1.08;
+        [Tooltip("Extra share of all money earned per rebirth (0.1 = +10% each).")]
+        public double rebirthBonus = 0.1;
+
         [Header("Economy")]
         public double startingMoney;
         public float autosaveSeconds = 30f;

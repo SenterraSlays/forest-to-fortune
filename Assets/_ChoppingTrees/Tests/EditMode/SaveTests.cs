@@ -30,6 +30,7 @@ namespace ChoppingTrees.Tests
             s.Set("wood", 77.25);
             s.Set("planks", 3);
             s.SetCarried("wood", 12.5);
+            s.Rebirths = 4;
             s.SetLevel("axe_tier", 2);
             s.SetLevel("chopper_count", 3);
             return s;
@@ -46,6 +47,7 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(77.25, loaded.Get("wood"), 1e-9);
             Assert.AreEqual(3, loaded.Get("planks"), 1e-9);
             Assert.AreEqual(12.5, loaded.Carried("wood"), 1e-9);
+            Assert.AreEqual(4, loaded.Rebirths);
             Assert.AreEqual(2, loaded.Level("axe_tier"));
             Assert.AreEqual(3, loaded.Level("chopper_count"));
             Assert.AreEqual(42, loaded.TreesFelled);

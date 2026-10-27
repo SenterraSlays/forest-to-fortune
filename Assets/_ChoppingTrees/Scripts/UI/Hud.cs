@@ -52,6 +52,8 @@ namespace ChoppingTrees
         string m_LastPack;
         float m_PackPunch, m_PackShake;
         GameObject m_YardCaption;
+        TextMeshProUGUI m_RebirthBadge;
+        int m_LastRebirths;
 
         GameObject m_FpsRoot;
         TextMeshProUGUI m_Fps, m_FpsDetail;
@@ -101,6 +103,9 @@ namespace ChoppingTrees
             m_Money.textWrappingMode = TextWrappingModes.NoWrap;
             m_Money.Layout(-1, -1, 1);
             m_MoneyRect = m_Money.rectTransform;
+            // Rebirth earnings multiplier, shown once the player has reborn.
+            m_RebirthBadge = UIFactory.Pill(money.transform, "", new Color(1f, 0.83f, 0.4f, 0.16f), UIStyle.Money, 17f);
+            m_RebirthBadge.transform.parent.gameObject.SetActive(false);
 
             BuildBackpack(col);
 
@@ -320,6 +325,12 @@ namespace ChoppingTrees
             m_MoneyRect.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(m_MoneyPunch * Mathf.PI));
 
             UpdateBackpack(model, dt);
+            if (model.State.Rebirths != m_LastRebirths)
+            {
+                m_LastRebirths = model.State.Rebirths;
+                m_RebirthBadge.transform.parent.gameObject.SetActive(m_LastRebirths > 0);
+                m_RebirthBadge.text = $"x{model.Market.RebirthMultiplier:0.0#}";
+            }
 
             // Lumber yard: machine output, shown once there is any.
             bool anyYard = false;

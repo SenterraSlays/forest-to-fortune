@@ -55,6 +55,12 @@ System package. Gamepads aren't supported.
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
+6. **Rebirth.** From the skill tree header (or the pause menu), pay to start over with a
+   permanent bonus: every rebirth adds +10% to all money you earn (sales, Goldbark cash and
+   lucky finds). The first costs $5,000 and each one after that costs 1.08 times the previous one.
+   Buy x1, x5, x10 or as many as you can afford at once (the price is the sum of the single prices).
+   A rebirth resets money, every upgrade (axes, backpack, machines, forests) and all wood; it keeps
+   your rebirths, lifetime stats and settings. The HUD shows the current multiplier next to your money.
 
 | Tree | Area | Axe needed | HP | Wood |
 | --- | --- | --- | --- | --- |

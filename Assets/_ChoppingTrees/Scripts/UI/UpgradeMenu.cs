@@ -95,6 +95,8 @@ namespace ChoppingTrees
             m_Money = UIFactory.Text(chip.transform, "$0", 30, UIStyle.Money, true, TextAlignmentOptions.Right);
             m_Money.textWrappingMode = TextWrappingModes.NoWrap;
             m_Money.Layout(-1, -1, 1);
+            var rebirth = UIFactory.Button(header, "Rebirth", () => RebirthMenu.Instance.Open(), 20, ButtonStyle.Ghost, "rebirth");
+            ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-380, 0), new Vector2(160, 52));
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
 

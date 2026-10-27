@@ -147,6 +147,8 @@ namespace ChoppingTrees
                 Capsule(p, V(.5f, .4f), V(.66f, .08f), .035f)),
             ["sprout"] = p => Union(Capsule(p, V(.5f, .1f), V(.5f, .52f), .045f),
                 Union(Inter(Circle(p, V(.46f, .48f), .22f), Circle(p, V(.24f, .72f), .22f)), Inter(Circle(p, V(.54f, .5f), .22f), Circle(p, V(.78f, .76f), .22f)))),
+            ["rebirth"] = p => Union(Cut(RingD(p, V(.5f, .5f), .3f, .09f), Poly(p, V(.5f, .5f), V(.95f, .62f), V(.95f, .95f), V(.62f, .95f))),
+                Union(Poly(p, V(.62f, .9f), V(.84f, .62f), V(.92f, .9f)), Poly(p, V(.4f, .56f), V(.5f, .4f), V(.6f, .56f), V(.5f, .7f)))),
             ["minus"] = p => Box(p, V(.5f, .5f), V(.32f, .075f), 0f, .04f),
             ["plus"] = p => Union(Box(p, V(.5f, .5f), V(.075f, .32f), 0f, .04f), Box(p, V(.5f, .5f), V(.32f, .075f), 0f, .04f)),
             ["arrow_up"] = p => Union(Capsule(p, V(.5f, .18f), V(.5f, .78f), .08f), Union(Capsule(p, V(.5f, .8f), V(.24f, .54f), .08f), Capsule(p, V(.5f, .8f), V(.76f, .54f), .08f))),

@@ -24,6 +24,8 @@ namespace ChoppingTrees
         public double totalEarned;
         public double totalWoodChopped;
         public long treesFelled;
+        /// <summary>Added in 1.4; older files load as 0.</summary>
+        public int rebirths;
         public double playSeconds;
         public int tutorialStep;
         public bool tutorialDone;

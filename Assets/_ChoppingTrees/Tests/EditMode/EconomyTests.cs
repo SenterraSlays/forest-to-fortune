@@ -197,6 +197,66 @@ namespace ChoppingTrees.Tests
         }
 
         [Test]
+        public void RebirthCostsGrowAndCanBeBoughtInBulk()
+        {
+            var cfg = m_Db.config;
+            Assert.AreEqual(5000, cfg.rebirthBaseCost, 1e-9);
+            Assert.AreEqual(1.08, cfg.rebirthCostGrowth, 1e-9);
+            var m = NewModel(0);
+            Assert.AreEqual(5000, m.RebirthCost(), 1e-6);
+            // Several at once cost exactly the sum of the single prices.
+            double sum = 0;
+            for (int i = 0; i < 5; i++) sum += 5000 * Math.Pow(1.08, i);
+            Assert.AreEqual(sum, m.RebirthCost(5), 1e-6);
+            Assert.AreEqual(0, m.MaxRebirths());
+            m.State.Money = sum;
+            Assert.AreEqual(5, m.MaxRebirths(), "exactly enough for five");
+            m.State.Money = sum - 0.01;
+            Assert.AreEqual(4, m.MaxRebirths());
+            Assert.IsFalse(m.TryRebirth(5, out var why));
+            StringAssert.StartsWith("Need", why);
+            Assert.AreEqual(0, m.State.Rebirths);
+
+            m.State.Money = sum;
+            Assert.IsTrue(m.TryRebirth(5, out _));
+            Assert.AreEqual(5, m.State.Rebirths);
+            Assert.AreEqual(5000 * Math.Pow(1.08, 5), m.RebirthCost(), 1e-6, "the next one continues the series");
+        }
+
+        [Test]
+        public void RebirthResetsProgressButKeepsStatsAndBoostsEarnings()
+        {
+            var m = NewModel(1e9);
+            Buy(m, m_Db, "axe_tier", 2);
+            Buy(m, m_Db, "chopper_count", 3);
+            Buy(m, m_Db, "area_grove");
+            m.State.Add("wood", 500);
+            m.Collect("wood", 20);
+            m.State.TreesFelled = 77;
+            m.State.TotalEarned = 12345;
+            m.State.TutorialDone = true;
+            double plainPrice = m.Market.Price(m_Db.Resource("wood"));
+            double wanted = 0;
+            Assert.IsTrue(m.TryRebirth(3, out _));
+            Assert.AreEqual(m_Db.config.startingMoney, m.State.Money, 1e-9);
+            Assert.AreEqual(0, m.Upgrades.AxeTier);
+            Assert.AreEqual(0, m.Upgrades.MachineCount("chopper"));
+            Assert.IsFalse(m.Upgrades.AreaUnlocked(Array.Find(m_Db.areas, a => a.id == "grove")));
+            Assert.IsFalse(m.Production.ProducesAnything);
+            Assert.AreEqual(wanted, m.State.Get("wood"));
+            Assert.AreEqual(0, m.State.CarriedTotal);
+            Assert.AreEqual(77, m.State.TreesFelled);
+            Assert.AreEqual(12345, m.State.TotalEarned, 1e-9);
+            Assert.IsTrue(m.State.TutorialDone);
+            // +10% per rebirth on everything sold.
+            Assert.AreEqual(1.3, m.Market.RebirthMultiplier, 1e-9);
+            Assert.AreEqual(m_Db.Resource("wood").basePrice * 1.3, m.Market.Price(m_Db.Resource("wood")), 1e-9);
+            Assert.Greater(plainPrice, 0);
+            m.Collect("wood", 10);
+            Assert.AreEqual(13, m.Sell().total, 1e-9);
+        }
+
+        [Test]
         public void LogMagnetAddsRangePerLevel()
         {
             Assert.IsNull(m_Db.Upgrade("courier"), "the Wood Courier was replaced by the Log Magnet");

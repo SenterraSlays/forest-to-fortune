@@ -137,7 +137,7 @@ namespace ChoppingTrees
                 var up = game.Model.Upgrades;
                 if (m_Type.cashBonus > 0)
                 {
-                    double cash = m_Type.cashBonus * up.TreeCashMultiplier;
+                    double cash = m_Type.cashBonus * up.TreeCashMultiplier * game.Model.Market.RebirthMultiplier;
                     game.Model.AddMoney(cash);
                     FloatingText.Show(m_Hinge.position + Vector3.up * 1.5f, "+" + NumberUtil.Money(cash), new Color(1f, 0.85f, 0.3f), 1.4f);
                     Effects.Sparkle(m_Hinge.position + Vector3.up, new Color(1f, 0.85f, 0.3f), 30);

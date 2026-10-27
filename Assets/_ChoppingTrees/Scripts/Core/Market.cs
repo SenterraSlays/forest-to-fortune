@@ -32,7 +32,10 @@ namespace ChoppingTrees
             m_Upgrades = upgrades;
         }
 
-        public double Price(ResourceDef r) => r == null ? 0 : NumberUtil.SafePositive(r.basePrice * m_Upgrades.PriceMultiplier(r.id) * m_Upgrades.SellMultiplier);
+        public double Price(ResourceDef r) => r == null ? 0 : NumberUtil.SafePositive(r.basePrice * m_Upgrades.PriceMultiplier(r.id) * m_Upgrades.SellMultiplier * RebirthMultiplier);
+
+        /// <summary>Earnings multiplier from rebirths (applies to every sale).</summary>
+        public double RebirthMultiplier => Rebirth.Multiplier(m_Db.config, m_State.Rebirths);
 
         /// <summary>What the chosen stock would sell for right now.</summary>
         public double StockValue(bool backpack = true, bool yard = true)

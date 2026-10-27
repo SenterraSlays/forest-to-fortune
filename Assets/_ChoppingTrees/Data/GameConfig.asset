@@ -53,6 +53,9 @@ MonoBehaviour:
   - 6000
   - 15000
   baseBackpackName: Burlap Sack
+  rebirthBaseCost: 5000
+  rebirthCostGrowth: 1.08
+  rebirthBonus: 0.1
   startingMoney: 0
   autosaveSeconds: 30
   baseOfflineHours: 2

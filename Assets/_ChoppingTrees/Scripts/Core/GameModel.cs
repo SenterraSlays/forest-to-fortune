@@ -27,6 +27,8 @@ namespace ChoppingTrees
         public event Action BackpackFilled;
         /// <summary>A tree was felled by the player.</summary>
         public event Action<TreeType> TreeFelled;
+        /// <summary>Progress was reset by a rebirth (number of rebirths bought).</summary>
+        public event Action<int> Reborn;
 
         float m_AutoSellTimer;
 
@@ -107,6 +109,35 @@ namespace ChoppingTrees
             var r = Market.SellAll(backpack: !automatic, yard: true);
             if (!r.Empty) Sold?.Invoke(r, automatic);
             return r;
+        }
+
+        /// <summary>Total price of the next <paramref name="count"/> rebirths.</summary>
+        public double RebirthCost(int count = 1) => Rebirth.Cost(Db.config, State.Rebirths, count);
+
+        /// <summary>How many rebirths the current money pays for at once.</summary>
+        public int MaxRebirths() => Rebirth.MaxAffordable(Db.config, State.Rebirths, State.Money);
+
+        /// <summary>
+        /// Buys <paramref name="count"/> rebirths at once: resets money, upgrades (so machines and
+        /// forests), the yard stock and the backpack, and adds to the rebirth count, which raises
+        /// all earnings. Lifetime stats and the tutorial state are kept.
+        /// </summary>
+        public bool TryRebirth(int count, out string failure)
+        {
+            failure = null;
+            if (count < 1) { failure = "Choose how many rebirths"; return false; }
+            double cost = RebirthCost(count);
+            if (State.Money + 1e-9 < cost) { failure = "Need " + NumberUtil.Money(cost - State.Money) + " more"; return false; }
+            State.Rebirths += count;
+            State.Money = Db.config.startingMoney;
+            State.Resources.Clear();
+            State.Backpack.Clear();
+            State.Levels.Clear();
+            State.LastSavedUtc = DateTime.UtcNow;
+            m_AutoSellTimer = 0;
+            Upgrades.MarkDirty();
+            Reborn?.Invoke(count);
+            return true;
         }
 
         public class OfflineReport

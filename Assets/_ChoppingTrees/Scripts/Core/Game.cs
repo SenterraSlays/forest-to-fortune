@@ -52,12 +52,15 @@ namespace ChoppingTrees
 
             GameSettings.Apply();
             // With saving off (automated runs) start from a clean slate instead of the player's save.
+            // After a rebirth the reset state is handed over directly (it was saved too, if saving is on).
             string problem = null;
-            GameState state = SavingEnabled ? SaveSystem.Load(out problem) : null;
+            bool carried = s_CarryState != null;
+            GameState state = carried ? s_CarryState : SavingEnabled ? SaveSystem.Load(out problem) : null;
+            s_CarryState = null;
             LoadProblem = problem;
             HadSave = state != null;
             Model = new GameModel(m_Database, state);
-            if (HadSave)
+            if (HadSave && !carried)
             {
                 var report = Model.ApplyOffline(DateTime.UtcNow);
                 if (report.awaySeconds >= m_Database.config.minOfflineSecondsToReport && report.gained.Count > 0)
@@ -135,6 +138,26 @@ namespace ChoppingTrees
         }
 
         static bool s_StartImmediately;
+        static GameState s_CarryState;
+        static int s_RebornCount;
+
+        /// <summary>
+        /// Buys <paramref name="count"/> rebirths, saves, and restarts the run in a fresh scene so
+        /// machines, gates and the player are rebuilt from the reset progress.
+        /// </summary>
+        public bool Rebirth(int count, out string failure)
+        {
+            if (!Model.TryRebirth(count, out failure)) return false;
+            Save();
+            s_CarryState = Model.State;
+            s_RebornCount = count;
+            s_StartImmediately = true;
+            m_Quitting = true; // nothing else to write on unload
+            Time.timeScale = 1f;
+            UIState.Clear();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            return true;
+        }
 
         void Start()
         {
@@ -143,6 +166,13 @@ namespace ChoppingTrees
             {
                 s_StartImmediately = false;
                 StartPlaying();
+                if (s_RebornCount > 0)
+                {
+                    string times = s_RebornCount > 1 ? $" x{s_RebornCount}" : "";
+                    Toasts.Show($"Reborn{times}! All earnings are now x{Model.Market.RebirthMultiplier:0.0#}", Toasts.Kind.Success);
+                    AudioManager.Ui("unlock", 0.9f);
+                    s_RebornCount = 0;
+                }
             }
             else SetPhase(GamePhase.MainMenu);
         }

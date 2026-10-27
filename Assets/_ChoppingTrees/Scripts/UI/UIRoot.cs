@@ -21,6 +21,7 @@ namespace ChoppingTrees
         PauseMenu m_Pause;
         SettingsMenu m_Settings;
         UpgradeMenu m_Upgrades;
+        RebirthMenu m_Rebirth;
         ConfirmDialog m_Confirm;
         OfflinePopup m_Offline;
 
@@ -55,6 +56,7 @@ namespace ChoppingTrees
             new GameObject("Tutorial", typeof(RectTransform)).AddComponent<Tutorial>().Create(root);
             new GameObject("Toasts", typeof(RectTransform)).AddComponent<Toasts>().Create(root);
             m_Upgrades = Screen<UpgradeMenu>(root, "UpgradeMenu");
+            m_Rebirth = Screen<RebirthMenu>(root, "RebirthMenu");
             m_Main = Screen<MainMenu>(root, "MainMenu");
             m_Pause = Screen<PauseMenu>(root, "PauseMenu");
             m_Offline = Screen<OfflinePopup>(root, "OfflinePopup");
@@ -85,6 +87,7 @@ namespace ChoppingTrees
             if (m_Confirm.IsOpen) m_Confirm.Close();
             else if (m_Settings.IsOpen) m_Settings.Close();
             else if (m_Offline.IsOpen) m_Offline.Close();
+            else if (m_Rebirth.IsOpen) m_Rebirth.Close();
             else if (m_Upgrades.IsOpen) m_Upgrades.Close();
             else if (m_Pause.IsOpen) m_Pause.Close();
             else if (Game.Instance.Phase == GamePhase.Playing) m_Pause.Open();

@@ -48,8 +48,9 @@ namespace ChoppingTrees
                 {
                     var r = m.Db.Resource(u.targetId);
                     double baseP = r != null ? r.basePrice : 1;
-                    double now = baseP * up.PriceMultiplier(u.targetId) * up.SellMultiplier;
-                    double next = now + baseP * e * up.SellMultiplier;
+                    double boost = up.SellMultiplier * m.Market.RebirthMultiplier;
+                    double now = baseP * up.PriceMultiplier(u.targetId) * boost;
+                    double next = now + baseP * e * boost;
                     return Pair((r != null ? r.displayName : "Price") + " price", NumberUtil.Money(now), NumberUtil.Money(next), maxed);
                 }
                 case UpgradeEffect.AutoSell:
