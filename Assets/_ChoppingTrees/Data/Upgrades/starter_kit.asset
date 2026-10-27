@@ -15,10 +15,10 @@ MonoBehaviour:
   id: starter_kit
   displayName: Starter Kit
   description: Start every run with Auto-Choppers already running.
-  category: 4
+  category: 5
   effect: 26
   targetId: chopper
-  maxLevel: 4
+  maxLevel: 6
   baseCost: 0
   costGrowth: 1
   explicitCosts:
@@ -26,10 +26,12 @@ MonoBehaviour:
   - 3
   - 5
   - 8
+  - 12
+  - 18
   effectPerLevel: 1
   levelNames: []
   requires: []
   sortOrder: 2
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -6.05, y: 1.35}
   icon: saw

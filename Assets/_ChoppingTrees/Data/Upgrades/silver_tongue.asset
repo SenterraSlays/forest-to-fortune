@@ -15,7 +15,7 @@ MonoBehaviour:
   id: silver_tongue
   displayName: Silver Tongue
   description: 'Buyers trust you: everything sells for more.'
-  category: 4
+  category: 8
   effect: 18
   targetId: 
   maxLevel: 10
@@ -27,5 +27,5 @@ MonoBehaviour:
   requires: []
   sortOrder: 9
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: 6.05, y: 1.35}
   icon: tag

@@ -127,7 +127,7 @@ namespace ChoppingTrees
             int lv = up.Level(Def);
             bool maxed = Def.IsMaxed(lv);
             bool locked = !maxed && up.IsLocked(Def);
-            bool affordable = !maxed && !locked && model.State.Money + 1e-9 >= up.NextCost(Def);
+            bool affordable = !maxed && !locked && up.CanAfford(Def);
             Current = maxed ? State.Maxed : locked ? State.Locked : affordable ? State.Affordable : lv > 0 ? State.Owned : State.Available;
             Selected = selected;
 
@@ -185,7 +185,7 @@ namespace ChoppingTrees
             }
 
             // Counter: "3/15" for levelled upgrades, the price for single ones, OWNED/MAX when done.
-            m_Level.text = maxed ? (multi ? "MAX" : "OWNED") : multi ? $"{lv}/{Def.maxLevel}" : NumberUtil.Money(up.NextCost(Def));
+            m_Level.text = maxed ? (multi ? "MAX" : "OWNED") : multi ? $"{lv}/{Def.maxLevel}" : Def.legacy ? up.SkillPointCost(Def) + " SP" : NumberUtil.Money(up.NextCost(Def));
             m_Pill.color = maxed ? gold : Current == State.Affordable ? UIStyle.Accent : new Color(0.07f, 0.08f, 0.065f, 0.96f);
             m_Level.color = maxed || Current == State.Affordable ? UIStyle.AccentDark : Current == State.Locked ? UIStyle.Dim : UIStyle.Muted;
             m_Name.color = Current == State.Locked ? Color.Lerp(UIStyle.Dim, UIStyle.Muted, 0.35f) : UIStyle.Text;

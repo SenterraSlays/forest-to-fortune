@@ -5,7 +5,7 @@
 A first-person incremental game made in Unity 6 (6000.6.6f1, URP). You start with a rusty
 hatchet in a pine clearing: chop trees, collect the logs, sell them at the Lumber Market and
 spend the money at the Workbench. Better axes cut tougher trees, Auto-Choppers and Sawmills
-work for you (even while the game is closed), and two gated forests open up as you grow.
+work for you (even while the game is closed), and five gated forests open up as you grow.
 
 ## Playing
 
@@ -62,39 +62,46 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed) → Lucky Strike (chance of double damage); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness) → Clean Cuts (more wood per tree) → Trail Boots (move speed).
    - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers; Sawmill → Carpentry Workshop (up to 3, 3 planks → 1 furniture) → Workshop Tools → Fine Joinery, and Carpentry Workshop → Cabin Builder (up to 3, 5 furniture → 1 cabin kit) → Power Cranes → Master Builders. Furniture Showroom and Cabin Realtors (Economy) raise their prices.
    - **Economy:** Market Contacts (wood price) → Log Magnet (pickup range), Night Shift (longer offline time) and Haggling (every sale pays more) → Lucky Finds (felled trees sometimes drop cash).
-   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash).
+   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash). Ironwood Ridge → Frostpine Peaks ($8M; Ironbreaker) → Blossom Vale ($150M; Frostbite Axe) → Crystal Wilds ($4B; Emberforge Axe), each with two perks of its own: Frost Tempering, Snow Chains; Blossom Festival, Ember Kilns; Crystal Resonance, Starlight Harvest. (Prices here are before the skill tree's half-price scale.)
    - **Later perks in every branch:** Honed Edge, Steady Rhythm, Cleave (chance to fell a tree in one
      hit), Lucky Blade, Power Swing (bigger double-damage hits), Pack Mule, Timber Sense, Long Strides
      (Axe); Twin Engines, Turbo Choppers, Fuel Efficiency, Assembly Line, Overtime Crew, Kiln Drying,
      Overdrive Saws (Automation); Wood Brokers, Premium Planks, Strong Magnet, Long Nights, Export Deals,
      Fortune's Favor, Bulk Buyer (cheaper non-machine upgrades) (Economy); Old Growth, Timber Rights,
      Pathfinder, Ranger's Eye, Deep Roots, Forest Spirits, Golden Canopy (Forests).
+   - **Top of the tree (2.1):** Master Smith, Timberfall, Devastating Blows, Second Wind, Sherpa Frame
+     (Axe); Hydraulic Rams, Graveyard Shift, Conveyor Belts, Band Saws, Power Lathes, Prefab Panels
+     (Automation); Designer Furniture, Luxury Cabins, Global Trade, Treasure Hunter (Economy). Better Axe
+     goes on to the Frostbite, Emberforge and Starsteel axes, and the Backpack to the Glacier Pack,
+     Ember Hauler and Starlight Satchel.
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
 6. **Rebirth.** From the skill tree header at the Workbench, pay to start over with a
-   permanent bonus: every rebirth adds +10% to all money you earn (sales, Goldbark cash and
-   lucky finds). The first costs $5,000 and each one after that costs 1.08 times the previous one.
+   permanent bonus: every rebirth adds +15% to all money you earn (sales, Goldbark cash and
+   lucky finds). The first costs $5,000 and each one after that costs 1.03 times the previous one.
    Buy x1, x5, x10 or as many as you can afford at once (the price is the sum of the single prices).
    A rebirth resets money, every upgrade (axes, backpack, machines, forests) and all wood; it keeps
-   your rebirths, lifetime stats and settings. The HUD shows the current multiplier next to your money.
-   Each rebirth also gives a **skill point**. Spend them on the *Legacy Perks* tab of the Rebirth
-   screen; Legacy perks are never reset:
+   your rebirths, achievements, lifetime stats and settings. The HUD shows the current multiplier next
+   to your money. Each rebirth also gives **3 skill points**. Spend them in the **Legacy Tree**
+   (the button in the Rebirth screen's header): a second skill tree of 40 perks that are never reset,
+   in four branches:
 
-   | Perk | Levels | What it does |
-   | --- | --- | --- |
-   | Heirloom Axe | 3 | Every run starts with the Steel, Lumberjack's or Tempered axe |
-   | Head Start | 4 | Every run starts with $500, $2,500, $12,500 or $62,500 |
-   | Starter Kit | 4 | Every run starts with 1 to 4 Auto-Choppers |
-   | Forest Charter | 2 | Every run starts with the Old Grove (and Ironwood Ridge) open |
-   | Titan Grip | 10 | +50% axe damage per level |
-   | Quick Hands | 5 | +10% swing speed per level |
-   | Deep Pockets | 5 | +50% backpack capacity per level |
-   | Lodestone | 5 | +3 m log magnet range per level |
-   | Master Engineer | 10 | +25% output for every machine per level |
-   | Silver Tongue | 10 | +15% on every sale per level |
+   | Branch | Perks |
+   | --- | --- |
+   | Heritage | Heirloom Axe, Head Start, Starter Kit, Forest Charter, Heirloom Pack (start with a bigger backpack), Sawmill Deed, Workshop Deed, Builder's Charter (start with those machines), Scholar (+1 skill point per rebirth per level), Ancestral Wisdom (+2% earnings per rebirth per level), Phoenix Feather (rebirths up to 50% cheaper) |
+   | Might | Titan Grip, Quick Hands, Deep Pockets, Lodestone, Keen Eye, Crushing Blows, Legend's Swing, Giant's Strength, Woodsman's Instinct, Fleet Foot |
+   | Industry | Master Engineer, Ancestral Engines, Family Sawmill, Guild Carpenters, Master Architects (much faster machines), Perfect Joinery, Blueprints, Night Watch, Market Courier and Express Courier (the yard stock sells itself every 30 s, then 10 s) |
+   | Fortune | Silver Tongue, Timber Baron, Plank Empire, Furniture Dynasty, Cabin Tycoon (higher prices), Fortune's Child, Golden Touch, Old Connections, Druid's Blessing |
 
-   Head starts apply as soon as you buy them and again at the start of every run.
+   Head starts apply as soon as you buy them and again at the start of every run. Saves from before
+   2.1 get the extra skill points their earlier rebirths now earn (3 each) the first time they load.
+7. **Achievements.** 59 achievements in seven groups (Chopping, Wealth, Rebirth, Gear, Industry,
+   Explorer, Milestones), in the pause menu. Each gives a reward once: money, skill points, or a
+   permanent bonus for that save (+5% axe damage, +10% on all sales...). They belong to the save slot
+   (every slot earns its own) and stay through rebirths. A banner drops in at the top when one unlocks;
+   an older save collects everything its progress already earned when you first play it, shown as one
+   summary banner.
 
 | Tree | Area | Axe needed | HP | Wood |
 | --- | --- | --- | --- | --- |
@@ -103,8 +110,12 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
 | Oak | Clearing / Grove | Steel Axe | 16 | 18 |
 | Maple | Old Grove | Lumberjack's Axe | 70 | 55 |
 | Redwood | Grove / Ridge | Lumberjack's Axe | 170 | 150 |
-| Ironwood | Ironwood Ridge | Tempered Broadaxe | 650 | 560 |
+| Ironwood | Ridge / Peaks | Tempered Broadaxe | 650 | 560 |
 | Goldbark | Ironwood Ridge | Ironbreaker | 2,600 | 1,500 + $12,000 |
+| Frostpine | Peaks / Vale | Frostbite Axe | 8,000 | 4,800 |
+| Cherry | Vale / Wilds | Emberforge Axe | 26,000 | 15,000 |
+| Emberwood | Vale / Wilds | Emberforge Axe | 42,000 | 24,000 |
+| Crystalwood | Crystal Wilds | Starsteel Axe | 140,000 | 60,000 + $450,000 |
 
 ### Graphics and performance
 

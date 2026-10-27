@@ -201,12 +201,12 @@ namespace ChoppingTrees.Tests
         {
             var cfg = m_Db.config;
             Assert.AreEqual(5000, cfg.rebirthBaseCost, 1e-9);
-            Assert.AreEqual(1.08, cfg.rebirthCostGrowth, 1e-9);
+            Assert.AreEqual(1.03, cfg.rebirthCostGrowth, 1e-9);
             var m = NewModel(0);
             Assert.AreEqual(5000, m.RebirthCost(), 1e-6);
             // Several at once cost exactly the sum of the single prices.
             double sum = 0;
-            for (int i = 0; i < 5; i++) sum += 5000 * Math.Pow(1.08, i);
+            for (int i = 0; i < 5; i++) sum += 5000 * Math.Pow(1.03, i);
             Assert.AreEqual(sum, m.RebirthCost(5), 1e-6);
             Assert.AreEqual(0, m.MaxRebirths());
             m.State.Money = sum;
@@ -220,7 +220,7 @@ namespace ChoppingTrees.Tests
             m.State.Money = sum;
             Assert.IsTrue(m.TryRebirth(5, out _));
             Assert.AreEqual(5, m.State.Rebirths);
-            Assert.AreEqual(5000 * Math.Pow(1.08, 5), m.RebirthCost(), 1e-6, "the next one continues the series");
+            Assert.AreEqual(5000 * Math.Pow(1.03, 5), m.RebirthCost(), 1e-6, "the next one continues the series");
         }
 
         [Test]
@@ -270,13 +270,15 @@ namespace ChoppingTrees.Tests
 
             // Buying applies the head start immediately: the axe and free choppers appear now.
             Buy(m, m_Db, "heirloom_axe", 2);
-            Assert.AreEqual(10 - 2 - 4, m.State.SkillPoints, "costs 2 + 4 skill points");
+            int p = m_Db.config.rebirthSkillPoints;
+            Assert.AreEqual(3, p, "three skill points per rebirth");
+            Assert.AreEqual(10 * p - 2 - 4, m.State.SkillPoints, "costs 2 + 4 skill points");
             Assert.AreEqual(2, m.Upgrades.AxeTier);
             Buy(m, m_Db, "starter_kit");
             Assert.AreEqual(1, m.Upgrades.MachineCount("chopper"));
             Buy(m, m_Db, "head_start");
             Assert.AreEqual(500, m.Upgrades.StartingMoney, 1e-9);
-            Assert.AreEqual(1, m.State.SkillPoints);
+            Assert.AreEqual(10 * p - 9, m.State.SkillPoints);
 
             // The next rebirth keeps the perks and grants the head start again.
             m.State.Money = 1e9;
@@ -286,8 +288,8 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(2, m.Upgrades.AxeTier, "the heirloom axe, not the tier bought last run");
             Assert.AreEqual(1, m.Upgrades.MachineCount("chopper"));
             Assert.AreEqual(m_Db.config.startingMoney + 500, m.State.Money, 1e-9);
-            Assert.AreEqual(2, m.State.SkillPoints);
-            Assert.AreEqual(11, m.State.SkillPointsEarned);
+            Assert.AreEqual(11 * p - 9, m.State.SkillPoints);
+            Assert.AreEqual(11 * p, m.State.SkillPointsEarned);
 
             Buy(m, m_Db, "deep_pockets");
             Assert.AreEqual(Upgrades.CapacityForTier(m_Db.config, 0) * (1 + m_Db.Upgrade("deep_pockets").effectPerLevel), m.BackpackCapacity, 1e-6);
@@ -490,13 +492,22 @@ namespace ChoppingTrees.Tests
         public void SkillTreeIsConnectedAndLaidOut()
         {
             var seen = new System.Collections.Generic.HashSet<Vector2>();
+            var seenLegacy = new System.Collections.Generic.HashSet<Vector2>();
             foreach (var u in m_Db.upgrades)
             {
                 Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
-                if (u.legacy) continue; // Legacy perks are cards in the Rebirth screen, not tree nodes
+                if (u.legacy)
+                {
+                    // The Legacy tree is its own screen.
+                    Assert.IsTrue(seenLegacy.Add(u.treePosition), $"{u.id} shares a Legacy tree position with another perk");
+                    Assert.That(u.treePosition.x, Is.InRange(-7.5f, 7.5f), u.id);
+                    Assert.That(u.treePosition.y, Is.InRange(1f, 8f), u.id);
+                    Assert.AreNotEqual(UpgradeCategory.Legacy, u.category, $"{u.id} needs a Legacy tree branch");
+                    continue;
+                }
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
-                Assert.That(u.treePosition.x, Is.InRange(-8f, 9.6f), u.id);
-                Assert.That(u.treePosition.y, Is.InRange(0f, 8.5f), u.id);
+                Assert.That(u.treePosition.x, Is.InRange(-11.5f, 9.6f), u.id);
+                Assert.That(u.treePosition.y, Is.InRange(0f, 9.5f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.
             var roots = System.Array.FindAll(m_Db.upgrades, u => !u.legacy && (u.requires == null || u.requires.Length == 0));

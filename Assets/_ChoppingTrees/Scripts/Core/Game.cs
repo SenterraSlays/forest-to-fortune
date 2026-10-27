@@ -85,9 +85,19 @@ namespace ChoppingTrees
         {
             Model.Tick(Time.deltaTime);
             if (Phase != GamePhase.Playing) return;
+            // Achievements are checked during play only, so an older save's first batch (everything
+            // its progress already earned) shows up when the player starts, not on the title screen.
+            m_AchievementTimer -= Time.unscaledDeltaTime;
+            if (m_AchievementTimer <= 0f)
+            {
+                m_AchievementTimer = 0.5f;
+                if (Model.CheckAchievements() != null) Save();
+            }
             m_AutosaveTimer += Time.unscaledDeltaTime;
             if (m_AutosaveTimer >= m_Database.config.autosaveSeconds) Save();
         }
+
+        float m_AchievementTimer;
 
         public void StartPlaying()
         {

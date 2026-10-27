@@ -18,7 +18,7 @@ MonoBehaviour:
   category: 0
   effect: 0
   targetId: 
-  maxLevel: 4
+  maxLevel: 7
   baseCost: 0
   costGrowth: 1
   explicitCosts:
@@ -26,12 +26,18 @@ MonoBehaviour:
   - 300
   - 3750
   - 60000
+  - 1250000
+  - 30000000
+  - 750000000
   effectPerLevel: 1
   levelNames:
   - Steel Axe
   - Lumberjack's Axe
   - Tempered Broadaxe
   - Ironbreaker
+  - Frostbite Axe
+  - Emberforge Axe
+  - Starsteel Axe
   requires: []
   sortOrder: 0
   legacy: 0

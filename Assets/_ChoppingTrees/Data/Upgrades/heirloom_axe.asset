@@ -15,20 +15,23 @@ MonoBehaviour:
   id: heirloom_axe
   displayName: Heirloom Axe
   description: Start every run with a better axe already forged.
-  category: 4
+  category: 5
   effect: 22
   targetId: 
-  maxLevel: 3
+  maxLevel: 6
   baseCost: 0
   costGrowth: 1
   explicitCosts:
   - 2
   - 4
   - 8
+  - 16
+  - 30
+  - 50
   effectPerLevel: 1
   levelNames: []
   requires: []
   sortOrder: 0
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -7.15, y: 1.35}
   icon: axe

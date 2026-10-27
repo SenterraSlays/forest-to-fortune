@@ -15,10 +15,10 @@ MonoBehaviour:
   id: head_start
   displayName: Head Start
   description: Start every run with money in your pocket.
-  category: 4
+  category: 5
   effect: 23
   targetId: 
-  maxLevel: 4
+  maxLevel: 6
   baseCost: 0
   costGrowth: 1
   explicitCosts:
@@ -26,10 +26,12 @@ MonoBehaviour:
   - 2
   - 4
   - 8
+  - 15
+  - 25
   effectPerLevel: 500
   levelNames: []
   requires: []
   sortOrder: 1
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -4.95, y: 1.35}
   icon: coin

@@ -91,7 +91,7 @@ namespace ChoppingTrees
                      {
                          ("coin", UIStyle.Money, "Money"), ("rebirth", UIStyle.Skill, "Rebirths"), ("pine", UIStyle.Good, "Trees felled"),
                          ("log", new Color(0.78f, 0.56f, 0.33f), "Wood chopped"), ("axe", UIStyle.CategoryColor(UpgradeCategory.Axe), "Axe"),
-                         ("clock", UIStyle.CategoryColor(UpgradeCategory.Forest), "Time played"),
+                         ("clock", UIStyle.CategoryColor(UpgradeCategory.Forest), "Time played"), ("trophy", UIStyle.Money, "Achievements"),
                      })
                 c.values.Add(StatRow(stats, icon, color, label));
             c.stats = stats.gameObject;
@@ -217,11 +217,12 @@ namespace ChoppingTrees
                 int axeLevel = 0;
                 foreach (var u in d.upgrades) if (u.id == "axe_tier") axeLevel = u.level;
                 c.values[0].text = NumberUtil.Money(d.money);
-                c.values[1].text = d.rebirths > 0 ? $"{d.rebirths}  <size=80%><color=#B49EE6>x{Rebirth.Multiplier(db.config, d.rebirths):0.0#}</color></size>" : "0";
+                c.values[1].text = d.rebirths > 0 ? $"{d.rebirths}  <size=80%><color=#B49EE6>x{Rebirth.MultiplierFor(db, d):0.0#}</color></size>" : "0";
                 c.values[2].text = NumberUtil.Format(d.treesFelled);
                 c.values[3].text = NumberUtil.Format(d.totalWoodChopped);
                 c.values[4].text = (axe != null ? axe.LevelName(axeLevel) : null) ?? db.config.baseAxeName;
                 c.values[5].text = NumberUtil.Duration(d.playSeconds);
+                c.values[6].text = $"{(d.achievements != null ? d.achievements.Count : 0)} / {Achievements.All.Length}";
             }
         }
 

@@ -14,8 +14,8 @@ namespace ChoppingTrees
     public class SkillTreeView : MonoBehaviour, IBeginDragHandler, IDragHandler, IScrollHandler
     {
         public const float MaxZoom = 2.8f;
-        /// <summary>Scale of the default view (about full size).</summary>
-        const float HomeScale = 0.92f;
+        /// <summary>Scale of the default view (0.92 is about full size).</summary>
+        public float HomeScale { get; set; } = 0.92f;
 
         /// <summary>Content point (origin bottom-left) the default view is centred on.</summary>
         public Vector2 Home { get; set; }

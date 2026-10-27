@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: giants_strength
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: giants_strength
+  displayName: Giant's Strength
+  description: The strength of a giant in every swing.
+  category: 6
+  effect: 1
+  targetId: 
+  maxLevel: 10
+  baseCost: 15
+  costGrowth: 1.4
+  explicitCosts: []
+  effectPerLevel: 1
+  levelNames: []
+  requires:
+  - upgradeId: legends_swing
+    level: 1
+  sortOrder: 23
+  legacy: 1
+  treePosition: {x: -2.75, y: 6.55}
+  icon: mountain

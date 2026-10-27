@@ -81,7 +81,7 @@ namespace ChoppingTrees.EditorTools
 
             StockPile(yard, "WoodPile", "LogPiece", GameModel.Wood, new Vector3(-14.8f, 0, -9.6f), 35f, 21, 5f, 1.35f, 0.36f, 0.95f);
             StockPile(yard, "PlankPile", "PlankPiece", "planks", new Vector3(-15.6f, 0, -15.8f), 35f, 12, 3f, 1.45f, 0.13f, 0f);
-            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f), (-34f, -19f), (34f, -21.5f), (-30f, -33f), (29f, -32f) })
+            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f), (-3f, 186f), (3f, 256f), (-3f, 326f), (-34f, -19f), (34f, -21.5f), (-30f, -33f), (29f, -32f) })
             {
                 var lamp = Place("Lantern_Post", yard, x, z, 0f);
                 var light = new GameObject("Light").AddComponent<Light>();
@@ -99,6 +99,9 @@ namespace ChoppingTrees.EditorTools
             Place("Signpost", yard, 5.5f, 1.5f, -20f);
             Place("Signpost", yard, 3.2f, 47f, 10f);
             Place("Signpost", yard, -3.2f, 117f, -10f);
+            Place("Signpost", yard, 3.2f, 187f, 10f);
+            Place("Signpost", yard, -3.2f, 257f, -10f);
+            Place("Signpost", yard, 3.2f, 327f, 10f);
 
             // Furniture and cabin kit stock, and the buildings around the bigger yard: a red barn, a
             // water tower, lumber racks, wagons, a well and two more cabins.
@@ -129,11 +132,10 @@ namespace ChoppingTrees.EditorTools
 
             var yardComp = MachineYardBuild(yard, prefabs);
 
-            // ---- gates and fences
-            var grove = db.areas.First(a => a.id == "grove");
-            var ridge = db.areas.First(a => a.id == "ridge");
-            GateAndFence(env, WorldLayout.Gate1Z, grove);
-            GateAndFence(env, WorldLayout.Gate2Z, ridge);
+            // ---- gates and fences: one before every locked area, in order.
+            var locked = db.areas.Where(a => !a.unlockedByDefault).OrderBy(a => a.sortOrder).ToArray();
+            for (int i = 0; i < locked.Length && i < WorldLayout.Gates.Length; i++) GateAndFence(env, WorldLayout.Gates[i], locked[i]);
+            ForestAreaDef Area(string id) => db.areas.First(a => a.id == id);
 
             // ---- forests and props
             var forest = new GameObject("Forest").transform;
@@ -143,8 +145,11 @@ namespace ChoppingTrees.EditorTools
             // only a thin line of trees stays along the walls behind them.
             trees += Forest(forest, db.areas.First(a => a.id == "clearing"), -55f, -48f, -42f, -6f, 4.5f, 6);
             trees += Forest(forest, db.areas.First(a => a.id == "clearing"), 48f, 55f, -42f, -6f, 4.5f, 6);
-            trees += Forest(forest, grove, -55f, 55f, 54f, 117f, 5.6f, 95);
-            trees += Forest(forest, ridge, -55f, 55f, 124f, 189f, 6.2f, 75, "goldbark", 4);
+            trees += Forest(forest, Area("grove"), -55f, 55f, 54f, 117f, 5.6f, 95);
+            trees += Forest(forest, Area("ridge"), -55f, 55f, 124f, 187f, 6.2f, 75, "goldbark", 4);
+            trees += Forest(forest, Area("peaks"), -55f, 55f, 194f, 257f, 6.0f, 80);
+            trees += Forest(forest, Area("vale"), -55f, 55f, 264f, 327f, 5.8f, 80);
+            trees += Forest(forest, Area("wilds"), -55f, 55f, 334f, 399f, 6.2f, 75, "crystalwood", 5);
             Backdrop(env, db);
             int props = Props(env);
 
@@ -615,29 +620,35 @@ namespace ChoppingTrees.EditorTools
             var root = new GameObject("Backdrop").transform;
             root.SetParent(parent);
             string[] models = { "Tree_Pine", "Tree_Pine", "Tree_Redwood", "Tree_Oak", "Tree_Birch", "Tree_Pine" };
+            // Each far forest is lined with its own trees beyond the walls.
+            string[] themed = { null, "Tree_Maple", "Tree_Ironwood", "Tree_Frostpine", "Tree_Cherry", "Tree_Emberwood" };
             int n = 0;
-            for (int attempt = 0; attempt < 3000 && n < 260; attempt++)
+            for (int attempt = 0; attempt < 6000 && n < 440; attempt++)
             {
                 float x = R(WorldLayout.MinX + 5f, WorldLayout.MaxX - 5f), z = R(WorldLayout.MinZ + 5f, WorldLayout.MaxZ - 5f);
                 bool outside = Mathf.Abs(x) > WorldLayout.WallX + 2f || z < WorldLayout.WallSouth - 2f || z > WorldLayout.WallNorth + 2f;
                 if (!outside || Mathf.Abs(x) > 86f) continue;
                 string m = models[s_Rng.Next(models.Length)];
-                if (z > WorldLayout.Gate1Z && z < WorldLayout.Gate2Z && s_Rng.NextDouble() < 0.4) m = "Tree_Maple";
+                int band = WorldLayout.Band(z);
+                if (band >= 3) m = "Tree_Frostpine";
+                if (themed[Mathf.Min(band, themed.Length - 1)] != null && s_Rng.NextDouble() < (band >= 3 ? 0.6 : 0.4)) m = themed[Mathf.Min(band, themed.Length - 1)];
                 var t = Place(m, root, x, z, R(0f, 360f), R(1.0f, 1.6f), 0.3f);
                 SetStatic(t);
                 n++;
             }
-            for (int i = 0; i < 14; i++)
+            // Mountains and hills ring the whole valley, centred on its middle.
+            float midZ = (WorldLayout.MinZ + WorldLayout.MaxZ) * 0.5f;
+            for (int i = 0; i < 22; i++)
             {
-                float a = i / 14f * Mathf.PI * 2f;
-                float x = Mathf.Sin(a) * 190f, z = 72f + Mathf.Cos(a) * 250f;
+                float a = i / 22f * Mathf.PI * 2f;
+                float x = Mathf.Sin(a) * 190f, z = midZ + Mathf.Cos(a) * 370f;
                 var m = Model("Mountain_A", root, new Vector3(x, -6f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), new Vector3(R(1.6f, 2.6f), R(1.0f, 1.8f), R(1.6f, 2.6f)));
                 SetStatic(m);
             }
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < 28; i++)
             {
-                float a = i / 18f * Mathf.PI * 2f;
-                float x = Mathf.Sin(a) * 120f, z = 72f + Mathf.Cos(a) * 175f;
+                float a = i / 28f * Mathf.PI * 2f;
+                float x = Mathf.Sin(a) * 120f, z = midZ + Mathf.Cos(a) * 290f;
                 var h = Model("Hill_A", root, new Vector3(x, -1f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), Vector3.one * R(1.4f, 2.4f));
                 SetStatic(h);
             }
@@ -661,13 +672,39 @@ namespace ChoppingTrees.EditorTools
                 ("Mushrooms", 50, 0.8f, 1.5f, false, 0.3f),
                 ("Branch_Fallen", 35, 0.8f, 1.3f, false, 0.6f),
                 ("Log_Fallen", 12, 0.9f, 1.2f, true, 2.5f),
+                // The far forests: grass and rocks continue, and each has its own scenery.
+                ("Grass_A", 500, 0.8f, 1.5f, false, 0.2f),
+                ("Rock_A", 40, 0.7f, 1.4f, false, 0.6f),
+                ("Rock_B", 20, 0.8f, 1.3f, true, 1.2f),
+                ("Branch_Fallen", 25, 0.8f, 1.3f, false, 0.6f),
+                ("Rock_Snow", 45, 0.8f, 1.4f, true, 1.2f),
+                ("Snow_Drift", 70, 0.8f, 1.5f, false, 0.8f),
+                ("Bush_Blossom", 70, 0.8f, 1.3f, false, 1.0f),
+                ("Petals", 140, 0.8f, 1.4f, false, 0.3f),
+                ("Crystal_Cluster", 60, 0.7f, 1.4f, true, 1.0f),
+                ("Glowcap", 90, 0.8f, 1.4f, false, 0.3f),
             };
-            foreach (var row in table)
+            // Where each row goes (z range): the first rows cover the old forests, the rest the far ones.
+            (float z0, float z1)[] ranges =
             {
+                (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z),
+                (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z),
+                (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z),
+                (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z), (WorldLayout.WallSouth + 1f, WorldLayout.Gate3Z),
+                (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f),
+                (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f),
+                (WorldLayout.Gate3Z, WorldLayout.Gate4Z), (WorldLayout.Gate3Z, WorldLayout.Gate4Z),
+                (WorldLayout.Gate4Z, WorldLayout.Gate5Z), (WorldLayout.Gate4Z, WorldLayout.Gate5Z),
+                (WorldLayout.Gate5Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate5Z, WorldLayout.WallNorth - 1f),
+            };
+            for (int r = 0; r < table.Length; r++)
+            {
+                var row = table[r];
+                var range = ranges[r];
                 int placed = 0;
                 for (int attempt = 0; attempt < row.count * 20 && placed < row.count; attempt++)
                 {
-                    float x = R(-WorldLayout.WallX + 1f, WorldLayout.WallX - 1f), z = R(WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f);
+                    float x = R(-WorldLayout.WallX + 1f, WorldLayout.WallX - 1f), z = R(range.z0, range.z1);
                     bool small = !row.collider;
                     if (WorldLayout.DistToPath(x, z) < (small ? 1.6f : 3f)) continue;
                     if (small ? IsBlockedStructure(x, z, row.pad) : IsBlocked(x, z, row.pad)) continue;
@@ -713,20 +750,36 @@ namespace ChoppingTrees.EditorTools
 
         // ------------------------------------------------------------------ ground
 
+        /// <summary>Where the ground splits into its south and north pieces (each has its own colour map,
+        /// so neither needs a texture over 4096 px).</summary>
+        const float GroundSplitZ = 175f;
+
         static void Ground(Transform parent)
+        {
+            var detail = GroundDetailMaps();
+            GroundChunk(parent, "Ground", WorldLayout.MinZ, GroundSplitZ, detail);
+            GroundChunk(parent, "Ground_North", GroundSplitZ, WorldLayout.MaxZ, detail);
+        }
+
+        static void GroundChunk(Transform parent, string name, float z0, float z1, (Texture2D albedo, Texture2D normal) detail)
         {
             // 1 m grid: smoother hills and paths than the old 1.5 m one.
             const float step = 1.0f;
             int nx = Mathf.CeilToInt((WorldLayout.MaxX - WorldLayout.MinX) / step) + 1;
-            int nz = Mathf.CeilToInt((WorldLayout.MaxZ - WorldLayout.MinZ) / step) + 1;
+            int nz = Mathf.CeilToInt((z1 - z0) / step) + 1;
             var verts = new Vector3[nx * nz];
             var uvs = new Vector2[nx * nz];
+            var normals = new Vector3[nx * nz];
             for (int j = 0; j < nz; j++)
             for (int i = 0; i < nx; i++)
             {
-                float x = WorldLayout.MinX + i * step, z = WorldLayout.MinZ + j * step;
+                float x = WorldLayout.MinX + i * step, z = z0 + j * step;
                 verts[j * nx + i] = new Vector3(x, WorldLayout.Height(x, z), z);
-                uvs[j * nx + i] = new Vector2((x - WorldLayout.MinX) / (WorldLayout.MaxX - WorldLayout.MinX), (z - WorldLayout.MinZ) / (WorldLayout.MaxZ - WorldLayout.MinZ));
+                uvs[j * nx + i] = new Vector2((x - WorldLayout.MinX) / (WorldLayout.MaxX - WorldLayout.MinX), (z - z0) / (z1 - z0));
+                // Normals from the height function, so the two pieces light identically along the seam.
+                float hx = WorldLayout.Height(x + step, z) - WorldLayout.Height(x - step, z);
+                float hz = WorldLayout.Height(x, z + step) - WorldLayout.Height(x, z - step);
+                normals[j * nx + i] = new Vector3(-hx, 2f * step, -hz).normalized;
             }
             var tris = new int[(nx - 1) * (nz - 1) * 6];
             int k = 0;
@@ -737,22 +790,23 @@ namespace ChoppingTrees.EditorTools
                 tris[k++] = a; tris[k++] = c; tris[k++] = b;
                 tris[k++] = b; tris[k++] = c; tris[k++] = d;
             }
-            var mesh = new Mesh { name = "Ground", indexFormat = IndexFormat.UInt32 };
+            var mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
             mesh.vertices = verts;
             mesh.uv = uvs;
+            mesh.normals = normals;
             mesh.triangles = tris;
-            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
-            string meshPath = $"{TexDir}/Ground.asset";
+            mesh.RecalculateTangents();
+            string meshPath = $"{TexDir}/{name}.asset";
             AssetDatabase.DeleteAsset(meshPath);
             AssetDatabase.CreateAsset(mesh, meshPath);
 
-            var go = new GameObject("Ground", typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
+            var go = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider));
             go.transform.SetParent(parent);
             go.layer = GameLayers.Ground;
             go.GetComponent<MeshFilter>().sharedMesh = mesh;
             go.GetComponent<MeshCollider>().sharedMesh = mesh;
-            go.GetComponent<MeshRenderer>().sharedMaterial = GroundMaterial();
+            go.GetComponent<MeshRenderer>().sharedMaterial = GroundMaterial(name, z0, z1, detail);
             GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic);
         }
 
@@ -762,19 +816,23 @@ namespace ChoppingTrees.EditorTools
         /// plus tiling detail maps (a fine grass-and-soil pattern and its normal map, repeating
         /// every 2.5 m) so the ground still has texture right under the player's feet.
         /// </summary>
-        static Material GroundMaterial()
+        static Material GroundMaterial(string name, float z0, float z1, (Texture2D albedo, Texture2D normal) detailMaps)
         {
-            const int W = 2048, H = 3488;
+            // About 11.4 px per metre, like the single map the ground used to have.
+            const int W = 2048;
+            int H = Mathf.RoundToInt(W * (z1 - z0) / (WorldLayout.MaxX - WorldLayout.MinX));
             var px = new Color32[W * H];
             Color grassA = new Color(0.36f, 0.55f, 0.23f), grassB = new Color(0.27f, 0.46f, 0.20f), dry = new Color(0.55f, 0.56f, 0.28f);
             Color dirt = new Color(0.50f, 0.39f, 0.26f), dirtDark = new Color(0.38f, 0.29f, 0.19f), needles = new Color(0.42f, 0.33f, 0.20f);
             Color autumn = new Color(0.62f, 0.42f, 0.20f), moss = new Color(0.25f, 0.42f, 0.36f), rock = new Color(0.45f, 0.45f, 0.42f);
+            Color snow = new Color(0.86f, 0.9f, 0.94f), lush = new Color(0.40f, 0.62f, 0.27f), petal = new Color(0.96f, 0.72f, 0.82f);
+            Color crystalMoss = new Color(0.30f, 0.42f, 0.50f), glow = new Color(0.55f, 0.75f, 0.95f);
             var rnd = new System.Random(7);
             for (int j = 0; j < H; j++)
             for (int i = 0; i < W; i++)
             {
                 float x = Mathf.Lerp(WorldLayout.MinX, WorldLayout.MaxX, (i + 0.5f) / W);
-                float z = Mathf.Lerp(WorldLayout.MinZ, WorldLayout.MaxZ, (j + 0.5f) / H);
+                float z = Mathf.Lerp(z0, z1, (j + 0.5f) / H);
                 float n1 = Mathf.PerlinNoise(x * 0.06f, z * 0.06f);
                 float n2 = Mathf.PerlinNoise(x * 0.25f + 40f, z * 0.25f + 13f);
                 float n3 = Mathf.PerlinNoise(x * 1.1f + 5f, z * 1.1f + 9f);
@@ -783,7 +841,21 @@ namespace ChoppingTrees.EditorTools
                 int area = WorldLayout.AreaAt(x, z);
                 if (area == 0) c = Color.Lerp(c, needles, Mathf.Clamp01((n2 - 0.55f) * 3f) * 0.45f);
                 if (area == 1 || (area == -1 && z > WorldLayout.Gate1Z && z < WorldLayout.Gate2Z)) c = Color.Lerp(c, autumn, Mathf.Clamp01(n2 * 1.3f - 0.35f) * 0.5f);
-                if (area == 2 || (area == -1 && z >= WorldLayout.Gate2Z)) c = Color.Lerp(c, moss, 0.35f + n1 * 0.3f);
+                int band = WorldLayout.Band(z);
+                if (band == 2) c = Color.Lerp(c, moss, 0.35f + n1 * 0.3f);
+                // Snow over the peaks (thinning towards the gates), a lush valley with fallen petals,
+                // and blue-grey moss with glints in the crystal wilds.
+                if (band == 3) c = Color.Lerp(c, snow, Mathf.Clamp01(0.55f + n1 * 0.35f + (n2 - 0.5f) * 0.4f));
+                if (band == 4)
+                {
+                    c = Color.Lerp(c, lush, 0.45f);
+                    c = Color.Lerp(c, petal, Mathf.Clamp01((n3 - 0.68f) * 3f) * 0.65f * (0.5f + n1));
+                }
+                if (band == 5)
+                {
+                    c = Color.Lerp(c, crystalMoss, 0.45f + n1 * 0.25f);
+                    c = Color.Lerp(c, glow, Mathf.Clamp01((n3 - 0.82f) * 5f) * 0.5f);
+                }
                 float h = WorldLayout.Height(x, z);
                 if (h > 6f) c = Color.Lerp(c, rock, Mathf.Clamp01((h - 6f) / 8f) * (0.4f + n2 * 0.6f));
                 // Packed earth in the yard, worn dirt paths elsewhere.
@@ -799,7 +871,7 @@ namespace ChoppingTrees.EditorTools
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, true);
             tex.SetPixels32(px);
             tex.Apply();
-            string path0 = $"{TexDir}/Ground.png";
+            string path0 = $"{TexDir}/{name}.png";
             File.WriteAllBytes(path0, tex.EncodeToPNG());
             Object.DestroyImmediate(tex);
             AssetDatabase.ImportAsset(path0);
@@ -809,9 +881,9 @@ namespace ChoppingTrees.EditorTools
             imp.anisoLevel = 8;
             imp.textureCompression = TextureImporterCompression.CompressedHQ;
             imp.SaveAndReimport();
-            var (detail, detailNormal) = GroundDetailMaps();
+            var (detail, detailNormal) = detailMaps;
 
-            string matPath = $"{MaterialLibrary.Dir}/M_Ground.mat";
+            string matPath = $"{MaterialLibrary.Dir}/M_{name}.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(matPath);
             if (m == null)
             {
@@ -823,7 +895,7 @@ namespace ChoppingTrees.EditorTools
             m.SetFloat("_Smoothness", 0.05f);
             // URP Lit detail inputs: x2 multiply albedo (0.5 = unchanged) and a detail normal map.
             const float tile = 2.5f;
-            var tiling = new Vector2((WorldLayout.MaxX - WorldLayout.MinX) / tile, (WorldLayout.MaxZ - WorldLayout.MinZ) / tile);
+            var tiling = new Vector2((WorldLayout.MaxX - WorldLayout.MinX) / tile, (z1 - z0) / tile);
             m.SetTexture("_DetailAlbedoMap", detail);
             m.SetTexture("_DetailNormalMap", detailNormal);
             m.SetTextureScale("_DetailAlbedoMap", tiling);

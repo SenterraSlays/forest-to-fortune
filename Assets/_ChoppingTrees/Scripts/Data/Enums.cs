@@ -6,8 +6,16 @@ namespace ChoppingTrees
         Automation,
         Economy,
         Forest,
-        /// <summary>Rebirth perks bought with skill points (shown in the Rebirth screen, not the Workbench).</summary>
+        /// <summary>Rebirth perks bought with skill points (older saves; the Legacy tree uses the four branches below).</summary>
         Legacy,
+        /// <summary>Legacy tree: head starts for every run and the rebirth itself.</summary>
+        Heritage,
+        /// <summary>Legacy tree: the axe and the player.</summary>
+        Might,
+        /// <summary>Legacy tree: machines and offline time.</summary>
+        Industry,
+        /// <summary>Legacy tree: prices, luck and the forests.</summary>
+        Fortune,
     }
 
     /// <summary>What an upgrade level changes. Effects are aggregated by <see cref="Upgrades"/>.</summary>
@@ -73,6 +81,14 @@ namespace ChoppingTrees
         FellChance,
         /// <summary>-effectPerLevel price for every skill tree upgrade that isn't a machine (capped at 30%).</summary>
         UpgradeDiscount,
+        /// <summary>Level = backpack tier every run starts with.</summary>
+        StartingBackpack,
+        /// <summary>+effectPerLevel extra skill points for every rebirth.</summary>
+        ExtraSkillPoints,
+        /// <summary>+effectPerLevel to the earnings bonus each rebirth gives (base <see cref="GameConfig.rebirthBonus"/>).</summary>
+        RebirthBonus,
+        /// <summary>-effectPerLevel price for rebirths (capped at 50%).</summary>
+        RebirthDiscount,
     }
 
     public enum MachineKind

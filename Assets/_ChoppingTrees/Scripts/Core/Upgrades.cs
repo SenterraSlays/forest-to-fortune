@@ -20,8 +20,8 @@ namespace ChoppingTrees
         int m_AxeTier, m_BackpackTier;
         float m_DamageMult, m_SpeedMult, m_AutoSellSeconds, m_OfflineHours, m_ProductionBonus;
         float m_MagnetBonus, m_WoodYield, m_CritChance, m_MoveSpeed, m_Discount, m_SellBonus, m_LuckyChance, m_Regrowth, m_TreeCash, m_PackBonus, m_StartMoneyBase;
-        int m_StartAxe, m_StartAreas, m_StartMoneyLevel;
-        float m_CritDamage, m_FellChance, m_UpgradeDiscount;
+        int m_StartAxe, m_StartAreas, m_StartMoneyLevel, m_StartPack;
+        float m_CritDamage, m_FellChance, m_UpgradeDiscount, m_ExtraPoints, m_RebirthBonus, m_RebirthDiscount;
         readonly Dictionary<string, int> m_StartMachines = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_ProcessorYield = new Dictionary<string, double>();
         readonly Dictionary<string, int> m_MachineCounts = new Dictionary<string, int>();
@@ -144,6 +144,13 @@ namespace ChoppingTrees
         // ---------- what every run starts with (Legacy perks)
 
         public int StartingAxeTier { get { Refresh(); return m_StartAxe; } }
+        public int StartingBackpackTier { get { Refresh(); return m_StartPack; } }
+        /// <summary>Skill points every rebirth gives on top of the base amount.</summary>
+        public int ExtraSkillPoints { get { Refresh(); return Mathf.RoundToInt(m_ExtraPoints); } }
+        /// <summary>Added to the earnings bonus of every rebirth (0.02 = +2% per rebirth).</summary>
+        public double RebirthBonusExtra { get { Refresh(); return m_RebirthBonus; } }
+        /// <summary>Share taken off rebirth prices (0..0.5).</summary>
+        public double RebirthDiscount { get { Refresh(); return Mathf.Clamp(m_RebirthDiscount, 0f, 0.5f); } }
         public int StartingAreas { get { Refresh(); return m_StartAreas; } }
         public int StartingMachines(string machineId) { Refresh(); return m_StartMachines.TryGetValue(machineId, out var v) ? v : 0; }
         public double StartingMoney { get { Refresh(); return StartingMoneyFor(m_StartMoneyBase, m_StartMoneyLevel); } }
@@ -227,8 +234,8 @@ namespace ChoppingTrees
             m_OfflineHours = 0f;
             m_ProductionBonus = 0f;
             m_MagnetBonus = m_WoodYield = m_CritChance = m_MoveSpeed = m_Discount = m_SellBonus = m_LuckyChance = m_Regrowth = m_TreeCash = m_PackBonus = m_StartMoneyBase = 0f;
-            m_StartAxe = m_StartAreas = m_StartMoneyLevel = 0;
-            m_CritDamage = m_FellChance = m_UpgradeDiscount = 0f;
+            m_StartAxe = m_StartAreas = m_StartMoneyLevel = m_StartPack = 0;
+            m_CritDamage = m_FellChance = m_UpgradeDiscount = m_ExtraPoints = m_RebirthBonus = m_RebirthDiscount = 0f;
             m_StartMachines.Clear();
             m_ProcessorYield.Clear();
             m_MachineCounts.Clear();
@@ -239,51 +246,11 @@ namespace ChoppingTrees
             var tierProducts = new Dictionary<string, double>();
 
             foreach (var u in m_Db.upgrades)
-            {
-                if (u == null) continue;
-                int lv = Level(u);
-                float e = u.effectPerLevel;
-                string t = u.targetId ?? "";
-                switch (u.effect)
-                {
-                    case UpgradeEffect.AxeTier: m_AxeTier = Math.Max(m_AxeTier, lv); break;
-                    case UpgradeEffect.AxeDamage: m_DamageMult += e * lv; break;
-                    case UpgradeEffect.AxeSpeed: m_SpeedMult += e * lv; break;
-                    case UpgradeEffect.MachineCount: m_MachineCounts[t] = (m_MachineCounts.TryGetValue(t, out var c) ? c : 0) + lv; break;
-                    case UpgradeEffect.MachineSpeed: speedSums[t] = (speedSums.TryGetValue(t, out var s) ? s : 0) + e * lv; break;
-                    case UpgradeEffect.MachineTier:
-                        m_MachineTier[t] = (m_MachineTier.TryGetValue(t, out var mt) ? mt : 0) + lv;
-                        tierProducts[t] = (tierProducts.TryGetValue(t, out var p) ? p : 1) * Math.Pow(e, lv);
-                        break;
-                    case UpgradeEffect.ResourcePrice: m_PriceMult[t] = (m_PriceMult.TryGetValue(t, out var pm) ? pm : 1) + e * lv; break;
-                    case UpgradeEffect.AutoSell:
-                        if (lv > 0) m_AutoSellSeconds = m_AutoSellSeconds <= 0 ? e : Mathf.Min(m_AutoSellSeconds, e);
-                        break;
-                    case UpgradeEffect.OfflineHours: m_OfflineHours += e * lv; break;
-                    case UpgradeEffect.ProductionBonus: m_ProductionBonus += e * lv; break;
-                    case UpgradeEffect.BackpackCapacity: m_BackpackTier = Math.Max(m_BackpackTier, lv); break;
-                    case UpgradeEffect.MagnetRange: m_MagnetBonus += e * lv; break;
-                    case UpgradeEffect.WoodYield: m_WoodYield += e * lv; break;
-                    case UpgradeEffect.CritChance: m_CritChance += e * lv; break;
-                    case UpgradeEffect.MoveSpeed: m_MoveSpeed += e * lv; break;
-                    case UpgradeEffect.ProcessorYield: m_ProcessorYield[t] = (m_ProcessorYield.TryGetValue(t, out var py) ? py : 0) + e * lv; break;
-                    case UpgradeEffect.MachineDiscount: m_Discount += e * lv; break;
-                    case UpgradeEffect.SellBonus: m_SellBonus += e * lv; break;
-                    case UpgradeEffect.LuckyFind: m_LuckyChance += e * lv; break;
-                    case UpgradeEffect.TreeRegrowth: m_Regrowth += e * lv; break;
-                    case UpgradeEffect.TreeCashBonus: m_TreeCash += e * lv; break;
-                    case UpgradeEffect.StartingAxe: m_StartAxe = Math.Max(m_StartAxe, lv); break;
-                    case UpgradeEffect.StartingMoney:
-                        if (lv > m_StartMoneyLevel) { m_StartMoneyLevel = lv; m_StartMoneyBase = e; }
-                        break;
-                    case UpgradeEffect.BackpackBonus: m_PackBonus += e * lv; break;
-                    case UpgradeEffect.StartingAreas: m_StartAreas = Math.Max(m_StartAreas, lv); break;
-                    case UpgradeEffect.CritDamage: m_CritDamage += e * lv; break;
-                    case UpgradeEffect.FellChance: m_FellChance += e * lv; break;
-                    case UpgradeEffect.UpgradeDiscount: m_UpgradeDiscount += e * lv; break;
-                    case UpgradeEffect.StartingMachines: m_StartMachines[t] = Math.Max(m_StartMachines.TryGetValue(t, out var sm) ? sm : 0, lv); break;
-                }
-            }
+                if (u != null) Apply(u.effect, u.targetId ?? "", u.effectPerLevel, Level(u), speedSums, tierProducts);
+            // Achievement rewards are permanent bonuses for this save, added like one upgrade level.
+            foreach (var a in Achievements.All)
+                if (a.bonus.HasValue && m_State.Achievements.Contains(a.id))
+                    Apply(a.bonus.Value, a.bonusTarget ?? "", a.bonusAmount, 1, speedSums, tierProducts);
 
             foreach (var m in m_Db.machines)
             {
@@ -291,6 +258,53 @@ namespace ChoppingTrees
                 double speed = 1 + (speedSums.TryGetValue(m.id, out var s) ? s : 0);
                 double tier = tierProducts.TryGetValue(m.id, out var p) ? p : 1;
                 m_MachineMult[m.id] = NumberUtil.Safe(speed * tier);
+            }
+        }
+
+        void Apply(UpgradeEffect effect, string t, float e, int lv, Dictionary<string, double> speedSums, Dictionary<string, double> tierProducts)
+        {
+            switch (effect)
+            {
+                case UpgradeEffect.AxeTier: m_AxeTier = Math.Max(m_AxeTier, lv); break;
+                case UpgradeEffect.AxeDamage: m_DamageMult += e * lv; break;
+                case UpgradeEffect.AxeSpeed: m_SpeedMult += e * lv; break;
+                case UpgradeEffect.MachineCount: m_MachineCounts[t] = (m_MachineCounts.TryGetValue(t, out var c) ? c : 0) + lv; break;
+                case UpgradeEffect.MachineSpeed: speedSums[t] = (speedSums.TryGetValue(t, out var s) ? s : 0) + e * lv; break;
+                case UpgradeEffect.MachineTier:
+                    m_MachineTier[t] = (m_MachineTier.TryGetValue(t, out var mt) ? mt : 0) + lv;
+                    tierProducts[t] = (tierProducts.TryGetValue(t, out var p) ? p : 1) * Math.Pow(e, lv);
+                    break;
+                case UpgradeEffect.ResourcePrice: m_PriceMult[t] = (m_PriceMult.TryGetValue(t, out var pm) ? pm : 1) + e * lv; break;
+                case UpgradeEffect.AutoSell:
+                    if (lv > 0) m_AutoSellSeconds = m_AutoSellSeconds <= 0 ? e : Mathf.Min(m_AutoSellSeconds, e);
+                    break;
+                case UpgradeEffect.OfflineHours: m_OfflineHours += e * lv; break;
+                case UpgradeEffect.ProductionBonus: m_ProductionBonus += e * lv; break;
+                case UpgradeEffect.BackpackCapacity: m_BackpackTier = Math.Max(m_BackpackTier, lv); break;
+                case UpgradeEffect.MagnetRange: m_MagnetBonus += e * lv; break;
+                case UpgradeEffect.WoodYield: m_WoodYield += e * lv; break;
+                case UpgradeEffect.CritChance: m_CritChance += e * lv; break;
+                case UpgradeEffect.MoveSpeed: m_MoveSpeed += e * lv; break;
+                case UpgradeEffect.ProcessorYield: m_ProcessorYield[t] = (m_ProcessorYield.TryGetValue(t, out var py) ? py : 0) + e * lv; break;
+                case UpgradeEffect.MachineDiscount: m_Discount += e * lv; break;
+                case UpgradeEffect.SellBonus: m_SellBonus += e * lv; break;
+                case UpgradeEffect.LuckyFind: m_LuckyChance += e * lv; break;
+                case UpgradeEffect.TreeRegrowth: m_Regrowth += e * lv; break;
+                case UpgradeEffect.TreeCashBonus: m_TreeCash += e * lv; break;
+                case UpgradeEffect.StartingAxe: m_StartAxe = Math.Max(m_StartAxe, lv); break;
+                case UpgradeEffect.StartingMoney:
+                    if (lv > m_StartMoneyLevel) { m_StartMoneyLevel = lv; m_StartMoneyBase = e; }
+                    break;
+                case UpgradeEffect.BackpackBonus: m_PackBonus += e * lv; break;
+                case UpgradeEffect.StartingAreas: m_StartAreas = Math.Max(m_StartAreas, lv); break;
+                case UpgradeEffect.CritDamage: m_CritDamage += e * lv; break;
+                case UpgradeEffect.FellChance: m_FellChance += e * lv; break;
+                case UpgradeEffect.UpgradeDiscount: m_UpgradeDiscount += e * lv; break;
+                case UpgradeEffect.StartingMachines: m_StartMachines[t] = Math.Max(m_StartMachines.TryGetValue(t, out var sm) ? sm : 0, lv); break;
+                case UpgradeEffect.StartingBackpack: m_StartPack = Math.Max(m_StartPack, lv); break;
+                case UpgradeEffect.ExtraSkillPoints: m_ExtraPoints += e * lv; break;
+                case UpgradeEffect.RebirthBonus: m_RebirthBonus += e * lv; break;
+                case UpgradeEffect.RebirthDiscount: m_RebirthDiscount += e * lv; break;
             }
         }
     }

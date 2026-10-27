@@ -25,6 +25,12 @@ namespace ChoppingTrees
             var mode = GraphicsService.CameraAntialiasing();
             m_Data.antialiasing = mode;
             if (mode == AntialiasingMode.SubpixelMorphologicalAntiAliasing) m_Data.antialiasingQuality = AntialiasingQuality.High;
+            // Trees past the fog are invisible anyway: skip drawing them (the world is 500 m long).
+            var cam = GetComponent<Camera>();
+            var cull = new float[32];
+            cull[GameLayers.Tree] = 345f;
+            cam.layerCullDistances = cull;
+            cam.layerCullSpherical = true;
         }
     }
 }

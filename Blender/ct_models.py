@@ -1670,6 +1670,196 @@ def Well():
     finish("Well", p)
 
 
+# ----------------------------------------------------------------- the far forests (2.1)
+# Frostpine Peaks, Blossom Vale and the Crystal Wilds: their trees, stumps, scenery and the three
+# axes that cut them.
+
+COLORS.update({
+    "M_LeafFrost": (0.74, 0.84, 0.88), "M_BarkCherry": (0.38, 0.21, 0.19), "M_LeafBlossom": (0.98, 0.66, 0.80),
+    "M_LeafBlossomLight": (1.0, 0.84, 0.90), "M_BarkEmber": (0.17, 0.11, 0.09), "M_EmberGlow": (1.0, 0.45, 0.15),
+    "M_LeafEmber": (0.96, 0.38, 0.12), "M_BarkCrystal": (0.45, 0.50, 0.64), "M_LeafCrystal": (0.52, 0.78, 0.92),
+    "M_Crystal": (0.60, 0.88, 1.0), "M_CrystalViolet": (0.74, 0.56, 1.0), "M_Ice": (0.72, 0.88, 1.0),
+    "M_Starsteel": (0.88, 0.90, 0.98),
+})
+
+
+@model
+def Tree_Frostpine():
+    """A tall pine with frosted needles and snow on every tier."""
+    parts = [ftube("Trunk", (0, 0, 0), (0, 0, 9.2), 0.42, 0.08, "M_Bark", 8)]
+    tiers = [(1.6, 2.6, 2.9), (3.0, 2.2, 2.7), (4.4, 1.8, 2.4), (5.7, 1.35, 2.1), (6.9, 0.95, 1.8), (8.0, 0.55, 1.5)]
+    for i, (z, r, h) in enumerate(tiers):
+        parts.append(cone("Tier", r, 0.05, h, (0, 0, z + h / 2), "M_LeafFrost" if i % 2 == 0 else "M_LeafPine", 8, (0, 0, i * 0.45), 0.08, 300 + i))
+        parts.append(cone("Snow", r * 0.72, 0.03, h * 0.55, (0, 0, z + h * 0.62), "M_Snow", 8, (0, 0, i * 0.45 + 0.2), 0.05, 320 + i))
+    finish("Tree_Frostpine", parts)
+
+
+@model
+def Tree_Cherry():
+    """A gnarled cherry tree in full pink blossom."""
+    pts = [(0, 0, 0), (0.3, 0.1, 1.6), (0.1, 0.3, 3.2), (0.2, 0.1, 4.2)]
+    radii = [0.42, 0.36, 0.3, 0.24]
+    parts = [ftube("Trunk", pts[i], pts[i + 1], radii[i], radii[i + 1], "M_BarkCherry", 8) for i in range(3)]
+    for (x, y, z) in [(2.1, 0.5, 5.0), (-1.9, 0.9, 5.2), (0.3, -2.0, 5.1), (-0.5, 1.8, 5.6), (1.2, -1.2, 5.8)]:
+        parts.append(ftube("Branch", (0.2, 0.1, 3.6), (x, y, z), 0.2, 0.08, "M_BarkCherry", 6))
+    crown(parts, [(0, 0, 6.0, 2.0), (2.1, 0.5, 5.4, 1.5), (-1.9, 0.9, 5.6, 1.5), (0.3, -2.1, 5.5, 1.4), (-0.5, 1.9, 6.1, 1.4),
+                  (1.2, -1.2, 6.5, 1.3), (0.2, 0.3, 7.2, 1.3)], ["M_LeafBlossom", "M_LeafBlossomLight"], 400)
+    finish("Tree_Cherry", parts)
+
+
+@model
+def Tree_Emberwood():
+    """A charred trunk with glowing cracks under a crown of fiery leaves."""
+    parts = [ftube("Trunk", (0, 0, 0), (0.1, 0, 5.5), 0.55, 0.36, "M_BarkEmber", 9)]
+    rnd = random.Random(13)
+    for i in range(10):
+        a = rnd.uniform(0, math.tau)
+        z = rnd.uniform(0.4, 4.8)
+        r = 0.55 - z * 0.035
+        parts.append(box("Crack", (0.06, 0.08, rnd.uniform(0.5, 1.1)), (math.cos(a) * r + z * 0.018, math.sin(a) * r, z), "M_EmberGlow",
+                         rot=(rnd.uniform(-0.2, 0.2), 0, a)))
+    for (x, y, z) in [(2.0, 0.3, 6.8), (-1.9, 0.7, 7.0), (0.3, -2.0, 6.9), (-0.3, 1.9, 7.3)]:
+        parts.append(ftube("Branch", (0.05, 0, 4.6), (x, y, z), 0.28, 0.12, "M_BarkEmber", 6))
+    crown(parts, [(0, 0, 8.0, 2.3), (2.1, 0.3, 7.2, 1.7), (-2.0, 0.7, 7.4, 1.7), (0.3, -2.1, 7.3, 1.6), (-0.3, 2.0, 7.8, 1.6), (0.4, 0.2, 9.4, 1.4)],
+          ["M_LeafEmber", "M_LeafAutumn", "M_LeafMaple"], 500)
+    finish("Tree_Emberwood", parts)
+
+
+@model
+def Tree_Crystalwood():
+    """A pale trunk whose crown grows glowing crystal shards."""
+    pts = [(0, 0, 0), (0.15, 0.05, 3.0), (-0.1, 0.15, 6.0), (0.1, 0, 7.6)]
+    radii = [0.55, 0.45, 0.34, 0.22]
+    parts = [ftube("Trunk", pts[i], pts[i + 1], radii[i], radii[i + 1], "M_BarkCrystal", 8) for i in range(3)]
+    for (x, y, z) in [(2.0, 0.4, 8.2), (-1.9, 0.6, 8.4), (0.3, -2.0, 8.3), (-0.2, 1.8, 8.8)]:
+        parts.append(ftube("Branch", (0.05, 0.05, 6.2), (x, y, z), 0.24, 0.1, "M_BarkCrystal", 6))
+    rnd = random.Random(21)
+    centers = [(0, 0, 9.2, 2.0), (2.0, 0.4, 8.4, 1.5), (-1.9, 0.6, 8.6, 1.5), (0.3, -2.0, 8.5, 1.4), (-0.2, 1.8, 9.0, 1.4)]
+    for i, (x, y, z, r) in enumerate(centers):
+        parts.append(ico("Leaves", r, (x, y, z), "M_LeafCrystal", 1, (1, 1, 0.8), 0.12, 600 + i))
+        for k in range(3):
+            a = rnd.uniform(0, math.tau)
+            d = r * 0.75
+            parts.append(ico("Shard", r * 0.28, (x + math.cos(a) * d, y + math.sin(a) * d, z + rnd.uniform(-0.2, 0.6)),
+                             "M_Crystal" if (i + k) % 2 else "M_CrystalViolet", 0, (0.55, 0.55, 1.7)))
+    finish("Tree_Crystalwood", parts)
+
+
+@model
+def Stump_Cherry():
+    stump("Stump_Cherry", "M_BarkCherry")
+
+
+@model
+def Stump_Ember():
+    stump("Stump_Ember", "M_BarkEmber")
+
+
+@model
+def Stump_Crystal():
+    stump("Stump_Crystal", "M_BarkCrystal")
+
+
+@model
+def Axe_5():
+    """Frostbite Axe: an ice-blue bearded head with a frosted edge."""
+    parts = [ftube("Handle", (0, 0, -0.22), (0, 0, 0.86), 0.025, 0.024, "M_WoodDark", 8)]
+    for z in (-0.18, -0.12, -0.06):
+        parts.append(fcyl("Grip", 0.029, 0.045, (0, 0, z), "M_Leather", verts=8))
+    for z in (0.4, 0.62):
+        parts.append(fcyl("Band", 0.029, 0.035, (0, 0, z), "M_Steel", verts=8))
+    axe_head(parts, [(-0.07, 0.7), (0.05, 0.7), (0.13, 0.5), (0.27, 0.46), (0.28, 0.94), (0.06, 0.86), (-0.07, 0.87)], 0.055, "M_Ice", "M_Crystal")
+    parts.append(box("Poll", (0.06, 0.07, 0.16), (0, -0.09, 0.8), "M_Ice"))
+    finish("Axe_5", parts)
+
+
+@model
+def Axe_6():
+    """Emberforge Axe: a double-bit head forged around a glowing ember core."""
+    parts = [ftube("Handle", (0, 0, -0.24), (0, 0, 0.88), 0.026, 0.025, "M_BarkEmber", 8)]
+    for z in (-0.2, 0.3, 0.6):
+        parts.append(fcyl("Band", 0.03, 0.04, (0, 0, z), "M_Gold", verts=8))
+    prof = [(0.0, 0.66), (0.09, 0.68), (0.26, 0.58), (0.28, 0.98), (0.09, 0.9), (0.0, 0.92)]
+    axe_head(parts, prof, 0.058, "M_MetalDark", "M_EmberGlow")
+    back = [(-p[0] * 0.7, p[1]) for p in reversed(prof)]
+    parts.append(flat(prism("Head2", back, 0.058, "M_MetalDark", 'X')))
+    parts.append(box("Edge2", (0.036, 0.02, 0.3), (0, -0.19, 0.79), "M_EmberGlow"))
+    parts.append(box("Core", (0.075, 0.075, 0.28), (0, 0, 0.79), "M_EmberGlow"))
+    finish("Axe_6", parts)
+
+
+@model
+def Axe_7():
+    """Starsteel Axe: a silver crescent with a crystal edge and violet star gems."""
+    parts = [ftube("Handle", (0, 0, -0.24), (0, 0.01, 0.9), 0.025, 0.024, "M_Starsteel", 8)]
+    for z in (-0.2, -0.14, -0.08, -0.02):
+        parts.append(fcyl("Grip", 0.029, 0.05, (0, 0, z), "M_PaintBlue", verts=8))
+    prof = [(-0.06, 0.72), (0.06, 0.7), (0.16, 0.56), (0.32, 0.52), (0.33, 0.74), (0.32, 0.98), (0.16, 0.94), (0.06, 0.88), (-0.06, 0.88)]
+    axe_head(parts, prof, 0.05, "M_Starsteel", "M_Crystal")
+    for x in (0.03, -0.03):
+        parts.append(ico("Gem", 0.035, (x, 0.04, 0.8), "M_CrystalViolet", 0))
+    parts.append(cone("Spike", 0.03, 0.0, 0.12, (0, 0, 0.96), "M_Starsteel", 6))
+    finish("Axe_7", parts)
+
+
+@model
+def Rock_Snow():
+    parts = [ico("Rock", 0.9, (0, 0, 0.4), "M_StoneDark", 1, (1.25, 1.05, 0.75), 0.2, 31),
+             ico("Snow", 0.8, (0.05, 0.0, 0.72), "M_Snow", 1, (1.25, 1.05, 0.35), 0.12, 32)]
+    finish("Rock_Snow", parts)
+
+
+@model
+def Snow_Drift():
+    parts = [ico("Drift", r, (x, y, 0), "M_Snow", 1, (1.6, 1.0, 0.28), 0.15, 40 + i)
+             for i, (x, y, r) in enumerate([(0, 0, 0.9), (0.9, 0.3, 0.6), (-0.8, -0.2, 0.55)])]
+    finish("Snow_Drift", parts)
+
+
+@model
+def Bush_Blossom():
+    parts = []
+    for i, (x, y, z, r) in enumerate([(0, 0, 0.5, 0.62), (0.55, 0.15, 0.38, 0.45), (-0.5, 0.1, 0.38, 0.45), (0.1, -0.45, 0.32, 0.4)]):
+        parts.append(ico("Bush", r, (x, y, z), "M_LeafBlossom" if i % 2 == 0 else "M_LeafBlossomLight", 1, (1, 1, 0.85), 0.15, 70 + i))
+    finish("Bush_Blossom", parts)
+
+
+@model
+def Petals():
+    rnd = random.Random(50)
+    parts = []
+    for i in range(22):
+        a = rnd.uniform(0, math.tau)
+        d = rnd.uniform(0, 0.7)
+        parts.append(box("Petal", (0.07, 0.05, 0.008), (math.cos(a) * d, math.sin(a) * d, 0.01), "M_LeafBlossom" if i % 3 else "M_LeafBlossomLight",
+                         rot=(0, 0, rnd.uniform(0, math.tau))))
+    finish("Petals", parts)
+
+
+@model
+def Crystal_Cluster():
+    parts = [ico("Base", 0.45, (0, 0, 0.1), "M_StoneDark", 1, (1.3, 1.1, 0.5), 0.15, 60)]
+    rnd = random.Random(61)
+    for i in range(7):
+        a = rnd.uniform(0, math.tau)
+        d = rnd.uniform(0, 0.35)
+        h = rnd.uniform(0.5, 1.2)
+        t = rnd.uniform(0.1, 0.45)
+        o = ico("Shard", 0.16, (math.cos(a) * d, math.sin(a) * d, h * 0.45), "M_Crystal" if i % 2 else "M_CrystalViolet", 0, (0.8, 0.8, h / 0.32))
+        o.rotation_euler = (-math.sin(a) * t, math.cos(a) * t, 0)  # leans outwards
+        parts.append(o)
+    finish("Crystal_Cluster", parts)
+
+
+@model
+def Glowcap():
+    parts = []
+    for (x, y, h, r) in [(0, 0, 0.22, 0.12), (0.16, 0.1, 0.15, 0.09), (-0.12, 0.12, 0.12, 0.07), (0.05, -0.15, 0.1, 0.06)]:
+        parts.append(fcyl("Stem", r * 0.32, h, (x, y, h / 2), "M_Canvas", verts=6))
+        parts.append(cone("Cap", r, r * 0.25, r * 0.75, (x, y, h + r * 0.25), "M_Crystal", 8))
+    finish("Glowcap", parts)
+
+
 def main():
     names = [n for n in MODELS if not ONLY or n in ONLY]
     for n in names:

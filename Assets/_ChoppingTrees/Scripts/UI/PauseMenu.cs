@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace ChoppingTrees
 {
-    /// <summary>Esc menu: resume, settings, save, reset, main menu, quit. The game keeps
+    /// <summary>Esc menu: resume, achievements, settings, save, reset, main menu, quit. The game keeps
     /// running behind it (machines, trees and the clock don't stop); only the player waits.</summary>
     public class PauseMenu : UIScreen
     {
@@ -14,9 +14,10 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            UIFactory.Window(Root, "Menu", "leaf", new Vector2(500, 498), out var body);
+            UIFactory.Window(Root, "Menu", "leaf", new Vector2(500, 566), out var body);
             UIFactory.VStack(body, 12f, new RectOffset(36, 36, 26, 32));
             UIFactory.Button(body, "Resume", Close, 26, ButtonStyle.Primary, "play").Layout(-1, 64);
+            UIFactory.Button(body, "Achievements", () => AchievementsMenu.Instance.Open(), 22, ButtonStyle.Ghost, "trophy").Layout(-1, 56);
             UIFactory.Button(body, "Settings", () => SettingsMenu.Instance.Open(), 22, ButtonStyle.Ghost, "gear").Layout(-1, 56);
             UIFactory.Button(body, "Save Game", SaveNow, 22, ButtonStyle.Ghost, "save").Layout(-1, 56);
             UIFactory.Button(body, "Main Menu", () => Game.Instance.ReturnToMenu(), 22, ButtonStyle.Ghost, "leaf").Layout(-1, 56);

@@ -47,6 +47,11 @@ namespace ChoppingTrees
             UpgradeCategory.Automation => new Color(0.97f, 0.73f, 0.27f),
             UpgradeCategory.Economy => new Color(0.42f, 0.80f, 0.62f),
             UpgradeCategory.Forest => new Color(0.45f, 0.72f, 0.92f),
+            // The Legacy tree's branches: jewel tones around the skill point purple.
+            UpgradeCategory.Heritage => new Color(0.80f, 0.66f, 0.98f),
+            UpgradeCategory.Might => new Color(0.95f, 0.50f, 0.62f),
+            UpgradeCategory.Industry => new Color(0.42f, 0.78f, 0.95f),
+            UpgradeCategory.Fortune => new Color(0.98f, 0.80f, 0.40f),
             _ => new Color(0.74f, 0.62f, 0.92f), // Legacy (skill point perks)
         };
 
@@ -56,6 +61,10 @@ namespace ChoppingTrees
             UpgradeCategory.Automation => "gear",
             UpgradeCategory.Economy => "coin",
             UpgradeCategory.Forest => "pine",
+            UpgradeCategory.Heritage => "crown",
+            UpgradeCategory.Might => "bolt",
+            UpgradeCategory.Industry => "gear",
+            UpgradeCategory.Fortune => "coin",
             _ => "rebirth",
         };
 

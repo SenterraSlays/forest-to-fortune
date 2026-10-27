@@ -11,8 +11,10 @@ namespace ChoppingTrees
     [Serializable]
     public class SaveData
     {
-        /// <summary>2: added <see cref="backpack"/> (1.2). Version 1 stock all stays in the yard.</summary>
-        public const int CurrentVersion = 2;
+        /// <summary>2: added <see cref="backpack"/> (1.2). Version 1 stock all stays in the yard.
+        /// 3: added <see cref="achievements"/> and <see cref="felled"/> (2.1); older saves earn the
+        /// achievements their progress already meets the first time they load.</summary>
+        public const int CurrentVersion = 3;
 
         public int version = CurrentVersion;
         public double money;
@@ -34,6 +36,10 @@ namespace ChoppingTrees
         public bool tutorialDone;
         public bool hasPlayed;
         public long lastSavedUtcTicks;
+        /// <summary>Unlocked achievement ids. Achievements belong to this save only.</summary>
+        public List<string> achievements = new List<string>();
+        /// <summary>Trees felled per species (counted from 2.1).</summary>
+        public List<Amount> felled = new List<Amount>();
 
         [Serializable]
         public struct Amount

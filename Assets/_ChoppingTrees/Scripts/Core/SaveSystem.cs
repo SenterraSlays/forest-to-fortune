@@ -186,6 +186,11 @@ namespace ChoppingTrees
             // Version 1 had a single stock. It stays in the yard: moving it into the backpack
             // could overflow the new capacity, and the market sells both anyway.
             if (d.version < 2) d.version = 2;
+            // Version 3 added achievements and per-species counts; they start empty and the game
+            // grants every achievement the save already qualifies for when it loads.
+            if (d.version < 3) d.version = 3;
+            if (d.achievements == null) d.achievements = new System.Collections.Generic.List<string>();
+            if (d.felled == null) d.felled = new System.Collections.Generic.List<SaveData.Amount>();
             if (d.resources == null) d.resources = new System.Collections.Generic.List<SaveData.Amount>();
             if (d.backpack == null) d.backpack = new System.Collections.Generic.List<SaveData.Amount>();
             if (d.upgrades == null) d.upgrades = new System.Collections.Generic.List<SaveData.UpgradeLevel>();

@@ -16,20 +16,38 @@ namespace ChoppingTrees
     /// Owned paths carry a slow flow of light; buying an upgrade sends a pulse along its links.
     /// The detail panel shows the hovered or selected node with its effect, requirements and price.
     /// Everything refreshes immediately after a purchase and a few times a second otherwise.
+    /// <see cref="LegacyMenu"/> is the same screen for the Legacy perks (paid in skill points).
     /// </summary>
     public class UpgradeMenu : UIScreen
     {
         public static UpgradeMenu Instance { get; private set; }
 
-        // Tree units covered by the content (positions are x = -8..7, y = 0..8) and its size
-        // in canvas units per tree unit. The band below the trunk leaves room for the overlays.
-        const float XMin = -8.6f, XMax = 10.0f, YMin = -1.25f, YMax = 9.1f;
+        // Size of the content in canvas units per tree unit. The band below the trunk leaves room
+        // for the overlays.
         const float UnitX = 136f, UnitY = 132f;
-        static readonly Vector2 ContentSize = new Vector2((XMax - XMin) * UnitX, (YMax - YMin) * UnitY);
-        static readonly Vector2 RootPos = new Vector2(0.7f, 0.05f);
+        static readonly Color WoodColor = new Color(0.62f, 0.45f, 0.27f);
+
+        /// <summary>True for the Legacy tree: shows the Legacy perks and prices them in skill points.</summary>
+        protected virtual bool Legacy => false;
+        /// <summary>Tree units the content covers (positions are x = -11..9, y = 0..9).</summary>
+        protected virtual Rect Bounds => Rect.MinMaxRect(-11.7f, -1.25f, 10.0f, 10.4f);
+        protected virtual Vector2 RootPos => new Vector2(0.7f, 0.05f);
         /// <summary>Where the default view looks: the trunk and the first rows of every branch.</summary>
-        static readonly Vector2 HomePos = new Vector2(0.2f, 3.3f);
-        static readonly Color Wood = new Color(0.62f, 0.45f, 0.27f);
+        protected virtual Vector2 HomePos => new Vector2(0.2f, 3.3f);
+        protected virtual Color RootColor => WoodColor;
+        protected virtual Color RootFace => new Color(0.30f, 0.21f, 0.12f);
+        protected virtual string RootIcon => "log";
+        /// <summary>Scale of the default view (0.92 is about full size).</summary>
+        protected virtual float HomeScale => 0.92f;
+        protected virtual Color Trim => UIStyle.Accent;
+        Vector2 ContentSize => new Vector2(Bounds.width * UnitX, Bounds.height * UnitY);
+
+        protected virtual void Register() => Instance = this;
+
+        protected virtual void Unregister()
+        {
+            if (Instance == this) Instance = null;
+        }
 
         class Pulse
         {
@@ -92,22 +110,35 @@ namespace ChoppingTrees
 
         protected override void Build()
         {
-            Instance = this;
+            Register();
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
 
-            var window = UIFactory.Window(Root, "Workbench", "leaf", new Vector2(1840, 1000), out var body, "Skill tree: spend money to grow your operation, one branch at a time");
+            RectTransform body;
+            var window = Legacy
+                ? UIFactory.Window(Root, "Legacy Tree", "star", new Vector2(1840, 1000), out body, "Perks bought with skill points: never reset, rebirth after rebirth")
+                : UIFactory.Window(Root, "Workbench", "leaf", new Vector2(1840, 1000), out body, "Skill tree: spend money to grow your operation, one branch at a time");
             m_Window = window.rectTransform;
             m_WindowShadow = (RectTransform)Root.Find("WindowShadow");
-            UIFactory.TopTrim(m_Window, UIStyle.Accent);
-
-            // Currency chips, Rebirth and close in the header.
+            UIFactory.TopTrim(m_Window, Trim);
             var header = window.transform.Find("Header");
-            m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-104, 0), 260);
-            m_SkillPoints = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-380, 0), 150);
+            var badge = header.Find("Badge");
+            if (badge != null) badge.GetComponent<Image>().color = Trim;
+
+            // Currency chips, Rebirth and close in the header (the Legacy tree leads with skill points).
+            if (Legacy)
+            {
+                m_SkillPoints = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-104, 0), 200);
+                m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-320, 0), 230);
+            }
+            else
+            {
+                m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-104, 0), 260);
+                m_SkillPoints = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-380, 0), 190);
+            }
             var rebirth = UIFactory.Button(header, "Rebirth", () => RebirthMenu.Instance.Open(), 20, ButtonStyle.Ghost, "rebirth");
-            ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-546, 0), new Vector2(170, 52));
+            ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(Legacy ? -566 : -586, 0), new Vector2(170, 52));
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
             close.navigation = new Navigation { mode = Navigation.Mode.None }; // B closes
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
@@ -123,25 +154,24 @@ namespace ChoppingTrees
             m_Content.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, ContentSize);
             m_View = treeArea.gameObject.AddComponent<SkillTreeView>();
             m_View.Init(m_TreeArea, m_Content);
+            m_View.HomeScale = HomeScale;
             BuildTree();
             UIFactory.Border(m_TreeArea, new Color(1f, 0.95f, 0.82f, 0.12f));
 
             BuildLegend();
-            BuildProduction();
+            if (Legacy) BuildPointsPanel();
+            else BuildProduction();
             BuildDetails(body);
 
             Game.Instance.Model.Purchased += _ => { if (IsOpen) RefreshAll(); };
             Game.Instance.PhaseChanged += _ => Close();
         }
 
-        void OnDestroy()
-        {
-            if (Instance == this) Instance = null;
-        }
+        void OnDestroy() => Unregister();
 
         // ------------------------------------------------------------------ layout
 
-        static Vector2 ToCanvas(Vector2 tree) => new Vector2((tree.x - XMin) * UnitX, (tree.y - YMin) * UnitY);
+        Vector2 ToCanvas(Vector2 tree) => new Vector2((tree.x - Bounds.xMin) * UnitX, (tree.y - Bounds.yMin) * UnitY);
 
         /// <summary>Sizes the window to the screen, places the tree and fits the view to the tree
         /// area. Cheap (a few dozen rects), and only runs when the size changes.</summary>
@@ -170,7 +200,7 @@ namespace ChoppingTrees
                 int count = 0;
                 foreach (var n in m_Nodes)
                     if (n.Def.category == h.category) { sum += n.Def.treePosition.x; count++; }
-                h.rect.anchoredPosition = ToCanvas(new Vector2(count > 0 ? sum / count : 0f, YMax - 0.3f));
+                h.rect.anchoredPosition = ToCanvas(new Vector2(count > 0 ? sum / count : 0f, Bounds.yMax - 0.3f));
             }
 
             // Growth rings and lantern light sit in the content, centred on the trunk.
@@ -241,7 +271,7 @@ namespace ChoppingTrees
             var headingLayer = UIFactory.Rect("Headings", m_Content);
             headingLayer.Stretch();
             var cats = new List<UpgradeCategory>();
-            foreach (var u in db.upgrades) if (u != null && !u.legacy && !cats.Contains(u.category)) cats.Add(u.category);
+            foreach (var u in db.upgrades) if (u != null && u.legacy == Legacy && !cats.Contains(u.category)) cats.Add(u.category);
             foreach (var c in cats) m_Headings.Add(HeadingFor(headingLayer, c));
 
             // Links first so nodes (and their labels) draw on top.
@@ -249,7 +279,7 @@ namespace ChoppingTrees
             m_LinkLayer.Stretch();
             foreach (var u in db.upgrades)
             {
-                if (u == null || u.legacy) continue;
+                if (u == null || u.legacy != Legacy) continue;
                 // Draw links to prerequisites in the same branch; a node with none in its branch
                 // links to its first prerequisite. Every prerequisite is still listed in the details.
                 var parents = new List<UpgradeDef.Requirement>();
@@ -285,22 +315,23 @@ namespace ChoppingTrees
             var glow = UIFactory.Panel(m_RootNode, "Glow", new Color(1f, 0.7f, 0.35f, 0.18f), false);
             glow.sprite = UIIcons.Glow;
             glow.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(230, 230));
-            var bezel = UIFactory.Panel(m_RootNode, "Bezel", Wood, false);
+            if (Legacy) glow.color = new Color(RootColor.r, RootColor.g, RootColor.b, 0.2f);
+            var bezel = UIFactory.Panel(m_RootNode, "Bezel", RootColor, false);
             bezel.sprite = UIIcons.Bezel;
             bezel.rectTransform.Stretch();
-            var face = UIFactory.Panel(m_RootNode, "Face", new Color(0.30f, 0.21f, 0.12f), false);
+            var face = UIFactory.Panel(m_RootNode, "Face", RootFace, false);
             face.sprite = UIIcons.Face;
             face.rectTransform.Stretch(11, 11, 11, 11);
-            var rings = UIFactory.Panel(m_RootNode, "Rings", new Color(0.12f, 0.08f, 0.04f, 0.5f), false);
+            var rings = UIFactory.Panel(m_RootNode, "Rings", new Color(0.12f, 0.08f, 0.04f, Legacy ? 0.25f : 0.5f), false);
             rings.sprite = UIIcons.TreeRings;
             rings.rectTransform.Stretch(13, 13, 13, 13);
-            UIFactory.Icon(m_RootNode, "log", new Color(0.95f, 0.8f, 0.55f), 50f).rectTransform.anchoredPosition = Vector2.zero;
+            UIFactory.Icon(m_RootNode, RootIcon, Legacy ? new Color(0.94f, 0.88f, 1f) : new Color(0.95f, 0.8f, 0.55f), 50f).rectTransform.anchoredPosition = Vector2.zero;
 
             var nodeLayer = UIFactory.Rect("Nodes", m_Content);
             nodeLayer.Stretch();
             foreach (var u in db.upgrades)
             {
-                if (u == null || u.legacy) continue;
+                if (u == null || u.legacy != Legacy) continue;
                 m_Nodes.Add(SkillNode.Create(nodeLayer, u, Vector2.zero, Hover, Select, Buy));
             }
         }
@@ -407,6 +438,43 @@ namespace ChoppingTrees
             foreach (var m in db.machines)
                 if (m != null) m_MachineStats[m.id] = StatCell(grid, m.kind == MachineKind.Producer ? "saw" : "gear", UIStyle.CategoryColor(UpgradeCategory.Automation), m.displayName);
             m_PriceStat = StatCell(grid, "coin", UIStyle.Money, "Wood price");
+        }
+
+        Stat[] m_PointsStats;
+
+        /// <summary>Legacy tree: skill points on hand, per rebirth and in total, and the rebirth bonus.</summary>
+        void BuildPointsPanel()
+        {
+            var panel = UIFactory.Surface(m_TreeArea, "Points", new Color(0.04f, 0.05f, 0.04f, 0.86f));
+            panel.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-16, 16), Vector2.zero);
+            UIFactory.VStack(panel, 6f, new RectOffset(14, 14, 9, 11));
+            UIFactory.Fit(panel, true, true);
+            var head = UIFactory.Rect("Head", panel.transform);
+            UIFactory.HStack(head, 7f);
+            UIFactory.Icon(head, "star", UIStyle.Skill, 14f);
+            UIFactory.Caption(head, "Skill points", UIStyle.Muted, 13f);
+            var grid = UIFactory.Rect("Grid", panel.transform);
+            var g = grid.gameObject.AddComponent<GridLayoutGroup>();
+            g.cellSize = new Vector2(196, 24);
+            g.spacing = new Vector2(18, 2);
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            g.constraintCount = 2;
+            m_PointsStats = new[]
+            {
+                StatCell(grid, "star", UIStyle.Skill, "To spend"),
+                StatCell(grid, "rebirth", UIStyle.Skill, "Per rebirth"),
+                StatCell(grid, "chart", UIStyle.Skill, "Earned in total"),
+                StatCell(grid, "coin", UIStyle.Money, "Rebirth bonus"),
+            };
+        }
+
+        void RefreshPoints(GameModel model)
+        {
+            m_PointsStats[0].value.text = model.State.SkillPoints.ToString("N0");
+            m_PointsStats[1].value.text = "+" + model.SkillPointsPerRebirth;
+            m_PointsStats[2].value.text = model.State.SkillPointsEarned.ToString("N0");
+            m_PointsStats[3].value.text = $"x{model.Market.RebirthMultiplier:0.0#}";
+            m_PointsStats[3].value.color = UIStyle.Money;
         }
 
         static Stat StatCell(RectTransform grid, string icon, Color iconColor, string label)
@@ -534,8 +602,8 @@ namespace ChoppingTrees
             UIFactory.VStack(footer, 8f, new RectOffset(18, 18, 14, 16));
             var costRow = UIFactory.Rect("Cost", footer.transform);
             UIFactory.HStack(costRow, 10f, null, TextAnchor.MiddleLeft);
-            UIFactory.Icon(costRow, "coin", UIStyle.Money, 30f);
-            m_DCost = UIFactory.Text(costRow, "", 34, UIStyle.Money, true);
+            UIFactory.Icon(costRow, Legacy ? "star" : "coin", Legacy ? UIStyle.Skill : UIStyle.Money, 30f);
+            m_DCost = UIFactory.Text(costRow, "", 34, Legacy ? UIStyle.Skill : UIStyle.Money, true);
             m_DCost.textWrappingMode = TextWrappingModes.NoWrap;
             m_DStatus = UIFactory.Text(footer.transform, "", 16, UIStyle.Muted);
             m_Buy = UIFactory.Button(footer.transform, "Buy", () => Buy(m_Selected), 26, ButtonStyle.Primary, "check");
@@ -676,9 +744,10 @@ namespace ChoppingTrees
                 else l.SetStyle(SkillLink.Style.Locked, new Color(0.46f, 0.47f, 0.43f, 0.45f));
             }
             foreach (var l in m_RootLinks)
-                l.SetStyle(up.Level(l.To) > 0 ? SkillLink.Style.Owned : SkillLink.Style.Available, up.Level(l.To) > 0 ? Wood : new Color(Wood.r, Wood.g, Wood.b, 0.6f));
+                l.SetStyle(up.Level(l.To) > 0 ? SkillLink.Style.Owned : SkillLink.Style.Available, up.Level(l.To) > 0 ? RootColor : new Color(RootColor.r, RootColor.g, RootColor.b, 0.6f));
 
-            RefreshProduction(model);
+            if (Legacy) RefreshPoints(model);
+            else RefreshProduction(model);
             RefreshDetails();
         }
 
@@ -779,12 +848,24 @@ namespace ChoppingTrees
             else
             {
                 double cost = up.NextCost(u);
-                m_DCost.text = NumberUtil.Money(cost);
                 string missing = up.MissingRequirement(u);
-                bool afford = model.State.Money + 1e-9 >= cost;
+                bool afford = up.CanAfford(u);
                 m_Buy.interactable = missing == null && afford;
                 m_Buy.Label.text = lv > 0 ? "Upgrade" : "Unlock";
-                m_DStatus.text = missing != null ? $"<color=#E8705F>{missing}</color>" : afford ? "<color=#86CC61>You can afford this.</color>" : $"Need {NumberUtil.Money(cost - model.State.Money)} more.";
+                string need;
+                if (u.legacy)
+                {
+                    int points = up.SkillPointCost(u);
+                    m_DCost.text = points == 1 ? "1 skill point" : points + " skill points";
+                    int more = points - model.State.SkillPoints;
+                    need = $"Need {more} more skill point{(more == 1 ? "" : "s")}. Each rebirth gives {model.SkillPointsPerRebirth}.";
+                }
+                else
+                {
+                    m_DCost.text = NumberUtil.Money(cost);
+                    need = $"Need {NumberUtil.Money(cost - model.State.Money)} more.";
+                }
+                m_DStatus.text = missing != null ? $"<color=#E8705F>{missing}</color>" : afford ? "<color=#86CC61>You can afford this.</color>" : need;
             }
         }
 

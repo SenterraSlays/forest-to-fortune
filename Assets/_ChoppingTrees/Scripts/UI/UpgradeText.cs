@@ -80,7 +80,7 @@ namespace ChoppingTrees
                 case UpgradeEffect.TreeRegrowth:
                     return Pair("Regrowth speed", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.TreeCashBonus:
-                    return Pair("Goldbark cash", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                    return Pair("Goldbark and Crystalwood cash", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.StartingAxe:
                 {
                     var axe = up.FirstWithEffect(UpgradeEffect.AxeTier);
@@ -133,6 +133,26 @@ namespace ChoppingTrees
                 }
                 case UpgradeEffect.ProductionBonus:
                     return Pair("All machines", "+" + (e * lv * 100).ToString("0") + "%", "+" + (e * (lv + 1) * 100).ToString("0") + "%", maxed);
+                case UpgradeEffect.StartingBackpack:
+                {
+                    var bag = up.FirstWithEffect(UpgradeEffect.BackpackCapacity);
+                    string now = lv > 0 && bag != null ? bag.LevelName(lv) : m.Db.config.baseBackpackName;
+                    string next = bag != null ? bag.LevelName(lv + 1) : "";
+                    return maxed ? $"Every run starts with the <b>{now}</b>" : $"Every run starts with{Arrow}<color=#FBBD52>{next}</color>";
+                }
+                case UpgradeEffect.ExtraSkillPoints:
+                {
+                    int bas = m.Db.config.rebirthSkillPoints;
+                    return Pair("Skill points per rebirth", (bas + e * lv).ToString("0"), (bas + e * (lv + 1)).ToString("0"), maxed);
+                }
+                case UpgradeEffect.RebirthBonus:
+                {
+                    double bas = m.Db.config.rebirthBonus;
+                    return Pair("Earnings per rebirth", "+" + ((bas + e * lv) * 100).ToString("0") + "%", "+" + ((bas + e * (lv + 1)) * 100).ToString("0") + "%", maxed)
+                           + $"\n<color=#8F8A7C>Counts every rebirth you've done: x{m.Market.RebirthMultiplier:0.0#} now</color>";
+                }
+                case UpgradeEffect.RebirthDiscount:
+                    return Pair("Rebirth prices", "-" + Pct(e * lv, false), "-" + Pct(e * (lv + 1), false), maxed) + "\n<color=#8F8A7C>Up to -50%</color>";
             }
             return "";
         }

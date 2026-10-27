@@ -29,6 +29,8 @@ namespace ChoppingTrees
         public event Action<TreeType> TreeFelled;
         /// <summary>Progress was reset by a rebirth (number of rebirths bought).</summary>
         public event Action<int> Reborn;
+        /// <summary>An achievement was unlocked and its reward granted.</summary>
+        public event Action<AchievementDef> AchievementUnlocked;
 
         float m_AutoSellTimer;
 
@@ -100,7 +102,66 @@ namespace ChoppingTrees
         public void NotifyTreeFelled(TreeType t)
         {
             State.TreesFelled++;
+            if (t != null && !string.IsNullOrEmpty(t.id)) State.Felled[t.id] = State.FelledOf(t.id) + 1;
             TreeFelled?.Invoke(t);
+        }
+
+        // ---------- achievements
+
+        /// <summary>Locked forests opened so far.</summary>
+        public int AreasUnlocked
+        {
+            get
+            {
+                int n = 0;
+                foreach (var a in Db.areas) if (a != null && !a.unlockedByDefault && Upgrades.AreaUnlocked(a)) n++;
+                return n;
+            }
+        }
+
+        /// <summary>Levels owned across Workbench upgrades (or Legacy perks).</summary>
+        public int UpgradeLevels(bool legacy)
+        {
+            int n = 0;
+            foreach (var u in Db.upgrades) if (u != null && u.legacy == legacy) n += Upgrades.Level(u);
+            return n;
+        }
+
+        public int MachinesOwned
+        {
+            get
+            {
+                int n = 0;
+                foreach (var m in Db.machines) if (m != null) n += Upgrades.MachineCount(m.id);
+                return n;
+            }
+        }
+
+        /// <summary>
+        /// Unlocks every achievement whose goal is met and grants its reward: money, skill points,
+        /// or a bonus that lasts for the rest of this save. Saves from before achievements earn
+        /// everything their progress already meets the first time this runs.
+        /// Returns the achievements unlocked now (null when none).
+        /// </summary>
+        public List<AchievementDef> CheckAchievements()
+        {
+            List<AchievementDef> unlocked = null;
+            foreach (var a in Achievements.All)
+            {
+                if (State.Achievements.Contains(a.id) || a.Progress(this) + 1e-9 < a.goal) continue;
+                State.Achievements.Add(a.id);
+                if (a.money > 0) State.Money = NumberUtil.Add(State.Money, a.money);
+                if (a.skillPoints > 0)
+                {
+                    State.SkillPoints += a.skillPoints;
+                    State.SkillPointsEarned += a.skillPoints;
+                }
+                (unlocked ??= new List<AchievementDef>()).Add(a);
+            }
+            if (unlocked == null) return null;
+            Upgrades.MarkDirty();
+            foreach (var a in unlocked) AchievementUnlocked?.Invoke(a);
+            return unlocked;
         }
 
         public bool TryBuy(UpgradeDef u, out string failure)
@@ -125,6 +186,7 @@ namespace ChoppingTrees
                 if (State.Level(u.id) < level) State.SetLevel(u.id, level);
             }
             AtLeast(Upgrades.FirstWithEffect(UpgradeEffect.AxeTier), Upgrades.StartingAxeTier);
+            AtLeast(Upgrades.FirstWithEffect(UpgradeEffect.BackpackCapacity), Upgrades.StartingBackpackTier);
             foreach (var m in Db.machines)
                 if (m != null) AtLeast(Db.CountUpgradeFor(m.id), Upgrades.StartingMachines(m.id));
             int areas = Upgrades.StartingAreas;
@@ -144,17 +206,28 @@ namespace ChoppingTrees
             return r;
         }
 
-        /// <summary>Total price of the next <paramref name="count"/> rebirths.</summary>
-        public double RebirthCost(int count = 1) => Rebirth.Cost(Db.config, State.Rebirths, count);
+        /// <summary>Total price of the next <paramref name="count"/> rebirths (after Phoenix Feather).</summary>
+        public double RebirthCost(int count = 1) => NumberUtil.Safe(Rebirth.Cost(Db.config, State.Rebirths, count) * (1 - Upgrades.RebirthDiscount));
 
         /// <summary>How many rebirths the current money pays for at once.</summary>
-        public int MaxRebirths() => Rebirth.MaxAffordable(Db.config, State.Rebirths, State.Money);
+        public int MaxRebirths()
+        {
+            int n = Rebirth.MaxAffordable(Db.config, State.Rebirths, State.Money / (1 - Upgrades.RebirthDiscount));
+            while (n > 0 && RebirthCost(n) > State.Money + 1e-9) n--;
+            return n;
+        }
+
+        /// <summary>Skill points each rebirth gives (base plus Scholar).</summary>
+        public int SkillPointsPerRebirth => Db.config.rebirthSkillPoints + Upgrades.ExtraSkillPoints;
+
+        /// <summary>Earnings multiplier after <paramref name="rebirths"/> rebirths, with Ancestral Wisdom.</summary>
+        public double RebirthMultiplier(int rebirths) => Rebirth.Multiplier(Db.config, rebirths, Upgrades.RebirthBonusExtra);
 
         /// <summary>
         /// Buys <paramref name="count"/> rebirths at once: resets money, upgrades (so machines and
         /// forests), the yard stock and the backpack, and adds to the rebirth count, which raises
-        /// all earnings and gives skill points. Legacy perks, lifetime stats and the tutorial state
-        /// are kept, and the Legacy head starts are granted to the new run.
+        /// all earnings and gives skill points. Legacy perks, achievements, lifetime stats and the
+        /// tutorial state are kept, and the Legacy head starts are granted to the new run.
         /// </summary>
         public bool TryRebirth(int count, out string failure)
         {
@@ -163,7 +236,7 @@ namespace ChoppingTrees
             double cost = RebirthCost(count);
             if (State.Money + 1e-9 < cost) { failure = "Need " + NumberUtil.Money(cost - State.Money) + " more"; return false; }
             State.Rebirths += count;
-            int points = count * Db.config.rebirthSkillPoints;
+            int points = count * SkillPointsPerRebirth;
             State.SkillPoints += points;
             State.SkillPointsEarned += points;
             State.Money = Db.config.startingMoney;

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: titan_grip
   displayName: Titan Grip
   description: 'A grip that never tires: far more damage with every swing.'
-  category: 4
+  category: 6
   effect: 1
   targetId: 
   maxLevel: 10
@@ -27,5 +27,5 @@ MonoBehaviour:
   requires: []
   sortOrder: 4
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -2.75, y: 1.35}
   icon: gem

@@ -15,7 +15,7 @@ MonoBehaviour:
   id: quick_hands
   displayName: Quick Hands
   description: Swing faster, forever.
-  category: 4
+  category: 6
   effect: 2
   targetId: 
   maxLevel: 5
@@ -27,5 +27,5 @@ MonoBehaviour:
   requires: []
   sortOrder: 5
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -1.65, y: 1.35}
   icon: bolt

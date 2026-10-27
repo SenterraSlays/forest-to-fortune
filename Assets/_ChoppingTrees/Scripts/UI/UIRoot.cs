@@ -22,6 +22,8 @@ namespace ChoppingTrees
         SettingsMenu m_Settings;
         UpgradeMenu m_Upgrades;
         RebirthMenu m_Rebirth;
+        LegacyMenu m_Legacy;
+        AchievementsMenu m_Achievements;
         SaveMenu m_Saves;
         ConfirmDialog m_Confirm;
         CloudConflictDialog m_Conflict;
@@ -64,13 +66,16 @@ namespace ChoppingTrees
             new GameObject("Toasts", typeof(RectTransform)).AddComponent<Toasts>().Create(root);
             m_Upgrades = Screen<UpgradeMenu>(root, "UpgradeMenu");
             m_Rebirth = Screen<RebirthMenu>(root, "RebirthMenu");
+            m_Legacy = Screen<LegacyMenu>(root, "LegacyMenu");
             m_Main = Screen<MainMenu>(root, "MainMenu");
             m_Pause = Screen<PauseMenu>(root, "PauseMenu");
+            m_Achievements = Screen<AchievementsMenu>(root, "AchievementsMenu");
             m_Saves = Screen<SaveMenu>(root, "SaveMenu");
             m_Offline = Screen<OfflinePopup>(root, "OfflinePopup");
             m_Settings = Screen<SettingsMenu>(root, "SettingsMenu");
             m_Conflict = Screen<CloudConflictDialog>(root, "CloudConflictDialog");
             m_Confirm = Screen<ConfirmDialog>(root, "ConfirmDialog");
+            new GameObject("AchievementPopup", typeof(RectTransform)).AddComponent<AchievementPopup>().Create(root);
             // Toasts stay above menus; the controller focus frame and hints above everything.
             root.Find("Toasts").SetAsLastSibling();
             new GameObject("ControllerFocus", typeof(RectTransform)).AddComponent<ControllerFocus>().Create(root);
@@ -103,7 +108,9 @@ namespace ChoppingTrees
             else if (m_Conflict.IsOpen) m_Conflict.Close();
             else if (m_Settings.IsOpen) m_Settings.Close();
             else if (m_Offline.IsOpen) m_Offline.Close();
+            else if (m_Legacy.IsOpen) m_Legacy.Close();
             else if (m_Rebirth.IsOpen) m_Rebirth.Close();
+            else if (m_Achievements.IsOpen) m_Achievements.Close();
             else if (m_Saves.IsOpen) m_Saves.Close();
             else if (m_Upgrades.IsOpen) m_Upgrades.Close();
             else if (m_Pause.IsOpen) m_Pause.Close();

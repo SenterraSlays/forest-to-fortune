@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: express_courier
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: express_courier
+  displayName: Express Courier
+  description: 'A faster courier: the yard stock sells every 10 seconds.'
+  category: 7
+  effect: 7
+  targetId: 
+  maxLevel: 1
+  baseCost: 0
+  costGrowth: 1
+  explicitCosts:
+  - 40
+  effectPerLevel: 10
+  levelNames: []
+  requires:
+  - upgradeId: market_courier
+    level: 1
+  sortOrder: 38
+  legacy: 1
+  treePosition: {x: 3.85, y: 6.55}
+  icon: run

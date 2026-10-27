@@ -15,7 +15,7 @@ MonoBehaviour:
   id: master_engineer
   displayName: Master Engineer
   description: Every machine you build runs harder.
-  category: 4
+  category: 7
   effect: 10
   targetId: 
   maxLevel: 10
@@ -27,5 +27,5 @@ MonoBehaviour:
   requires: []
   sortOrder: 8
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: 2.75, y: 1.35}
   icon: gear

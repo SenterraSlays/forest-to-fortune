@@ -74,6 +74,20 @@ namespace ChoppingTrees.EditorTools
             ["M_FlowerYellow"] = new Spec(1.0f, 0.85f, 0.25f),
             ["M_FlowerPurple"] = new Spec(0.62f, 0.42f, 0.85f),
             ["M_Dirt"] = new Spec(0.45f, 0.34f, 0.22f),
+            // The far forests (2.1): frost, blossom, embers and crystal.
+            ["M_LeafFrost"] = new Spec(0.74f, 0.84f, 0.88f, 0.15f),
+            ["M_BarkCherry"] = new Spec(0.38f, 0.21f, 0.19f),
+            ["M_LeafBlossom"] = new Spec(0.98f, 0.66f, 0.80f),
+            ["M_LeafBlossomLight"] = new Spec(1.0f, 0.84f, 0.90f),
+            ["M_BarkEmber"] = new Spec(0.17f, 0.11f, 0.09f),
+            ["M_EmberGlow"] = new Spec(1.0f, 0.45f, 0.15f, 0.5f, 0f, new Color(2.6f, 0.9f, 0.15f)),
+            ["M_LeafEmber"] = new Spec(0.96f, 0.38f, 0.12f, 0.15f, 0f, new Color(0.18f, 0.04f, 0f)),
+            ["M_BarkCrystal"] = new Spec(0.45f, 0.50f, 0.64f, 0.35f, 0.1f),
+            ["M_LeafCrystal"] = new Spec(0.52f, 0.78f, 0.92f, 0.3f, 0f, new Color(0.05f, 0.12f, 0.18f)),
+            ["M_Crystal"] = new Spec(0.60f, 0.88f, 1.0f, 0.85f, 0f, new Color(0.45f, 0.95f, 1.5f)),
+            ["M_CrystalViolet"] = new Spec(0.74f, 0.56f, 1.0f, 0.85f, 0f, new Color(0.9f, 0.45f, 1.5f)),
+            ["M_Ice"] = new Spec(0.72f, 0.88f, 1.0f, 0.8f, 0.3f),
+            ["M_Starsteel"] = new Spec(0.88f, 0.90f, 0.98f, 0.9f, 0.9f),
         };
 
         public static bool Exists(string name) => s_Specs.ContainsKey(name);

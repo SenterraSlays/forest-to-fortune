@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: guild_carpenters
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: guild_carpenters
+  displayName: Guild Carpenters
+  description: 'The carpenters'' guild works for you: Workshops run much faster.'
+  category: 7
+  effect: 4
+  targetId: workshop
+  maxLevel: 10
+  baseCost: 6
+  costGrowth: 1.35
+  explicitCosts: []
+  effectPerLevel: 0.5
+  levelNames: []
+  requires:
+  - upgradeId: family_sawmill
+    level: 2
+  sortOrder: 32
+  legacy: 1
+  treePosition: {x: 2.75, y: 3.95}
+  icon: chair

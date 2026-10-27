@@ -16,11 +16,11 @@ namespace ChoppingTrees
 
         [Header("Chopping")]
         [Tooltip("Base damage per hit for each axe tier (index = tier).")]
-        public float[] axeTierDamage = { 1f, 2.5f, 6f, 16f, 45f };
+        public float[] axeTierDamage = { 1f, 2.5f, 6f, 16f, 45f, 130f, 380f, 1100f };
         [Tooltip("Swing speed multiplier for each axe tier.")]
-        public float[] axeTierSpeed = { 1f, 1.05f, 1.1f, 1.15f, 1.2f };
+        public float[] axeTierSpeed = { 1f, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f, 1.3f, 1.35f };
         [Tooltip("Axe model per tier (index = tier).")]
-        public string[] axeModels = { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4" };
+        public string[] axeModels = { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4", "Axe_5", "Axe_6", "Axe_7" };
         public string baseAxeName = "Rusty Hatchet";
         [Tooltip("Seconds per full swing at speed multiplier 1.")]
         public float swingSeconds = 0.55f;
@@ -38,18 +38,18 @@ namespace ChoppingTrees
 
         [Header("Backpack")]
         [Tooltip("Wood the player can carry for each backpack tier (index = tier). Machine output goes to the yard instead.")]
-        public double[] backpackCapacity = { 50, 150, 400, 1000, 2500, 6000, 15000 };
+        public double[] backpackCapacity = { 50, 150, 400, 1000, 2500, 6000, 15000, 40000, 100000, 250000 };
         public string baseBackpackName = "Burlap Sack";
 
         [Header("Rebirth")]
         [Tooltip("Price of the first rebirth.")]
         public double rebirthBaseCost = 5000;
         [Tooltip("Each rebirth costs this many times the previous one.")]
-        public double rebirthCostGrowth = 1.08;
-        [Tooltip("Extra share of all money earned per rebirth (0.1 = +10% each).")]
-        public double rebirthBonus = 0.1;
+        public double rebirthCostGrowth = 1.03;
+        [Tooltip("Extra share of all money earned per rebirth (0.15 = +15% each).")]
+        public double rebirthBonus = 0.15;
         [Tooltip("Skill points granted per rebirth (spent on Legacy perks).")]
-        public int rebirthSkillPoints = 1;
+        public int rebirthSkillPoints = 3;
 
         [Header("Discord")]
         [Tooltip("Application ID from discord.com/developers/applications (an app named \"Forest to Fortune\", " +

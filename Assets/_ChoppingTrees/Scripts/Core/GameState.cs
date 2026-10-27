@@ -17,6 +17,10 @@ namespace ChoppingTrees
         /// <summary>What the player carries; limited by the backpack's capacity.</summary>
         public readonly Dictionary<string, double> Backpack = new Dictionary<string, double>();
         public readonly Dictionary<string, int> Levels = new Dictionary<string, int>();
+        /// <summary>Unlocked achievements; they stay through rebirths but belong to this save only.</summary>
+        public readonly HashSet<string> Achievements = new HashSet<string>();
+        /// <summary>Trees felled per species id.</summary>
+        public readonly Dictionary<string, long> Felled = new Dictionary<string, long>();
 
         public double TotalEarned;
         public double TotalWoodChopped;
@@ -64,6 +68,8 @@ namespace ChoppingTrees
 
         public int Level(string id) => id != null && Levels.TryGetValue(id, out var v) ? v : 0;
 
+        public long FelledOf(string id) => id != null && Felled.TryGetValue(id, out var v) ? v : 0;
+
         public void SetLevel(string id, int level)
         {
             if (string.IsNullOrEmpty(id)) return;
@@ -93,6 +99,9 @@ namespace ChoppingTrees
             foreach (var kv in Resources) d.resources.Add(new SaveData.Amount { id = kv.Key, value = NumberUtil.SafePositive(kv.Value) });
             foreach (var kv in Backpack) d.backpack.Add(new SaveData.Amount { id = kv.Key, value = NumberUtil.SafePositive(kv.Value) });
             foreach (var kv in Levels) d.upgrades.Add(new SaveData.UpgradeLevel { id = kv.Key, level = Math.Max(0, kv.Value) });
+            d.achievements.AddRange(Achievements);
+            d.achievements.Sort(StringComparer.Ordinal);
+            foreach (var kv in Felled) d.felled.Add(new SaveData.Amount { id = kv.Key, value = Math.Max(0, kv.Value) });
             return d;
         }
 
@@ -121,6 +130,11 @@ namespace ChoppingTrees
                 foreach (var a in d.backpack) s.SetCarried(a.id, a.value);
             if (d.upgrades != null)
                 foreach (var u in d.upgrades) s.SetLevel(u.id, u.level);
+            if (d.achievements != null)
+                foreach (var a in d.achievements) if (!string.IsNullOrEmpty(a)) s.Achievements.Add(a);
+            if (d.felled != null)
+                foreach (var f in d.felled)
+                    if (!string.IsNullOrEmpty(f.id)) s.Felled[f.id] = (long)Math.Max(0, Math.Min(f.value, long.MaxValue / 2));
             return s;
         }
     }

@@ -18,7 +18,7 @@ MonoBehaviour:
   category: 0
   effect: 11
   targetId: 
-  maxLevel: 6
+  maxLevel: 9
   baseCost: 0
   costGrowth: 6
   explicitCosts:
@@ -28,6 +28,9 @@ MonoBehaviour:
   - 7500
   - 50000
   - 350000
+  - 2500000
+  - 20000000
+  - 150000000
   effectPerLevel: 1
   levelNames:
   - Canvas Satchel
@@ -36,6 +39,9 @@ MonoBehaviour:
   - Logger's Pack
   - Expedition Pack
   - Hauler's Harness
+  - Glacier Pack
+  - Ember Hauler
+  - Starlight Satchel
   requires:
   - upgradeId: axe_tier
     level: 1

@@ -15,19 +15,22 @@ MonoBehaviour:
   id: forest_charter
   displayName: Forest Charter
   description: Start every run with the forest gates already open.
-  category: 4
+  category: 5
   effect: 25
   targetId: 
-  maxLevel: 2
+  maxLevel: 5
   baseCost: 0
   costGrowth: 1
   explicitCosts:
   - 4
   - 10
+  - 20
+  - 35
+  - 55
   effectPerLevel: 1
   levelNames: []
   requires: []
   sortOrder: 3
   legacy: 1
-  treePosition: {x: 0, y: 0}
+  treePosition: {x: -3.85, y: 1.35}
   icon: pine

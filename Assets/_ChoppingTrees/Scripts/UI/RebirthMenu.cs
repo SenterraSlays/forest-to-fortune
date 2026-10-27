@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,42 +5,27 @@ using UnityEngine.UI;
 namespace ChoppingTrees
 {
     /// <summary>
-    /// Rebirth screen with two tabs.
-    /// <b>Rebirth</b>: an animated emblem with the current bonus, a 1 / 5 / 10 / Max picker, a
+    /// Rebirth screen: an animated emblem with the current bonus, a 1 / 5 / 10 / Max picker, a
     /// summary of what you pay and get (earnings multiplier, skill points) and what resets or
     /// stays. Buying asks for confirmation, then <see cref="Game.Rebirth"/> restarts the run.
-    /// <b>Legacy Perks</b>: cards for the perks bought with skill points, kept through rebirths.
-    /// Opened from the Workbench header and the pause menu.
+    /// The header opens the Legacy tree (<see cref="LegacyMenu"/>), where skill points are spent.
+    /// Opened from the Workbench header.
     /// </summary>
-    public class RebirthMenu : UIScreen, ITabbedScreen
+    public class RebirthMenu : UIScreen
     {
         public static RebirthMenu Instance { get; private set; }
 
         /// <summary>Quantity choices; 0 means "as many as you can afford".</summary>
         static readonly int[] Choices = { 1, 5, 10, 0 };
 
-        class PerkCard
-        {
-            public UpgradeDef def;
-            public Image bezel, face, icon, glow;
-            public TextMeshProUGUI level, effect;
-            public readonly List<Image> pips = new List<Image>();
-            public UIButton buy;
-            public SubmitSelectable select;
-        }
-
-        RectTransform m_RebirthTab, m_LegacyTab;
-        UIButton m_TabRebirth, m_TabLegacy;
-        RectTransform m_TabLine;
+        RectTransform m_RebirthTab;
         TextMeshProUGUI m_Money, m_Points;
-        TextMeshProUGUI m_Count, m_Bonus, m_Title, m_Cost, m_EarnFrom, m_EarnTo, m_PointsGain, m_Status, m_LegacyPoints;
+        TextMeshProUGUI m_Count, m_Bonus, m_Title, m_Cost, m_EarnFrom, m_EarnTo, m_PointsGain, m_Status;
         RectTransform m_Ring;
         Image m_EmblemGlow;
         readonly UIButton[] m_ChoiceButtons = new UIButton[Choices.Length];
-        readonly List<PerkCard> m_Cards = new List<PerkCard>();
         UIButton m_Go;
         int m_Choice;
-        bool m_Legacy;
         float m_Refresh;
 
         protected override void Build()
@@ -50,42 +34,20 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            var window = UIFactory.Window(Root, "Rebirth", "rebirth", new Vector2(1240, 820), out var body, "Start over stronger: bigger earnings and skill points");
+            var window = UIFactory.Window(Root, "Rebirth", "rebirth", new Vector2(1340, 720), out var body, "Start over stronger");
             UIFactory.TopTrim(window.rectTransform, UIStyle.Skill);
             var header = window.transform.Find("Header");
             m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-104, 0), 250);
-            m_Points = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-370, 0), 150);
+            m_Points = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-370, 0), 190);
+            var legacy = UIFactory.Button(header, "Legacy Tree", OpenLegacy, 20, ButtonStyle.Ghost, "star");
+            ((RectTransform)legacy.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-576, 0), new Vector2(210, 52));
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
             close.navigation = new Navigation { mode = Navigation.Mode.None }; // B closes
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
 
-            // Tabs.
-            var tabs = UIFactory.Rect("Tabs", body);
-            tabs.Place(new Vector2(0, 1), new Vector2(0, 1), new Vector2(36, -14), new Vector2(520, 50));
-            UIFactory.HStack(tabs, 6f);
-            m_TabRebirth = UIFactory.Button(tabs, "Rebirth", () => ShowTab(false), 21, ButtonStyle.Tab, "rebirth");
-            m_TabRebirth.Layout(200, 46);
-            m_TabLegacy = UIFactory.Button(tabs, "Legacy Perks", () => ShowTab(true), 21, ButtonStyle.Tab, "star");
-            m_TabLegacy.Layout(250, 46);
-            // A controller switches tabs with LB / RB.
-            m_TabRebirth.navigation = m_TabLegacy.navigation = new Navigation { mode = Navigation.Mode.None };
-            var line = UIFactory.Panel(body, "TabLine", new Color(1f, 0.95f, 0.82f, 0.08f), false);
-            line.rectTransform.anchorMin = new Vector2(0, 1);
-            line.rectTransform.anchorMax = new Vector2(1, 1);
-            line.rectTransform.sizeDelta = new Vector2(-72, 1.5f);
-            line.rectTransform.anchoredPosition = new Vector2(0, -66);
-            m_TabLine = UIFactory.Panel(body, "TabIndicator", UIStyle.Skill).rectTransform;
-            m_TabLine.GetComponent<Image>().sprite = UIStyle.RoundedSmall;
-            m_TabLine.anchorMin = m_TabLine.anchorMax = new Vector2(0, 1);
-            m_TabLine.pivot = new Vector2(0, 0.5f);
-            m_TabLine.sizeDelta = new Vector2(200, 3);
-
             m_RebirthTab = UIFactory.Rect("RebirthTab", body);
-            m_RebirthTab.Stretch(36, 36, 84, 30);
+            m_RebirthTab.Stretch(36, 36, 26, 30);
             BuildRebirthTab(m_RebirthTab);
-            m_LegacyTab = UIFactory.Rect("LegacyTab", body);
-            m_LegacyTab.Stretch(36, 36, 84, 30);
-            BuildLegacyTab(m_LegacyTab);
 
             Game.Instance.PhaseChanged += _ => Close();
         }
@@ -144,7 +106,7 @@ namespace ChoppingTrees
             UIFactory.HStack(lists, 18f, new RectOffset(0, 0, 12, 0), TextAnchor.UpperLeft);
             lists.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = true;
             List(lists, "Resets", UIStyle.Bad, new[] { ("coin", "Money"), ("axe", "Axes, backpack, all upgrades"), ("saw", "Machines and forests"), ("log", "Yard and backpack wood") });
-            List(lists, "You keep", UIStyle.Good, new[] { ("rebirth", "Rebirth bonus"), ("star", "Skill points and perks"), ("chart", "Lifetime stats"), ("gear", "Settings") });
+            List(lists, "You keep", UIStyle.Good, new[] { ("rebirth", "Rebirth bonus"), ("star", "Skill points and perks"), ("trophy", "Achievements"), ("chart", "Lifetime stats") });
 
             // Right: choose how many, see what you pay and get, rebirth.
             var right = UIFactory.Rect("Right", tab);
@@ -224,113 +186,6 @@ namespace ChoppingTrees
             }
         }
 
-        // ------------------------------------------------------------------ legacy tab
-
-        void BuildLegacyTab(RectTransform tab)
-        {
-            UIFactory.VStack(tab, 14f);
-            var intro = UIFactory.Rect("Intro", tab);
-            UIFactory.HStack(intro, 12f);
-            var text = UIFactory.Text(intro, "Legacy perks are bought with skill points (one per rebirth) and are <b>never reset</b>. Head starts apply right away and again at the start of every run.", 17, UIStyle.Muted);
-            text.Layout(-1, -1, 1);
-            m_LegacyPoints = UIFactory.Pill(intro, "", new Color(UIStyle.Skill.r, UIStyle.Skill.g, UIStyle.Skill.b, 0.18f), UIStyle.Skill, 20f);
-
-            var grid = UIFactory.Rect("Grid", tab);
-            var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            // Two rows of five cards fill the tab.
-            g.cellSize = new Vector2(222, 262);
-            g.spacing = new Vector2(14, 14);
-            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 5;
-            var perks = new List<UpgradeDef>();
-            foreach (var u in Game.Instance.Db.upgrades) if (u != null && u.legacy) perks.Add(u);
-            perks.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
-            foreach (var u in perks) m_Cards.Add(Card(grid, u));
-            WireGrid(g.constraintCount);
-        }
-
-        PerkCard Card(RectTransform grid, UpgradeDef u)
-        {
-            var c = new PerkCard { def = u };
-            var card = UIFactory.Surface(grid, u.id, new Color(0.075f, 0.085f, 0.07f, 1f));
-            UIFactory.VStack(card, 6f, new RectOffset(14, 14, 12, 12));
-            c.glow = UIFactory.Panel(card.transform, "Glow", new Color(UIStyle.Skill.r, UIStyle.Skill.g, UIStyle.Skill.b, 0f));
-            c.glow.rectTransform.Stretch();
-            c.glow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-
-            var head = UIFactory.Rect("Head", card.transform);
-            UIFactory.HStack(head, 10f);
-            var badge = UIFactory.Rect("Badge", head);
-            badge.Layout(48, 48);
-            c.bezel = UIFactory.Panel(badge, "Bezel", UIStyle.Skill, false);
-            c.bezel.sprite = UIIcons.Bezel;
-            c.bezel.rectTransform.Stretch();
-            c.face = UIFactory.Panel(badge, "Face", new Color(0.16f, 0.13f, 0.21f), false);
-            c.face.sprite = UIIcons.Face;
-            c.face.rectTransform.Stretch(6, 6, 6, 6);
-            c.icon = UIFactory.Icon(badge, u.icon, UIStyle.Text, 24f);
-            c.icon.rectTransform.anchoredPosition = Vector2.zero;
-            var titles = UIFactory.Rect("Titles", head);
-            UIFactory.VStack(titles, 0f);
-            titles.Layout(-1, -1, 1);
-            var name = UIFactory.Text(titles, u.displayName, 17, UIStyle.Text, true);
-            name.textWrappingMode = TextWrappingModes.NoWrap;
-            name.overflowMode = TextOverflowModes.Ellipsis;
-            c.level = UIFactory.Text(titles, "", 14, UIStyle.Muted, true);
-
-            var pips = UIFactory.Rect("Pips", card.transform);
-            UIFactory.HStack(pips, 3f);
-            for (int i = 0; i < u.maxLevel; i++)
-            {
-                var pip = UIFactory.Panel(pips, "Pip", UIStyle.Inset);
-                pip.sprite = UIStyle.RoundedSmall;
-                pip.Layout(Mathf.Min(22f, 190f / u.maxLevel - 3f), 6);
-                c.pips.Add(pip);
-            }
-            c.effect = UIFactory.Text(card.transform, "", 14.5f, UIStyle.Text);
-            c.effect.lineSpacing = 2f;
-            c.effect.Layout(-1, -1, -1, 1);
-            c.buy = UIFactory.Button(card.transform, "Unlock", () => BuyPerk(c), 17, ButtonStyle.Ghost, "star");
-            c.buy.Layout(-1, 40);
-            // With a controller the whole card is the stop (A buys), even when it can't be afforded yet;
-            // the button is for the mouse.
-            c.buy.navigation = new Navigation { mode = Navigation.Mode.None };
-            c.select = card.gameObject.AddComponent<SubmitSelectable>();
-            c.select.Init(card, () => BuyPerk(c));
-            return c;
-        }
-
-        /// <summary>Grid navigation between the perk cards (left / right along a row, up / down a column).</summary>
-        void WireGrid(int columns)
-        {
-            for (int i = 0; i < m_Cards.Count; i++)
-            {
-                var nav = new Navigation { mode = Navigation.Mode.Explicit };
-                int col = i % columns;
-                if (col > 0) nav.selectOnLeft = m_Cards[i - 1].select;
-                if (col < columns - 1 && i + 1 < m_Cards.Count) nav.selectOnRight = m_Cards[i + 1].select;
-                if (i - columns >= 0) nav.selectOnUp = m_Cards[i - columns].select;
-                if (i + columns < m_Cards.Count) nav.selectOnDown = m_Cards[i + columns].select;
-                m_Cards[i].select.navigation = nav;
-            }
-        }
-
-        void BuyPerk(PerkCard c)
-        {
-            var m = Game.Instance.Model;
-            if (m.TryBuy(c.def, out var why))
-            {
-                AudioManager.Ui("unlock", 0.8f);
-                Toasts.Show($"{c.def.displayName} level {m.Upgrades.Level(c.def)}", Toasts.Kind.Success);
-            }
-            else
-            {
-                AudioManager.Ui("error", 0.6f);
-                Toasts.Show(why, Toasts.Kind.Warning);
-            }
-            Refresh();
-        }
-
         // ------------------------------------------------------------------ behaviour
 
         void OnDestroy()
@@ -338,33 +193,17 @@ namespace ChoppingTrees
             if (Instance == this) Instance = null;
         }
 
-        /// <summary>Opens straight on the Legacy Perks tab.</summary>
+        /// <summary>Opens the Legacy tree on top of this screen.</summary>
         public void OpenLegacy()
         {
-            Open();
-            ShowTab(true);
-            Focus(DefaultSelection());
+            AudioManager.Ui("ui_click", 0.4f);
+            LegacyMenu.Instance.Open();
         }
 
         protected override void OnOpened()
         {
             AudioManager.Ui("menu_open", 0.6f);
-            ShowTab(false, false);
             Choose(0, false);
-        }
-
-        void ShowTab(bool legacy, bool sound = true)
-        {
-            m_Legacy = legacy;
-            m_RebirthTab.gameObject.SetActive(!legacy);
-            m_LegacyTab.gameObject.SetActive(legacy);
-            m_TabRebirth.Label.color = legacy ? UIStyle.Muted : UIStyle.Text;
-            m_TabLegacy.Label.color = legacy ? UIStyle.Text : UIStyle.Muted;
-            var active = (RectTransform)(legacy ? m_TabLegacy : m_TabRebirth).transform;
-            m_TabLine.sizeDelta = new Vector2(active.rect.width > 0 ? active.rect.width : 200, 3);
-            m_TabLine.anchoredPosition = new Vector2(36 + (legacy ? 206 : 0), -66);
-            if (sound) AudioManager.Ui("ui_click", 0.4f);
-            Refresh();
         }
 
         void Choose(int index, bool sound = true)
@@ -385,8 +224,7 @@ namespace ChoppingTrees
             var cfg = m.Db.config;
             m_Money.text = NumberUtil.Money(m.State.Money);
             m_Points.text = m.State.SkillPoints + " SP";
-            if (m_Legacy) RefreshLegacy(m);
-            else RefreshRebirth(m, cfg);
+            RefreshRebirth(m, cfg);
         }
 
         void RefreshRebirth(GameModel m, GameConfig cfg)
@@ -395,40 +233,18 @@ namespace ChoppingTrees
             double cost = m.RebirthCost(n);
             bool afford = m.State.Money + 1e-9 >= cost;
             m_Count.text = done == 0 ? "No rebirths yet" : done == 1 ? "1 rebirth" : $"{done:N0} rebirths";
-            m_Bonus.text = $"x{Rebirth.Multiplier(cfg, done):0.0#}";
+            m_Bonus.text = $"x{m.RebirthMultiplier(done):0.0#}";
             m_Title.text = n > 1 ? $"Rebirth {n} times" : "Rebirth once";
             m_Cost.text = NumberUtil.Money(cost);
-            m_EarnFrom.text = $"x{Rebirth.Multiplier(cfg, done):0.0#}  ->";
-            m_EarnTo.text = $"x{Rebirth.Multiplier(cfg, done + n):0.0#}";
-            m_PointsGain.text = $"+{n * cfg.rebirthSkillPoints} SP";
+            m_EarnFrom.text = $"x{m.RebirthMultiplier(done):0.0#}  ->";
+            m_EarnTo.text = $"x{m.RebirthMultiplier(done + n):0.0#}";
+            m_PointsGain.text = $"+{n * m.SkillPointsPerRebirth} SP";
             int max = m.MaxRebirths();
             m_Status.text = afford
                 ? $"<color=#86CC61>You can afford this.</color>  You have {NumberUtil.Money(m.State.Money)}" + (max > n ? $" (enough for {max})" : "")
                 : $"<color=#E8705F>Need {NumberUtil.Money(cost - m.State.Money)} more.</color>  You have {NumberUtil.Money(m.State.Money)}. Next rebirth: {NumberUtil.Money(m.RebirthCost(1))}";
             m_Go.interactable = afford;
             m_Go.Label.text = n > 1 ? $"Rebirth x{n}" : "Rebirth";
-        }
-
-        void RefreshLegacy(GameModel m)
-        {
-            var up = m.Upgrades;
-            m_LegacyPoints.text = $"{m.State.SkillPoints} skill points";
-            foreach (var c in m_Cards)
-            {
-                int lv = up.Level(c.def);
-                bool maxed = c.def.IsMaxed(lv);
-                bool afford = !maxed && up.CanAfford(c.def);
-                c.level.text = maxed ? "MAXED" : $"Level {lv} / {c.def.maxLevel}";
-                c.level.color = maxed ? UIStyle.Money : UIStyle.Muted;
-                for (int i = 0; i < c.pips.Count; i++) c.pips[i].color = i < lv ? (maxed ? UIStyle.Money : UIStyle.Skill) : new Color(1f, 0.95f, 0.82f, 0.1f);
-                c.effect.text = c.def.description + "\n<size=95%>" + UpgradeText.Effect(m, c.def) + "</size>";
-                c.bezel.color = maxed ? UIStyle.Money : lv > 0 ? UIStyle.Skill : Color.Lerp(UIStyle.Skill, new Color(0.4f, 0.4f, 0.4f), 0.5f);
-                c.icon.color = lv > 0 || afford ? UIStyle.Text : UIStyle.Muted;
-                c.glow.color = new Color(UIStyle.Skill.r, UIStyle.Skill.g, UIStyle.Skill.b, afford ? 0.08f : 0f);
-                c.buy.interactable = afford;
-                c.buy.SetStyle(afford ? ButtonStyle.Primary : ButtonStyle.Ghost);
-                c.buy.Label.text = maxed ? "Maxed" : $"{(lv > 0 ? "Upgrade" : "Unlock")}  ·  {up.SkillPointCost(c.def)} SP";
-            }
         }
 
         void Confirm()
@@ -439,7 +255,7 @@ namespace ChoppingTrees
             string times = n > 1 ? $"{n} times" : "once";
             ConfirmDialog.Ask($"Rebirth {times}?",
                 $"You pay {NumberUtil.Money(cost)} and start over: money, upgrades, machines, forests and all wood reset. " +
-                $"Everything you earn afterwards is worth x{Rebirth.Multiplier(m.Db.config, m.State.Rebirths + n):0.0#}, and you get {n * m.Db.config.rebirthSkillPoints} skill points.",
+                $"Everything you earn afterwards is worth x{m.RebirthMultiplier(m.State.Rebirths + n):0.0#}, and you get {n * m.SkillPointsPerRebirth} skill points.",
                 "Rebirth", () =>
                 {
                     if (!Game.Instance.Rebirth(n, out var why))
@@ -451,17 +267,12 @@ namespace ChoppingTrees
         }
 
         /// <summary>A controller starts on the first control of the open tab.</summary>
-        public override GameObject DefaultSelection() => FirstSelectable(m_Legacy ? m_LegacyTab : m_RebirthTab) ?? base.DefaultSelection();
+        public override GameObject DefaultSelection() => FirstSelectable(m_RebirthTab) ?? base.DefaultSelection();
 
         protected override void Update()
         {
             base.Update();
             if (!IsOpen) return;
-            if (TopModal == this && (GameInput.TabLeftPressed || GameInput.TabRightPressed))
-            {
-                ShowTab(!m_Legacy);
-                Focus(DefaultSelection());
-            }
             float t = Time.unscaledTime;
             if (m_Ring != null) m_Ring.localRotation = Quaternion.Euler(0, 0, -t * 25f);
             if (m_EmblemGlow != null) m_EmblemGlow.color = new Color(UIStyle.Skill.r, UIStyle.Skill.g, UIStyle.Skill.b, 0.22f + 0.08f * Mathf.Sin(t * 2f));

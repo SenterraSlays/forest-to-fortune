@@ -8,8 +8,22 @@ namespace ChoppingTrees
     /// </summary>
     public static class Rebirth
     {
-        /// <summary>Earnings multiplier after <paramref name="rebirths"/> rebirths (1 + bonus * n).</summary>
-        public static double Multiplier(GameConfig cfg, int rebirths) => 1 + cfg.rebirthBonus * Math.Max(0, rebirths);
+        /// <summary>Earnings multiplier after <paramref name="rebirths"/> rebirths: 1 + (bonus + extra) * n,
+        /// where <paramref name="extraPerRebirth"/> comes from Legacy perks (Ancestral Wisdom).</summary>
+        public static double Multiplier(GameConfig cfg, int rebirths, double extraPerRebirth = 0) => 1 + (cfg.rebirthBonus + extraPerRebirth) * Math.Max(0, rebirths);
+
+        /// <summary>The multiplier a save file shows, with the Legacy perks it owns.</summary>
+        public static double MultiplierFor(GameDatabase db, SaveData d)
+        {
+            double extra = 0;
+            if (d.upgrades != null)
+                foreach (var l in d.upgrades)
+                {
+                    var u = db.Upgrade(l.id);
+                    if (u != null && u.effect == UpgradeEffect.RebirthBonus) extra += u.effectPerLevel * Math.Min(l.level, u.maxLevel);
+                }
+            return Multiplier(db.config, d.rebirths, extra);
+        }
 
         /// <summary>Total price of <paramref name="count"/> rebirths when <paramref name="done"/> are done already.</summary>
         public static double Cost(GameConfig cfg, int done, int count)
