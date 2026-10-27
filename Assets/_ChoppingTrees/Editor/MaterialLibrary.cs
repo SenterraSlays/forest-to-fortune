@@ -80,7 +80,7 @@ namespace ChoppingTrees.EditorTools
 
         public static Material Get(string name) => AssetDatabase.LoadAssetAtPath<Material>($"{Dir}/{name}.mat");
 
-        [MenuItem("Tools/Chopping Trees/2. Build Materials", priority = 2)]
+        [MenuItem("Tools/Forest to Fortune/2. Build Materials", priority = 2)]
         public static string BuildAll()
         {
             System.IO.Directory.CreateDirectory(Dir);

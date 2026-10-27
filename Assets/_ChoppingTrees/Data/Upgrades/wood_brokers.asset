@@ -19,7 +19,7 @@ MonoBehaviour:
   effect: 6
   targetId: wood
   maxLevel: 15
-  baseCost: 3000
+  baseCost: 1500
   costGrowth: 1.7
   explicitCosts: []
   effectPerLevel: 0.2

@@ -26,7 +26,7 @@ namespace ChoppingTrees.EditorTools
 
         static readonly Dictionary<string, List<string>> s_Groups = new Dictionary<string, List<string>>();
 
-        [MenuItem("Tools/Chopping Trees/4. Generate Audio", priority = 4)]
+        [MenuItem("Tools/Forest to Fortune/4. Generate Audio", priority = 4)]
         public static string GenerateAll()
         {
             s_Rng = new System.Random(1337);
@@ -112,7 +112,7 @@ namespace ChoppingTrees.EditorTools
 
         /// <summary>Puts the recorded sounds into the existing library without re-synthesising
         /// anything else (Tools > Chopping Trees > Import Recorded Audio).</summary>
-        [MenuItem("Tools/Chopping Trees/Import Recorded Audio", priority = 40)]
+        [MenuItem("Tools/Forest to Fortune/Import Recorded Audio", priority = 40)]
         public static string ImportRecorded()
         {
             s_Groups.Clear();

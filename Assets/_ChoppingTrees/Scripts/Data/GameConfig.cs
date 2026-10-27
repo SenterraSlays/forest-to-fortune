@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>Tunable gameplay numbers that aren't tied to a single tree, upgrade or machine.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Game Config", fileName = "GameConfig")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject
     {
         [Header("Movement")]
@@ -50,6 +50,11 @@ namespace ChoppingTrees
         public double rebirthBonus = 0.1;
         [Tooltip("Skill points granted per rebirth (spent on Legacy perks).")]
         public int rebirthSkillPoints = 1;
+
+        [Header("Discord")]
+        [Tooltip("Application ID from discord.com/developers/applications (an app named \"Forest to Fortune\", " +
+                 "with the game icon uploaded under Rich Presence > Art Assets as \"icon\"). Empty = Rich Presence off.")]
+        public string discordApplicationId = "";
 
         [Header("Economy")]
         public double startingMoney;

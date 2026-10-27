@@ -27,7 +27,7 @@ namespace ChoppingTrees.EditorTools
             return a;
         }
 
-        [MenuItem("Tools/Chopping Trees/5. Build Game Data", priority = 5)]
+        [MenuItem("Tools/Forest to Fortune/5. Build Game Data", priority = 5)]
         public static string BuildAll()
         {
             foreach (var d in new[] { "Trees", "Upgrades", "Machines", "Areas", "Resources" })
@@ -289,6 +289,14 @@ namespace ChoppingTrees.EditorTools
                 if (legacyIcons.TryGetValue(u.id, out var icon)) { u.icon = icon; u.treePosition = Vector2.zero; }
 
             // ---- config and database
+            // Everything in the skill tree costs half of the prices above (Legacy perks are skill points).
+            foreach (var u in ups)
+            {
+                if (u.legacy) continue;
+                u.baseCost *= SkillTreePriceScale;
+                if (u.explicitCosts != null) u.explicitCosts = System.Array.ConvertAll(u.explicitCosts, c => c * SkillTreePriceScale);
+            }
+
             var cfg = Asset<GameConfig>($"{Data}/GameConfig.asset");
             // Wood carried by hand per backpack tier (machine output goes to the yard instead).
             cfg.backpackCapacity = new double[] { 50, 150, 400, 1000, 2500, 6000, 15000 };
@@ -311,6 +319,9 @@ namespace ChoppingTrees.EditorTools
             AssetDatabase.SaveAssets();
             return $"data: {db.trees.Length} trees, {db.upgrades.Length} upgrades, {db.machines.Length} machines, {db.areas.Length} areas, audio {(db.audio != null ? "ok" : "MISSING")}";
         }
+
+        /// <summary>Multiplier on every skill tree price written above.</summary>
+        public const double SkillTreePriceScale = 0.5;
 
         static UpgradeDef.Requirement Req(string id, int level) => new UpgradeDef.Requirement(id, level);
 

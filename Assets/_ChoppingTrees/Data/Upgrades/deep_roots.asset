@@ -19,7 +19,7 @@ MonoBehaviour:
   effect: 20
   targetId: 
   maxLevel: 5
-  baseCost: 40000
+  baseCost: 20000
   costGrowth: 2.2
   explicitCosts: []
   effectPerLevel: 0.15

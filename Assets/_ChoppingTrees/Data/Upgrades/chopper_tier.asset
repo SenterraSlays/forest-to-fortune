@@ -22,8 +22,8 @@ MonoBehaviour:
   baseCost: 0
   costGrowth: 16
   explicitCosts:
-  - 40000
-  - 650000
+  - 20000
+  - 325000
   effectPerLevel: 3
   levelNames:
   - Heavy Harvester

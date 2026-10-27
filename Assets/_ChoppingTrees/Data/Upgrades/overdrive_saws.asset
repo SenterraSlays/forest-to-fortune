@@ -19,7 +19,7 @@ MonoBehaviour:
   effect: 4
   targetId: sawmill
   maxLevel: 10
-  baseCost: 250000
+  baseCost: 125000
   costGrowth: 1.9
   explicitCosts: []
   effectPerLevel: 0.25

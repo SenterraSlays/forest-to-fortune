@@ -22,14 +22,14 @@ MonoBehaviour:
   baseCost: 0
   costGrowth: 2.4
   explicitCosts:
-  - 200
-  - 1200
-  - 3200
-  - 7500
-  - 16000
-  - 36000
-  - 80000
-  - 180000
+  - 100
+  - 600
+  - 1600
+  - 3750
+  - 8000
+  - 18000
+  - 40000
+  - 90000
   effectPerLevel: 1
   levelNames: []
   requires: []

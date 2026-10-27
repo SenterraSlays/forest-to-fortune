@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>A forest area. Locked areas are opened by a <see cref="UpgradeEffect.ForestArea"/> upgrade.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Forest Area", fileName = "Area")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Forest Area", fileName = "Area")]
     public class ForestAreaDef : ScriptableObject
     {
         public string id = "clearing";

@@ -1,4 +1,6 @@
-# A Game About Chopping Trees
+# Forest to Fortune
+
+(Formerly "A Game About Chopping Trees"; the Unity project folder and C# namespace keep the old name.)
 
 A first-person incremental game made in Unity 6 (6000.6.6f1, URP). You start with a rusty
 hatchet in a pine clearing: chop trees, collect the logs, sell them at the Lumber Market and
@@ -9,8 +11,8 @@ work for you (even while the game is closed), and two gated forests open up as y
 
 **In the editor:** open this folder in Unity 6000.6.6f1, open
 `Assets/_ChoppingTrees/Scenes/Main.unity` and press Play.
-**Built game:** `Builds/Windows/ChoppingTrees.exe`. The build output isn't part of the source;
-rebuild it with *Tools > Chopping Trees > Build Windows Player*.
+**Built game:** `Builds/Windows/ForestToFortune.exe`. The build output isn't part of the source;
+rebuild it with *Tools > Forest to Fortune > Build Windows Player*.
 
 | Action | Keyboard and mouse | Controller |
 | --- | --- | --- |
@@ -20,7 +22,7 @@ rebuild it with *Tools > Chopping Trees > Build Windows Player*.
 | Use (sell, workbench, gates) | E | X (Square) |
 | Hide tutorial hints | H | View / Select |
 | Cycle the FPS counter (off / FPS / detailed) | F3 | (Settings) |
-| Pause menu / close menus | Esc | Start (Options) / B (Circle) |
+| Menu (the game keeps running) / close menus | Esc | Start (Options) / B (Circle) |
 | Menus | Mouse | D-pad or stick to move, A to select, B to go back |
 | Skill tree | Drag, scroll | D-pad between nodes (A selects, A again buys), right stick pans, LT / RT zoom |
 
@@ -141,10 +143,31 @@ The FPS counter (*Settings > Interface* or F3) shows FPS; *Detailed* adds frame 
 worst frame, CPU/GPU times (when the platform reports them), the active upscaler and the
 resolution.
 
+### Discord
+
+The game shows Rich Presence on your Discord profile, for example "Chopping with the Lumberjack's Axe", plus money
+and rebirths. To turn it on, create an application named "Forest to Fortune" at
+discord.com/developers/applications. Under *Rich Presence > Art Assets*, upload
+`Assets/_ChoppingTrees/Art/Icon/GameIcon.png` with the name `icon`. Then paste the Application
+ID into `GameConfig.discordApplicationId` and rebuild. It uses Discord's local IPC pipe, so
+there is no SDK. Players can turn it off with *Settings > Interface > Discord status*.
+
+### Game icon
+
+`Art/Icon/GameIcon.png` is rendered from the game's own models. Re-render it with
+`blender -b --factory-startup -P Blender/icon_render.py -- render.png`, then run
+`python Blender/icon_compose.py render.png Assets/_ChoppingTrees/Art/Icon/GameIcon.png`.
+
 ### Saving
 
-Progress is saved to `%USERPROFILE%\AppData\LocalLow\Hazelwood\A Game About Chopping Trees\progress.json`:
-after every purchase, every 30 s, on pause/quit, and from *Pause > Save Game*. Settings are
+There are three save slots, A, B and C. *Play* on the main menu opens the save screen, where
+each slot shows its money, rebirths, trees felled, wood chopped, axe, time played and when it
+was last played. A used slot can be continued or deleted, and an empty one starts a new game. The
+main menu shows the stats of the slot played last. Slots are saved to
+`%USERPROFILE%\AppData\LocalLow\Hazelwood\Forest to Fortune\progress_A.json` (`_B`, `_C`):
+after every purchase, every 30 s, on quit, and from *Menu > Save Game*. On first launch, saves
+from the old "A Game About Chopping Trees" folder are copied over, and an old single
+`progress.json` becomes slot A. The Esc menu doesn't pause: machines and trees keep going behind it. Settings are
 saved separately in `settings.json`, so *Reset Progress* keeps them. Saves are versioned JSON,
 written atomically with a `.bak` copy. A damaged file falls back to the backup, and invalid
 numbers are cleaned up on load. Machines, upgrades and unlocked gates are rebuilt from the save
@@ -238,7 +261,7 @@ bash Tools/test.sh
 upgrade code, then prints a `[Smoke]` summary and PASS/FAIL to the log:
 
 ```bash
-Builds/Windows/ChoppingTrees.exe -ct-smoke -ct-quit-after 90 -ct-nosave -ct-upscaler DLSS -ct-screenshot shot.png -logFile smoke.log
+Builds/Windows/ForestToFortune.exe -ct-smoke -ct-quit-after 90 -ct-nosave -ct-upscaler DLSS -ct-screenshot shot.png -logFile smoke.log
 ```
 
 `-ct-upscaler` forces DLSS, FSR2, STP, FSR1 or Off. `-ct-screenshot` also saves

@@ -19,7 +19,7 @@ MonoBehaviour:
   effect: 4
   targetId: chopper
   maxLevel: 12
-  baseCost: 500
+  baseCost: 250
   costGrowth: 1.8
   explicitCosts: []
   effectPerLevel: 0.3

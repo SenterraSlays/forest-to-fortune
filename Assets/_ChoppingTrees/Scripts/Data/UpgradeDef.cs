@@ -7,7 +7,7 @@ namespace ChoppingTrees
     /// One purchasable upgrade line. Cost of the next level comes from <see cref="explicitCosts"/>
     /// when given, otherwise baseCost * costGrowth^level.
     /// </summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Upgrade", fileName = "Upgrade")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Upgrade", fileName = "Upgrade")]
     public class UpgradeDef : ScriptableObject
     {
         public string id = "axe_tier";

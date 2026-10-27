@@ -71,6 +71,9 @@ namespace ChoppingTrees
         public string monitor = "";
         public bool vSync = true;
         public bool showTutorial = true;
+        /// <summary>Save slot played last (0 = A); the main menu shows its stats.</summary>
+        public int lastSlot;
+        public bool discordPresence = true;
 
         [Header("Graphics")]
         public UpscalerSetting upscaler = UpscalerSetting.Off;

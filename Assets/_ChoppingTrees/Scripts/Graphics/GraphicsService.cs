@@ -28,6 +28,8 @@ namespace ChoppingTrees
         string m_OrigUpscaler;
         float m_OrigRenderScale, m_OrigShadowDistance;
         int m_OrigShadowRes, m_OrigCascades;
+        float m_OrigSplit2;
+        Vector3 m_OrigSplit4;
         Bloom m_Bloom;
         ColorAdjustments m_Color;
         float m_BaseExposure;
@@ -44,6 +46,8 @@ namespace ChoppingTrees
                 m_OrigShadowDistance = m_Asset.shadowDistance;
                 m_OrigShadowRes = m_Asset.mainLightShadowmapResolution;
                 m_OrigCascades = m_Asset.shadowCascadeCount;
+                m_OrigSplit2 = m_Asset.cascade2Split;
+                m_OrigSplit4 = m_Asset.cascade4Split;
             }
             else Debug.LogWarning("[Graphics] The active render pipeline is not URP; upscaling is unavailable.");
             Debug.Log("[Display] " + DisplayModes.Describe());
@@ -66,6 +70,8 @@ namespace ChoppingTrees
             m_Asset.shadowDistance = m_OrigShadowDistance;
             m_Asset.mainLightShadowmapResolution = m_OrigShadowRes;
             m_Asset.shadowCascadeCount = m_OrigCascades;
+            m_Asset.cascade2Split = m_OrigSplit2;
+            m_Asset.cascade4Split = m_OrigSplit4;
 #endif
         }
 
@@ -105,21 +111,30 @@ namespace ChoppingTrees
         {
             if (m_Asset != null)
             {
+                // Higher settings mean sharper shadows: bigger shadow maps and more cascades, packed
+                // towards the player so nearby shadows get most of the resolution.
                 (float dist, int res, int cascades) = s.shadows switch
                 {
                     ShadowQuality.Off => (0f, 512, 1),
                     ShadowQuality.Low => (35f, 1024, 1),
                     ShadowQuality.Medium => (60f, 2048, 2),
-                    ShadowQuality.High => (90f, 2048, 3),
-                    _ => (140f, 4096, 4),
+                    ShadowQuality.High => (80f, 4096, 4),
+                    _ => (110f, 8192, 4),
                 };
                 m_Asset.shadowDistance = dist;
                 m_Asset.mainLightShadowmapResolution = res;
                 m_Asset.shadowCascadeCount = cascades;
+                m_Asset.cascade2Split = 0.25f;
+                m_Asset.cascade4Split = s.shadows == ShadowQuality.Ultra ? new Vector3(0.06f, 0.17f, 0.42f) : new Vector3(0.08f, 0.2f, 0.45f);
             }
             var sun = RenderSettings.sun;
             if (sun != null)
+            {
                 sun.shadows = s.shadows == ShadowQuality.Off ? LightShadows.None : s.shadows == ShadowQuality.Low ? LightShadows.Hard : LightShadows.Soft;
+                // Better soft-shadow filtering on the higher settings: clean edges without blur or stair-steps.
+                if (sun.TryGetComponent<UniversalAdditionalLightData>(out var data) || (data = sun.gameObject.AddComponent<UniversalAdditionalLightData>()) != null)
+                    data.softShadowQuality = s.shadows >= ShadowQuality.High ? SoftShadowQuality.High : s.shadows == ShadowQuality.Medium ? SoftShadowQuality.Medium : SoftShadowQuality.Low;
+            }
 
             // Post-processing on a runtime copy of the profile (the asset is never changed).
             if (m_Bloom == null && m_Color == null)

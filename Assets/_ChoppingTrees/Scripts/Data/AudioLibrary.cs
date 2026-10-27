@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>Named sound clips. Several clips under one name are picked at random.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Audio Library", fileName = "AudioLibrary")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Audio Library", fileName = "AudioLibrary")]
     public class AudioLibrary : ScriptableObject
     {
         [Serializable]

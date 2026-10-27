@@ -2,7 +2,8 @@ using UnityEngine;
 
 namespace ChoppingTrees
 {
-    /// <summary>Esc menu: resume, settings, save, reset, main menu, quit. Pauses the game while open.</summary>
+    /// <summary>Esc menu: resume, settings, save, rebirth, reset, main menu, quit. The game keeps
+    /// running behind it (machines, trees and the clock don't stop); only the player waits.</summary>
     public class PauseMenu : UIScreen
     {
         public static PauseMenu Instance { get; private set; }
@@ -13,7 +14,7 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            UIFactory.Window(Root, "Paused", "clock", new Vector2(500, 566), out var body);
+            UIFactory.Window(Root, "Menu", "leaf", new Vector2(500, 566), out var body);
             UIFactory.VStack(body, 12f, new RectOffset(36, 36, 26, 32));
             UIFactory.Button(body, "Resume", Close, 26, ButtonStyle.Primary, "play").Layout(-1, 64);
             UIFactory.Button(body, "Settings", () => SettingsMenu.Instance.Open(), 22, ButtonStyle.Ghost, "gear").Layout(-1, 56);
@@ -30,13 +31,7 @@ namespace ChoppingTrees
             if (Instance == this) Instance = null;
         }
 
-        protected override void OnOpened()
-        {
-            Time.timeScale = 0f;
-            AudioManager.Ui("menu_open", 0.5f);
-        }
-
-        protected override void OnClosed() => Time.timeScale = 1f;
+        protected override void OnOpened() => AudioManager.Ui("menu_open", 0.5f);
 
         void SaveNow()
         {

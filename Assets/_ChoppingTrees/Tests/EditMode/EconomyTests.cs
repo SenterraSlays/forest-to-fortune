@@ -56,29 +56,29 @@ namespace ChoppingTrees.Tests
         public void CostsFollowExplicitPricesThenFormula()
         {
             var axe = m_Db.Upgrade("axe_tier");
-            Assert.AreEqual(50, axe.CostForLevel(0));
-            Assert.AreEqual(600, axe.CostForLevel(1));
+            Assert.AreEqual(25, axe.CostForLevel(0));
+            Assert.AreEqual(300, axe.CostForLevel(1));
             var stone = m_Db.Upgrade("axe_sharpen");
             Assert.AreEqual(stone.baseCost, stone.CostForLevel(0), 1e-9);
             Assert.AreEqual(stone.baseCost * Math.Pow(stone.costGrowth, 3), stone.CostForLevel(3), 1e-6);
             var chopper = m_Db.Upgrade("chopper_count");
-            Assert.AreEqual(200, chopper.CostForLevel(0));
-            Assert.AreEqual(1200, chopper.CostForLevel(1));
+            Assert.AreEqual(100, chopper.CostForLevel(0));
+            Assert.AreEqual(600, chopper.CostForLevel(1));
         }
 
         [Test]
         public void PurchaseNeedsMoneyAndRequirements()
         {
-            var m = NewModel(40);
+            var m = NewModel(20);
             var axe = m_Db.Upgrade("axe_tier");
             Assert.IsFalse(m.TryBuy(axe, out var why));
             StringAssert.Contains("money", why);
-            Assert.AreEqual(40, m.State.Money);
+            Assert.AreEqual(20, m.State.Money);
             Assert.AreEqual(0, m.Upgrades.Level(axe));
 
             m.State.Money = 1000;
             Assert.IsTrue(m.TryBuy(axe, out _));
-            Assert.AreEqual(950, m.State.Money, 1e-9);
+            Assert.AreEqual(975, m.State.Money, 1e-9);
             Assert.AreEqual(1, m.Upgrades.AxeTier);
             Assert.AreEqual(m_Db.config.axeTierDamage[1], m.Upgrades.AxeDamage, 1e-5);
 
@@ -315,7 +315,7 @@ namespace ChoppingTrees.Tests
             Assert.IsNull(m_Db.Upgrade("courier"), "the Wood Courier was replaced by the Log Magnet");
             var magnet = m_Db.Upgrade("magnet");
             Assert.AreEqual(10, magnet.maxLevel);
-            Assert.AreEqual(1000, magnet.CostForLevel(0), 1e-9);
+            Assert.AreEqual(500, magnet.CostForLevel(0), 1e-9);
             var m = NewModel(1e9);
             float baseRange = m_Db.config.pickupMagnetRadius;
             Assert.AreEqual(baseRange, m.Upgrades.MagnetRadius, 1e-5);

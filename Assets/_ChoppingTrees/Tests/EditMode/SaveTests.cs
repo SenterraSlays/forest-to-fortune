@@ -21,6 +21,7 @@ namespace ChoppingTrees.Tests
         public void TearDown()
         {
             SaveSystem.Directory = m_OldDir;
+            SaveSystem.CurrentSlot = 0;
             if (Directory.Exists(m_Dir)) Directory.Delete(m_Dir, true);
         }
 
@@ -58,6 +59,39 @@ namespace ChoppingTrees.Tests
             Assert.AreEqual(3, loaded.TutorialStep);
             Assert.IsTrue(loaded.HasPlayed);
             Assert.Less((DateTime.UtcNow - loaded.LastSavedUtc).TotalSeconds, 60);
+        }
+
+        [Test]
+        public void SlotsAreSeparate()
+        {
+            SaveSystem.CurrentSlot = 1;
+            var b = Sample();
+            b.Money = 77;
+            Assert.IsTrue(SaveSystem.Save(b));
+            Assert.IsTrue(SaveSystem.SlotHasSave(1));
+            Assert.IsFalse(SaveSystem.SlotHasSave(0));
+            Assert.IsFalse(SaveSystem.SlotHasSave(2));
+            StringAssert.EndsWith("progress_B.json", SaveSystem.SavePath);
+            Assert.AreEqual(77, SaveSystem.Peek(1).money, 1e-9, "the save screen can read a slot without loading it");
+            Assert.IsNull(SaveSystem.Peek(2));
+
+            SaveSystem.CurrentSlot = 0;
+            Assert.IsNull(SaveSystem.Load(out _), "slot A is still empty");
+            SaveSystem.Delete(1);
+            Assert.IsFalse(SaveSystem.SlotHasSave(1));
+        }
+
+        [Test]
+        public void OldSingleSaveBecomesSlotA()
+        {
+            Directory.CreateDirectory(m_Dir);
+            File.WriteAllText(Path.Combine(m_Dir, SaveSystem.LegacySaveFile), "{\"version\":2,\"money\":321,\"hasPlayed\":true}");
+            SaveSystem.CurrentSlot = 0;
+            var s = SaveSystem.Load(out var problem);
+            Assert.IsNull(problem);
+            Assert.AreEqual(321, s.Money, 1e-9);
+            Assert.IsTrue(File.Exists(SaveSystem.SlotPath(0)));
+            Assert.IsFalse(File.Exists(Path.Combine(m_Dir, SaveSystem.LegacySaveFile)));
         }
 
         [Test]

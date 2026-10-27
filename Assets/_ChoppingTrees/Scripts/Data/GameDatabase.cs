@@ -5,7 +5,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>Index of all game data. Lives in Resources so runtime and tests can load it by name.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Game Database", fileName = "GameDatabase")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Game Database", fileName = "GameDatabase")]
     public class GameDatabase : ScriptableObject
     {
         public const string ResourcePath = "GameDatabase";

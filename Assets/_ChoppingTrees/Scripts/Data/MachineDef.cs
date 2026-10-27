@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>An automated machine type. Counts and upgrades live in <see cref="UpgradeDef"/>s that target its id.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Machine", fileName = "Machine")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Machine", fileName = "Machine")]
     public class MachineDef : ScriptableObject
     {
         public string id = "chopper";

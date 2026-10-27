@@ -19,7 +19,7 @@ MonoBehaviour:
   effect: 6
   targetId: planks
   maxLevel: 10
-  baseCost: 7500
+  baseCost: 3750
   costGrowth: 1.9
   explicitCosts: []
   effectPerLevel: 0.25

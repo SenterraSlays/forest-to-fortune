@@ -11,9 +11,9 @@ namespace ChoppingTrees.EditorTools
     /// </summary>
     public static class BuildPipeline
     {
-        public const string PlayerPath = "Builds/Windows/ChoppingTrees.exe";
+        public const string PlayerPath = "Builds/Windows/ForestToFortune.exe";
 
-        [MenuItem("Tools/Chopping Trees/Build Everything", priority = 20)]
+        [MenuItem("Tools/Forest to Fortune/Build Everything", priority = 20)]
         public static void BuildEverythingMenu() => BuildEverything(true);
 
         /// <summary>Setup, materials, (Blender models), audio, data and the scene, in order.</summary>
@@ -30,7 +30,7 @@ namespace ChoppingTrees.EditorTools
             return log.ToString();
         }
 
-        [MenuItem("Tools/Chopping Trees/Build Windows Player", priority = 21)]
+        [MenuItem("Tools/Forest to Fortune/Build Windows Player", priority = 21)]
         public static string BuildWindows()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(PlayerPath));

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>A sellable resource (wood, planks, ...). New resources only need a new asset.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Resource", fileName = "Resource")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Resource", fileName = "Resource")]
     public class ResourceDef : ScriptableObject
     {
         public string id = "wood";

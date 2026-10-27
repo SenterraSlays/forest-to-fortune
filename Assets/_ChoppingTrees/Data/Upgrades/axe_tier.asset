@@ -22,10 +22,10 @@ MonoBehaviour:
   baseCost: 0
   costGrowth: 1
   explicitCosts:
-  - 50
-  - 600
-  - 7500
-  - 120000
+  - 25
+  - 300
+  - 3750
+  - 60000
   effectPerLevel: 1
   levelNames:
   - Steel Axe

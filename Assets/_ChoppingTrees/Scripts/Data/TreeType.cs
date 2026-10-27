@@ -3,7 +3,7 @@ using UnityEngine;
 namespace ChoppingTrees
 {
     /// <summary>A choppable tree species: toughness, rewards and look.</summary>
-    [CreateAssetMenu(menuName = "Chopping Trees/Tree Type", fileName = "Tree")]
+    [CreateAssetMenu(menuName = "Forest to Fortune/Tree Type", fileName = "Tree")]
     public class TreeType : ScriptableObject
     {
         public string id = "pine";

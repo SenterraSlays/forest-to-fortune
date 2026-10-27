@@ -51,6 +51,10 @@ namespace ChoppingTrees
             if (Environment.CommandLine.Contains("-ct-nosave")) SavingEnabled = false;
 
             GameSettings.Apply();
+            DiscordPresence.Ensure(m_Database);
+            // The slot chosen on the save screen (carried over the scene reload), else the last one played.
+            SaveSystem.CurrentSlot = s_PendingSlot >= 0 ? s_PendingSlot : GameSettings.Data.lastSlot;
+            s_PendingSlot = -1;
             // With saving off (automated runs) start from a clean slate instead of the player's save.
             // After a rebirth the reset state is handed over directly (it was saved too, if saving is on).
             string problem = null;
@@ -87,6 +91,11 @@ namespace ChoppingTrees
         public void StartPlaying()
         {
             Model.State.HasPlayed = true;
+            if (GameSettings.Data.lastSlot != SaveSystem.CurrentSlot)
+            {
+                GameSettings.Data.lastSlot = SaveSystem.CurrentSlot;
+                GameSettings.Save();
+            }
             SetPhase(GamePhase.Playing);
             Save();
         }
@@ -128,12 +137,37 @@ namespace ChoppingTrees
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
-        /// <summary>Starts a fresh game from the main menu (used by "New Game").</summary>
-        public void NewGame()
+        static int s_PendingSlot = -1;
+
+        /// <summary>
+        /// Plays a save slot from the save screen: continues it, or starts a new game when it is
+        /// empty. Another slot than the loaded one restarts the scene with that slot's progress.
+        /// </summary>
+        public void PlaySlot(int slot)
         {
-            if (SavingEnabled) SaveSystem.Delete();
-            m_Quitting = true;
+            if (slot == SaveSystem.CurrentSlot)
+            {
+                StartPlaying();
+                return;
+            }
+            if (Model.State.HasPlayed) Save();
+            GameSettings.Data.lastSlot = slot;
+            GameSettings.Save();
+            s_PendingSlot = slot;
             s_StartImmediately = true;
+            m_Quitting = true;
+            UIState.Clear();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>Erases a slot. Erasing the loaded one reloads the menu with an empty slot.</summary>
+        public void DeleteSlot(int slot)
+        {
+            if (SavingEnabled) SaveSystem.Delete(slot);
+            if (slot != SaveSystem.CurrentSlot) return;
+            s_PendingSlot = slot;
+            m_Quitting = true;
+            UIState.Clear();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 

@@ -21,7 +21,7 @@ namespace ChoppingTrees.EditorTools
         public const string PipelinePath = "Assets/Settings/PC_RPAsset.asset";
         public const string FontDir = Root + "/Art/Fonts";
 
-        [MenuItem("Tools/Chopping Trees/1. Setup Project", priority = 1)]
+        [MenuItem("Tools/Forest to Fortune/1. Setup Project", priority = 1)]
         public static string Run()
         {
             foreach (var f in new[] { "Art/Materials", "Art/Models", "Art/Textures", "Art/Fonts", "Audio", "Data/Trees", "Data/Upgrades", "Data/Machines", "Data/Areas", "Data/Resources", "Prefabs", "Resources", "Scenes" })
@@ -50,11 +50,30 @@ namespace ChoppingTrees.EditorTools
             return "layers ok";
         }
 
+        public const string IconPath = Root + "/Art/Icon/GameIcon.png";
+
+        /// <summary>The game icon (rendered by Blender/icon_render.py, framed by icon_compose.py).</summary>
+        public static string Icon()
+        {
+            var imp = AssetImporter.GetAtPath(IconPath) as TextureImporter;
+            if (imp == null) return "icon missing";
+            imp.textureType = TextureImporterType.Default;
+            imp.alphaIsTransparency = true;
+            imp.mipmapEnabled = false;
+            imp.textureCompression = TextureImporterCompression.Uncompressed;
+            imp.maxTextureSize = 1024;
+            imp.SaveAndReimport();
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(IconPath);
+            PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { tex }, IconKind.Any);
+            return "icon ok";
+        }
+
         static void Player()
         {
             PlayerSettings.companyName = "Hazelwood";
-            PlayerSettings.productName = "A Game About Chopping Trees";
-            PlayerSettings.bundleVersion = "1.0.0";
+            PlayerSettings.productName = "Forest to Fortune";
+            PlayerSettings.bundleVersion = "2.0.0";
+            Icon();
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

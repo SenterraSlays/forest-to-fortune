@@ -85,7 +85,7 @@ namespace ChoppingTrees.EditorTools
             }
         }
 
-        [MenuItem("Tools/Chopping Trees/3. Build Models in Blender", priority = 3)]
+        [MenuItem("Tools/Forest to Fortune/3. Build Models in Blender", priority = 3)]
         public static string BuildModels()
         {
             string blender = BlenderPath;

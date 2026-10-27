@@ -291,6 +291,7 @@ namespace ChoppingTrees
                 d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
             ToggleRow(ui, "Tutorial hints", "Step-by-step goals for new players", () => S.showTutorial, v => S.showTutorial = v);
             ToggleRow(ui, "Damage numbers", "Show the damage of each hit", () => S.damageNumbers, v => S.damageNumbers = v);
+            ToggleRow(ui, "Discord status", "Show what you're doing on your Discord profile", () => S.discordPresence, v => S.discordPresence = v);
         }
 
         // ------------------------------------------------------------------ behaviour

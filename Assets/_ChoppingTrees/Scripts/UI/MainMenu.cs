@@ -4,12 +4,13 @@ using UnityEngine.UI;
 
 namespace ChoppingTrees
 {
-    /// <summary>Title screen over the drifting forest camera.</summary>
+    /// <summary>Title screen over the drifting forest camera. Play opens the save slots; the stats
+    /// are those of the save played last.</summary>
     public class MainMenu : UIScreen
     {
-        UIButton m_Continue, m_New;
+        UIButton m_Play;
         GameObject m_Stats;
-        TextMeshProUGUI m_StatMoney, m_StatTrees, m_StatTime;
+        TextMeshProUGUI m_StatMoney, m_StatTrees, m_StatTime, m_StatsCaption;
         RectTransform m_Column;
         float m_Intro;
 
@@ -40,9 +41,9 @@ namespace ChoppingTrees
             var axe = UIFactory.Icon(badge.transform, "axe", UIStyle.AccentDark, 34f);
             axe.rectTransform.anchoredPosition = Vector2.zero;
             axe.GetComponent<LayoutElement>().ignoreLayout = true;
-            UIFactory.Caption(brand, "A Game About", UIStyle.Accent, 26f).characterSpacing = 14f;
+            UIFactory.Caption(brand, "A lumber idle game", UIStyle.Accent, 24f).characterSpacing = 12f;
 
-            var title = UIFactory.Text(m_Column, "Chopping\nTrees", 128, UIStyle.Text, true);
+            var title = UIFactory.Text(m_Column, "Forest to\nFortune", 124, UIStyle.Text, true);
             title.lineSpacing = -22f;
             title.Layout(-1, 270);
             var titleShadow = title.gameObject.AddComponent<Shadow>();
@@ -51,13 +52,13 @@ namespace ChoppingTrees
             var tagline = UIFactory.Text(m_Column, "Chop. Sell. Upgrade. Automate. Expand.", 24, UIStyle.Muted);
             tagline.Layout(-1, 52);
 
-            m_Continue = UIFactory.Button(m_Column, "Continue", () => Game.Instance.StartPlaying(), 28, ButtonStyle.Primary, "play");
-            m_Continue.Layout(420, 70);
-            m_New = UIFactory.Button(m_Column, "New Game", NewGame, 24, ButtonStyle.Ghost, "refresh");
-            m_New.Layout(420, 60);
+            m_Play = UIFactory.Button(m_Column, "Play", () => SaveMenu.Instance.Open(), 28, ButtonStyle.Primary, "play");
+            m_Play.Layout(420, 70);
             UIFactory.Button(m_Column, "Settings", () => SettingsMenu.Instance.Open(), 24, ButtonStyle.Ghost, "gear").Layout(420, 60);
             UIFactory.Button(m_Column, "Quit", () => Game.Instance.Quit(), 24, ButtonStyle.Ghost, "power").Layout(420, 60);
 
+            m_StatsCaption = UIFactory.Caption(m_Column, "", UIStyle.Muted, 14f);
+            m_StatsCaption.Layout(-1, 26);
             var stats = UIFactory.Rect("Stats", m_Column);
             UIFactory.HStack(stats, 12f);
             stats.Layout(-1, 84);
@@ -66,7 +67,7 @@ namespace ChoppingTrees
             m_StatTime = Stat(stats, "clock", UIStyle.CategoryColor(UpgradeCategory.Forest), "Played");
             m_Stats = stats.gameObject;
 
-            var credit = UIFactory.Text(Root, "Models built in Blender  •  sounds synthesised  •  v1.1", 16, new Color(1, 1, 1, 0.45f), false, TextAlignmentOptions.Right);
+            var credit = UIFactory.Text(Root, "Forest to Fortune  •  models built in Blender  •  v2.0", 16, new Color(1, 1, 1, 0.45f), false, TextAlignmentOptions.Right);
             credit.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-30, 22), new Vector2(900, 30));
 
             Game.Instance.PhaseChanged += p => { if (p == GamePhase.MainMenu) Open(); else Close(); };
@@ -91,13 +92,12 @@ namespace ChoppingTrees
         protected override void OnOpened()
         {
             var g = Game.Instance;
+            // The loaded save is the one played last.
             bool hasProgress = g.Model.State.HasPlayed;
-            m_Continue.gameObject.SetActive(hasProgress);
-            m_New.Label.text = hasProgress ? "New Game" : "Start Chopping";
-            m_New.SetStyle(hasProgress ? ButtonStyle.Ghost : ButtonStyle.Primary);
-            if (m_New.IconImage != null) m_New.IconImage.sprite = UIIcons.Get(hasProgress ? "refresh" : "play");
             var s = g.Model.State;
             m_Stats.SetActive(hasProgress);
+            m_StatsCaption.gameObject.SetActive(hasProgress);
+            m_StatsCaption.text = $"LAST PLAYED  ·  SAVE {SaveSystem.SlotNames[SaveSystem.CurrentSlot]}" + (s.Rebirths > 0 ? $"  ·  {s.Rebirths} REBIRTHS" : "");
             m_StatMoney.text = NumberUtil.Money(s.Money);
             m_StatTrees.text = NumberUtil.Format(s.TreesFelled);
             m_StatTime.text = NumberUtil.Duration(s.PlaySeconds);
@@ -115,15 +115,5 @@ namespace ChoppingTrees
             m_Column.anchoredPosition = new Vector2(Mathf.Lerp(70f, 130f, e), 10f);
         }
 
-        void NewGame()
-        {
-            if (!Game.Instance.Model.State.HasPlayed)
-            {
-                Game.Instance.StartPlaying();
-                return;
-            }
-            ConfirmDialog.Ask("Start a new game?", "This erases all your progress: money, upgrades, machines and forests. Settings are kept.", "Erase and start",
-                () => Game.Instance.NewGame());
-        }
     }
 }

@@ -22,12 +22,12 @@ MonoBehaviour:
   baseCost: 0
   costGrowth: 6
   explicitCosts:
-  - 50
-  - 350
-  - 2200
-  - 15000
-  - 100000
-  - 700000
+  - 25
+  - 175
+  - 1100
+  - 7500
+  - 50000
+  - 350000
   effectPerLevel: 1
   levelNames:
   - Canvas Satchel

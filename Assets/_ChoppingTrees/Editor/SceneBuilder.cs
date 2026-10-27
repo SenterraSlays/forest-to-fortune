@@ -25,7 +25,7 @@ namespace ChoppingTrees.EditorTools
         static float R(float a, float b) => a + (float)s_Rng.NextDouble() * (b - a);
         static readonly List<Vector3> s_Blocked = new List<Vector3>(); // x, z, radius
 
-        [MenuItem("Tools/Chopping Trees/6. Build Scene", priority = 6)]
+        [MenuItem("Tools/Forest to Fortune/6. Build Scene", priority = 6)]
         public static string Build()
         {
             s_Rng = new System.Random(20261026);
@@ -636,7 +636,8 @@ namespace ChoppingTrees.EditorTools
 
         static void Ground(Transform parent)
         {
-            const float step = 1.5f;
+            // 1 m grid: smoother hills and paths than the old 1.5 m one.
+            const float step = 1.0f;
             int nx = Mathf.CeilToInt((WorldLayout.MaxX - WorldLayout.MinX) / step) + 1;
             int nz = Mathf.CeilToInt((WorldLayout.MaxZ - WorldLayout.MinZ) / step) + 1;
             var verts = new Vector3[nx * nz];
@@ -676,9 +677,15 @@ namespace ChoppingTrees.EditorTools
             GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic);
         }
 
+        /// <summary>
+        /// Ground material: a painted colour map over the whole world (grass, dry patches, needles,
+        /// autumn leaves, moss, rock on hills, dirt paths and the yard) at about 17 px per metre,
+        /// plus tiling detail maps (a fine grass-and-soil pattern and its normal map, repeating
+        /// every 2.5 m) so the ground still has texture right under the player's feet.
+        /// </summary>
         static Material GroundMaterial()
         {
-            const int W = 1024, H = 1744;
+            const int W = 2048, H = 3488;
             var px = new Color32[W * H];
             Color grassA = new Color(0.36f, 0.55f, 0.23f), grassB = new Color(0.27f, 0.46f, 0.20f), dry = new Color(0.55f, 0.56f, 0.28f);
             Color dirt = new Color(0.50f, 0.39f, 0.26f), dirtDark = new Color(0.38f, 0.29f, 0.19f), needles = new Color(0.42f, 0.33f, 0.20f);
@@ -719,9 +726,11 @@ namespace ChoppingTrees.EditorTools
             AssetDatabase.ImportAsset(path0);
             var imp = (TextureImporter)AssetImporter.GetAtPath(path0);
             imp.wrapMode = TextureWrapMode.Clamp;
-            imp.maxTextureSize = 2048;
+            imp.maxTextureSize = 4096;
             imp.anisoLevel = 8;
+            imp.textureCompression = TextureImporterCompression.CompressedHQ;
             imp.SaveAndReimport();
+            var (detail, detailNormal) = GroundDetailMaps();
 
             string matPath = $"{MaterialLibrary.Dir}/M_Ground.mat";
             var m = AssetDatabase.LoadAssetAtPath<Material>(matPath);
@@ -733,8 +742,99 @@ namespace ChoppingTrees.EditorTools
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(path0));
             m.SetColor("_BaseColor", Color.white);
             m.SetFloat("_Smoothness", 0.05f);
+            // URP Lit detail inputs: x2 multiply albedo (0.5 = unchanged) and a detail normal map.
+            const float tile = 2.5f;
+            var tiling = new Vector2((WorldLayout.MaxX - WorldLayout.MinX) / tile, (WorldLayout.MaxZ - WorldLayout.MinZ) / tile);
+            m.SetTexture("_DetailAlbedoMap", detail);
+            m.SetTexture("_DetailNormalMap", detailNormal);
+            m.SetTextureScale("_DetailAlbedoMap", tiling);
+            m.SetFloat("_DetailAlbedoMapScale", 1f);
+            m.SetFloat("_DetailNormalMapScale", 0.9f);
+            m.EnableKeyword("_DETAIL_MULX2");
+            m.EnableKeyword("_NORMALMAP");
             EditorUtility.SetDirty(m);
             return m;
+        }
+
+        /// <summary>Tileable 512 px detail maps for the ground: albedo around mid-grey (x2 multiply)
+        /// with grass blades, soil grain and pebbles, and a normal map from the same height field.</summary>
+        static (Texture2D albedo, Texture2D normal) GroundDetailMaps()
+        {
+            const int N = 512;
+            var height = new float[N * N];
+            var rng = new System.Random(11);
+            // Tileable noise: blend the field with copies shifted by one tile.
+            float Tile(float x, float y, float scale, float ox, float oy)
+            {
+                float T = N;
+                float u = x / T, v = y / T;
+                float a = Mathf.PerlinNoise((x) * scale + ox, (y) * scale + oy);
+                float b = Mathf.PerlinNoise((x - T) * scale + ox, (y) * scale + oy);
+                float c = Mathf.PerlinNoise((x) * scale + ox, (y - T) * scale + oy);
+                float d = Mathf.PerlinNoise((x - T) * scale + ox, (y - T) * scale + oy);
+                return Mathf.Lerp(Mathf.Lerp(a, b, u), Mathf.Lerp(c, d, u), v);
+            }
+            for (int y = 0; y < N; y++)
+            for (int x = 0; x < N; x++)
+            {
+                float h = Tile(x, y, 0.012f, 3f, 7f) * 0.45f + Tile(x, y, 0.045f, 11f, 2f) * 0.35f + Tile(x, y, 0.16f, 5f, 19f) * 0.2f;
+                height[y * N + x] = h;
+            }
+            // Grass blades: short bright strokes; pebbles: small dark bumps.
+            for (int i = 0; i < 2600; i++)
+            {
+                int cx = rng.Next(N), cy = rng.Next(N), len = 4 + rng.Next(9);
+                float dx = (float)(rng.NextDouble() - 0.5) * 0.7f;
+                for (int s = 0; s < len; s++)
+                {
+                    int px = ((cx + Mathf.RoundToInt(dx * s)) % N + N) % N, py = ((cy + s) % N + N) % N;
+                    height[py * N + px] += 0.08f * (1f - s / (float)len);
+                }
+            }
+            for (int i = 0; i < 160; i++)
+            {
+                int cx = rng.Next(N), cy = rng.Next(N), r = 2 + rng.Next(4);
+                for (int oy = -r; oy <= r; oy++)
+                for (int ox = -r; ox <= r; ox++)
+                {
+                    float d = Mathf.Sqrt(ox * ox + oy * oy) / r;
+                    if (d > 1f) continue;
+                    int px = ((cx + ox) % N + N) % N, py = ((cy + oy) % N + N) % N;
+                    height[py * N + px] += 0.12f * Mathf.Sqrt(1f - d * d);
+                }
+            }
+            var albedo = new Color32[N * N];
+            var normal = new Color32[N * N];
+            for (int y = 0; y < N; y++)
+            for (int x = 0; x < N; x++)
+            {
+                float h = height[y * N + x];
+                float hx = height[y * N + (x + 1) % N] - height[y * N + (x - 1 + N) % N];
+                float hy = height[((y + 1) % N) * N + x] - height[((y - 1 + N) % N) * N + x];
+                var n = new Vector3(-hx * 6f, -hy * 6f, 1f).normalized;
+                normal[y * N + x] = new Color32((byte)((n.x * 0.5f + 0.5f) * 255), (byte)((n.y * 0.5f + 0.5f) * 255), (byte)((n.z * 0.5f + 0.5f) * 255), 255);
+                // Brighter on raised blades, darker in the hollows; centred on 0.5 (no tint change).
+                byte g = (byte)(Mathf.Clamp01(0.5f + (h - 0.5f) * 0.55f + (float)(rng.NextDouble() - 0.5) * 0.04f) * 255);
+                albedo[y * N + x] = new Color32(g, g, g, 255);
+            }
+            Texture2D Save(Color32[] px, string name, bool isNormal)
+            {
+                var tex = new Texture2D(N, N, TextureFormat.RGBA32, true);
+                tex.SetPixels32(px);
+                tex.Apply();
+                string path = $"{TexDir}/{name}.png";
+                File.WriteAllBytes(path, tex.EncodeToPNG());
+                Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(path);
+                var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+                imp.wrapMode = TextureWrapMode.Repeat;
+                imp.anisoLevel = 8;
+                imp.sRGBTexture = !isNormal;
+                if (isNormal) imp.textureType = TextureImporterType.NormalMap;
+                imp.SaveAndReimport();
+                return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            }
+            return (Save(albedo, "GroundDetail", false), Save(normal, "GroundDetail_N", true));
         }
 
         // ------------------------------------------------------------------ lighting
