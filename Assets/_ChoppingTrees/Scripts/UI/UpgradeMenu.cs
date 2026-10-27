@@ -643,7 +643,9 @@ namespace ChoppingTrees
             var up = model.Upgrades;
             m_Money.text = NumberUtil.Money(model.State.Money);
             m_SkillPoints.text = model.State.SkillPoints + " SP";
-            m_Hint.text = GameInput.UsingGamepad ? "A: select, A again: buy  ·  Right stick: pan  ·  LT / RT: zoom" : "Double-click a node to buy it";
+            m_Hint.text = GameInput.UsingGamepad
+                ? $"{GameInput.Key("select")}: select, again: buy  ·  {GameInput.Key("look")}: pan  ·  {GameInput.Key("zoomOut")} / {GameInput.Key("zoomIn")}: zoom"
+                : "Double-click a node to buy it";
             foreach (var n in m_Nodes) n.Refresh(model, n == m_Selected);
             foreach (var h in m_Headings)
             {

@@ -134,7 +134,7 @@ namespace ChoppingTrees
             switch (Step)
             {
                 case StepChop:
-                    body = GameInput.UsingGamepad ? "Walk up to a tree and <b>hold RT</b> to chop it down." : "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
+                    body = GameInput.UsingGamepad ? $"Walk up to a tree and <b>hold {GameInput.Key("chop")}</b> to chop it down." : "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
                     icon = "axe";
                     break;
                 case StepCollect:

@@ -189,6 +189,7 @@ namespace ChoppingTrees
             SliderRow(mouse, "Sensitivity", "How fast the mouse turns the view", 0.1f, 4f, () => S.mouseSensitivity, v => S.mouseSensitivity = v, v => v.ToString("0.00"));
             ToggleRow(mouse, "Invert Y", "Push up to look down", () => S.invertY, v => S.invertY = v);
             var pad = Section(left, "Controller", "gear");
+            BuildStylePicker(pad);
             SliderRow(pad, "Look sensitivity", "How fast the right stick turns", 0.2f, 3f, () => S.stickSensitivity, v => S.stickSensitivity = v, v => v.ToString("0.00"));
             ToggleRow(pad, "Invert Y", "Push up to look down", () => S.invertStickY, v => S.invertStickY = v);
             ToggleRow(pad, "Vibration", "Rumble on hits and felled trees", () => S.vibration, v => S.vibration = v);
@@ -201,8 +202,80 @@ namespace ChoppingTrees
             ToggleRow(cam, "Head bob", "View sways while walking", () => S.headBob, v => S.headBob = v);
             ToggleRow(cam, "Camera shake", "Kick on hits and falling trees", () => S.cameraShake, v => S.cameraShake = v);
             var layout = Section(right, "Controller layout", "gear");
-            var t = UIFactory.Text(layout, ControllerLayoutText(), 17, UIStyle.Text);
-            t.lineSpacing = 10f;
+            foreach (var (actions, text) in LayoutRows)
+            {
+                var row = UIFactory.Rect(text, layout);
+                UIFactory.HStack(row, 6f);
+                row.Layout(-1, 38);
+                var icons = new List<Image>();
+                foreach (var a in actions)
+                {
+                    // A light plate behind each button icon keeps the dark glyphs readable on the card.
+                    var plate = UIFactory.Panel(row, "Plate_" + a, new Color(1f, 0.95f, 0.82f, 0.16f));
+                    plate.sprite = UIStyle.RoundedSmall;
+                    plate.Layout(38, 38);
+                    var img = UIFactory.Panel(plate.transform, "Glyph", Color.white, false);
+                    img.preserveAspect = true;
+                    img.rectTransform.Stretch(2, 2, 2, 2);
+                    icons.Add(img);
+                }
+                var label = UIFactory.Text(row, text, 17, UIStyle.Text);
+                label.Layout(-1, -1, 1);
+                label.margin = new Vector4(8, 0, 0, 0);
+                m_LayoutRows.Add((icons, actions));
+            }
+        }
+
+        /// <summary>Controller layout card: the buttons of each action (as icons) and what they do.</summary>
+        static readonly (string[] actions, string text)[] LayoutRows =
+        {
+            (new[] { "move", "sprint" }, "Move  /  click to sprint"),
+            (new[] { "look" }, "Look"),
+            (new[] { "chop" }, "Chop (hold to keep swinging)"),
+            (new[] { "jump" }, "Jump"),
+            (new[] { "use" }, "Use: sell, workbench, gates"),
+            (new[] { "menu" }, "Pause menu"),
+            (new[] { "dpad", "select", "back" }, "Menus: move, select, back"),
+            (new[] { "look", "zoomOut", "zoomIn" }, "Skill tree: pan and zoom"),
+            (new[] { "hints" }, "Hide tutorial hints"),
+        };
+
+        readonly List<(List<Image> icons, string[] actions)> m_LayoutRows = new List<(List<Image>, string[])>();
+        readonly UIButton[] m_StyleButtons = new UIButton[3];
+
+        /// <summary>Three cards (Xbox, PlayStation, Switch): which button icons the game shows.</summary>
+        void BuildStylePicker(Transform parent)
+        {
+            var box = UIFactory.Rect("Style", parent);
+            UIFactory.VStack(box, 6f, new RectOffset(0, 0, 4, 6));
+            var head = UIFactory.Rect("Head", box);
+            UIFactory.VStack(head, 0f);
+            UIFactory.Text(head, "Controller buttons", 20, UIStyle.Text);
+            UIFactory.Text(head, "Which button icons the prompts show", 14, UIStyle.Dim);
+            var row = UIFactory.Rect("Cards", box);
+            UIFactory.HStack(row, 8f).childForceExpandWidth = true;
+            for (int i = 0; i < 3; i++)
+            {
+                var style = (ControllerStyle)i;
+                var b = UIFactory.Button(row, GameInput.StyleNames[i], () => SetStyle(style), 17, ButtonStyle.Ghost);
+                b.Layout(-1, 64, 1);
+                var content = b.transform.Find("Content");
+                var icon = UIFactory.Panel(content, "Controller", Color.white, false);
+                icon.sprite = GameInput.ControllerIcon(style);
+                icon.preserveAspect = true;
+                icon.Layout(38, 38);
+                icon.transform.SetAsFirstSibling();
+                m_StyleButtons[i] = b;
+            }
+        }
+
+        void SetStyle(ControllerStyle style)
+        {
+            S.controllerStyle = style;
+            S.controllerStyleChosen = true;
+            GameSettings.Apply();
+            AudioManager.Ui("ui_click", 0.5f);
+            RefreshLabels();
         }
 
         void BuildInterface(RectTransform page)
@@ -216,17 +289,6 @@ namespace ChoppingTrees
             ToggleRow(ui, "Tutorial hints", "Step-by-step goals for new players", () => S.showTutorial, v => S.showTutorial = v);
             ToggleRow(ui, "Damage numbers", "Show the damage of each hit", () => S.damageNumbers, v => S.damageNumbers = v);
         }
-
-        /// <summary>The controller bindings, in the same words as the HUD prompts.</summary>
-        public static string ControllerLayoutText() =>
-            "<color=#F5B545>Left stick</color>   Move  (click: sprint)\n" +
-            "<color=#F5B545>Right stick</color>   Look\n" +
-            "<color=#F5B545>RT / R2</color>   Chop (hold to keep swinging)\n" +
-            "<color=#F5B545>A / Cross</color>   Jump\n" +
-            "<color=#F5B545>X / Square</color>   Use (sell, workbench, gates)\n" +
-            "<color=#F5B545>Start / Options</color>   Pause menu\n" +
-            "<color=#F5B545>D-pad / stick, A, B</color>   Menus: move, select, back\n" +
-            "<color=#F5B545>Skill tree</color>   Right stick pans, LT / RT zoom";
 
         // ------------------------------------------------------------------ behaviour
 
@@ -359,6 +421,11 @@ namespace ChoppingTrees
                 slider.SetValueWithoutNotify(get());
                 text.text = format(get());
             }
+            var style = GameInput.Style;
+            for (int i = 0; i < m_StyleButtons.Length; i++)
+                if (m_StyleButtons[i] != null) m_StyleButtons[i].SetStyle(style == (ControllerStyle)i ? ButtonStyle.Primary : ButtonStyle.Ghost);
+            foreach (var (icons, actions) in m_LayoutRows)
+                for (int i = 0; i < icons.Count; i++) icons[i].sprite = GameInput.Glyph(style, actions[i]);
             for (int i = 0; i < m_PresetButtons.Length; i++)
                 m_PresetButtons[i].SetStyle((int)S.qualityPreset == i ? ButtonStyle.Primary : ButtonStyle.Ghost);
             m_PresetNote.text = S.qualityPreset == QualityPreset.Custom

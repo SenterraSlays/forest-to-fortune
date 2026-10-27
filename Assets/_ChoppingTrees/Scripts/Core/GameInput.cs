@@ -106,9 +106,18 @@ namespace ChoppingTrees
 
         // ------------------------------------------------------------------ per frame
 
+        static ControllerStyle s_LastStyle;
+
         public static void Tick()
         {
             DetectDevice();
+            // Picking a different controller in Settings (or plugging one in) re-labels the prompts.
+            var style = Style;
+            if (style != s_LastStyle)
+            {
+                s_LastStyle = style;
+                DeviceChanged?.Invoke();
+            }
             if (s_RumbleUntil > 0f && Time.unscaledTime >= s_RumbleUntil) StopRumble();
             if (Pad != null)
             {
@@ -154,16 +163,74 @@ namespace ChoppingTrees
             if (target != null) es.SetSelectedGameObject(target);
         }
 
-        /// <summary>Prompt label for an action on the device in use ("E" or "X", ...).</summary>
-        public static string Key(string action) => action switch
+        // ------------------------------------------------------------------ prompts and glyphs
+
+        /// <summary>Button icons in use: the player's choice in Settings, otherwise the connected controller's family.</summary>
+        public static ControllerStyle Style
         {
-            "chop" => UsingGamepad ? "RT" : "LMB",
-            "use" => UsingGamepad ? "X" : "E",
-            "sprint" => UsingGamepad ? "L3" : "Shift",
-            "jump" => UsingGamepad ? "A" : "Space",
-            "menu" => UsingGamepad ? "Start" : "Esc",
-            "hints" => UsingGamepad ? "View" : "H",
-            _ => action,
+            get
+            {
+                var s = GameSettings.Data;
+                if (s.controllerStyleChosen) return s.controllerStyle;
+                string type = Pad != null ? Pad.GetType().Name : "";
+                if (type.Contains("DualShock") || type.Contains("DualSense")) return ControllerStyle.PlayStation;
+                if (type.Contains("Switch")) return ControllerStyle.Switch;
+                return ControllerStyle.Xbox;
+            }
+        }
+
+        public static readonly string[] StyleNames = { "Xbox", "PlayStation", "Switch" };
+
+        /// <summary>Glyph file (Resources/Glyphs/&lt;style&gt;/&lt;file&gt;) and label per action and style.
+        /// Buttons go by position, so the Switch's bottom button (B) is "jump".</summary>
+        static readonly System.Collections.Generic.Dictionary<string, (string file, string label)[]> s_Buttons =
+            new System.Collections.Generic.Dictionary<string, (string, string)[]>
+        {
+            ["chop"] = new[] { ("RT", "RT"), ("R2", "R2"), ("ZR", "ZR") },
+            ["use"] = new[] { ("X", "X"), ("Square", "Square"), ("Y", "Y") },
+            ["jump"] = new[] { ("A", "A"), ("Cross", "Cross"), ("B", "B") },
+            ["select"] = new[] { ("A", "A"), ("Cross", "Cross"), ("B", "B") },
+            ["back"] = new[] { ("B", "B"), ("Circle", "Circle"), ("A", "A") },
+            ["menu"] = new[] { ("Menu", "Menu"), ("Options", "Options"), ("Plus", "+") },
+            ["hints"] = new[] { ("Windows", "View"), ("Share", "Share"), ("Minus", "-") },
+            ["sprint"] = new[] { ("Left_Stick_Click", "LS"), ("Left_Stick_Click", "L3"), ("Left_Stick_Click", "LS") },
+            ["move"] = new[] { ("Left_Stick", "Left stick"), ("Left_Stick", "Left stick"), ("Left_Stick", "Left stick") },
+            ["look"] = new[] { ("Right_Stick", "Right stick"), ("Right_Stick", "Right stick"), ("Right_Stick", "Right stick") },
+            ["zoomOut"] = new[] { ("LT", "LT"), ("L2", "L2"), ("ZL", "ZL") },
+            ["zoomIn"] = new[] { ("RT", "RT"), ("R2", "R2"), ("ZR", "ZR") },
+            ["dpad"] = new[] { ("Dpad", "D-pad"), ("Dpad", "D-pad"), ("Dpad", "D-pad") },
         };
+
+        static readonly string[] s_KeyboardKeys = { "chop:LMB", "use:E", "sprint:Shift", "jump:Space", "menu:Esc", "hints:H", "select:Enter", "back:Esc" };
+        static readonly System.Collections.Generic.Dictionary<string, Sprite> s_Glyphs = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>Prompt label for an action on the device in use ("E" on keyboard, "X" / "Square" / "Y" on a controller).</summary>
+        public static string Key(string action)
+        {
+            if (UsingGamepad && s_Buttons.TryGetValue(action, out var b)) return b[(int)Style].label;
+            foreach (var k in s_KeyboardKeys)
+                if (k.StartsWith(action + ":")) return k.Substring(action.Length + 1);
+            return action;
+        }
+
+        /// <summary>Button icon for an action when a controller is in use, otherwise null (show the key cap).</summary>
+        public static Sprite Glyph(string action) => UsingGamepad ? Glyph(Style, action) : null;
+
+        public static Sprite Glyph(ControllerStyle style, string action)
+        {
+            if (!s_Buttons.TryGetValue(action, out var b)) return null;
+            return LoadGlyph(style + "/" + b[(int)style].file);
+        }
+
+        /// <summary>Picture of a controller of that family (for the Settings picker).</summary>
+        public static Sprite ControllerIcon(ControllerStyle style) => LoadGlyph("Controllers/" + style);
+
+        static Sprite LoadGlyph(string path)
+        {
+            if (s_Glyphs.TryGetValue(path, out var s) && s != null) return s;
+            s = Resources.Load<Sprite>("Glyphs/" + path);
+            s_Glyphs[path] = s;
+            return s;
+        }
     }
 }

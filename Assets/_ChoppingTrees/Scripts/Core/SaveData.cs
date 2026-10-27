@@ -103,6 +103,9 @@ namespace ChoppingTrees
         public bool invertStickY;
         public bool vibration = true;
         public float stickDeadZone = 0.15f;
+        [Tooltip("Which button icons to show. Until the player picks one, the connected controller decides.")]
+        public ControllerStyle controllerStyle = ControllerStyle.Xbox;
+        public bool controllerStyleChosen;
 
         [Header("Comfort and interface")]
         public bool headBob = true;
@@ -112,6 +115,7 @@ namespace ChoppingTrees
     }
 
     public enum QualityPreset { Low, Medium, High, Ultra, Custom }
+    public enum ControllerStyle { Xbox, PlayStation, Switch }
     public enum ShadowQuality { Off, Low, Medium, High, Ultra }
     public enum TextureQuality { Full, Half, Quarter }
     public enum DetailLevel { Low, Medium, High, Ultra }

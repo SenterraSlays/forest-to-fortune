@@ -298,8 +298,8 @@ namespace ChoppingTrees
         /// <summary>Key caps show keyboard keys or controller buttons, whichever was used last.</summary>
         void RelabelKeys()
         {
-            if (m_UseCap != null) UIFactory.SetKeyCap(m_UseCap, GameInput.Key("use"));
-            foreach (var (cap, action) in m_HintCaps) if (cap != null) UIFactory.SetKeyCap(cap, GameInput.Key(action));
+            if (m_UseCap != null) UIFactory.SetKeyCap(m_UseCap, GameInput.Key("use"), GameInput.Glyph("use"));
+            foreach (var (cap, action) in m_HintCaps) if (cap != null) UIFactory.SetKeyCap(cap, GameInput.Key(action), GameInput.Glyph(action));
         }
 
         void OnDestroy() => GameInput.DeviceChanged -= RelabelKeys;

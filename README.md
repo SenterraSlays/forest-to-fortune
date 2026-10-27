@@ -26,7 +26,9 @@ rebuild it with *Tools > Chopping Trees > Build Windows Player*.
 
 No input setup is needed: the game reads the devices directly through the Input System
 package. Whichever you used last decides the button prompts (keys or controller buttons), and a
-controller always has a focused element in menus. Controller look speed, invert, dead zone and
+controller always has a focused element in menus. *Settings > Controls > Controller buttons*
+switches the prompts between Xbox, PlayStation and Switch button icons (until you pick one, the
+connected controller decides). Controller look speed, invert, dead zone and
 vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*.
 
 ### The loop

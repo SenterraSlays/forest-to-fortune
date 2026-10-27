@@ -273,17 +273,34 @@ namespace ChoppingTrees
             le.preferredWidth = le.minWidth = w;
             le.preferredHeight = le.minHeight = height;
             cap.rectTransform.sizeDelta = new Vector2(w, height);
+            // Controller button icon, shown instead of the key when a controller is in use.
+            var glyph = Panel(cap.transform, "Glyph", Color.white, false);
+            glyph.preserveAspect = true;
+            glyph.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.one * height * 1.3f);
+            glyph.gameObject.SetActive(false);
             return cap.rectTransform;
         }
 
-        /// <summary>Changes a key cap's label and fits its width.</summary>
-        public static void SetKeyCap(RectTransform cap, string key)
+        /// <summary>Changes a key cap's label and fits its width; with a glyph, shows the controller
+        /// button icon instead of the cap.</summary>
+        public static void SetKeyCap(RectTransform cap, string key, Sprite glyph = null)
         {
-            var t = cap.GetComponentInChildren<TextMeshProUGUI>();
-            if (t == null || t.text == key) return;
-            t.text = key;
+            var t = cap.GetComponentInChildren<TextMeshProUGUI>(true);
+            var g = cap.Find("Glyph")?.GetComponent<Image>();
+            var bg = cap.GetComponent<Image>();
+            var shadow = cap.GetComponent<UnityEngine.UI.Shadow>();
             float h = cap.sizeDelta.y;
-            float w = Mathf.Max(h, t.GetPreferredValues(key).x + 16f);
+            bool icon = glyph != null && g != null;
+            if (g != null)
+            {
+                g.gameObject.SetActive(icon);
+                if (icon) g.sprite = glyph;
+            }
+            bg.color = icon ? Color.clear : new Color(0.93f, 0.90f, 0.82f);
+            if (shadow != null) shadow.enabled = !icon;
+            t.gameObject.SetActive(!icon);
+            t.text = key;
+            float w = icon ? h * 1.3f : Mathf.Max(h, t.GetPreferredValues(key).x + 16f);
             var le = cap.GetComponent<LayoutElement>();
             le.preferredWidth = le.minWidth = w;
             cap.sizeDelta = new Vector2(w, h);
