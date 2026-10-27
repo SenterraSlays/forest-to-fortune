@@ -10,6 +10,9 @@ namespace ChoppingTrees
     {
         public static Effects Instance { get; private set; }
 
+        /// <summary>Share of particles emitted (the Effects quality setting).</summary>
+        public static float Density = 1f;
+
         [SerializeField] Material m_ParticleMaterial;
 
         ParticleSystem m_Chips, m_Dust, m_Leaves, m_Sparkle;
@@ -105,6 +108,7 @@ namespace ChoppingTrees
         static void Emit(ParticleSystem ps, int count, Vector3 pos, Vector3 dir, float speedMin, float speedMax, float spread, Color color, float sizeMul = 1f)
         {
             var size = Instance.m_Sizes.TryGetValue(ps, out var sz) ? sz : new Vector2(0.1f, 0.1f);
+            count = Mathf.Max(1, Mathf.RoundToInt(count * Density));
             var ep = new ParticleSystem.EmitParams();
             for (int i = 0; i < count; i++)
             {

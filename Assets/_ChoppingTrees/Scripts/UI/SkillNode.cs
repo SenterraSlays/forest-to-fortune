@@ -14,7 +14,7 @@ namespace ChoppingTrees
     /// up-arrow badge and a breathing ring (affordable), the progress arc (owned) and a gold check
     /// badge (maxed). Hover previews it in the detail panel, click selects it, double-click buys.
     /// </summary>
-    public class SkillNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    public class SkillNode : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler, ISelectHandler, IDeselectHandler, ISubmitHandler
     {
         public enum State { Locked, Available, Affordable, Owned, Maxed }
 
@@ -54,6 +54,9 @@ namespace ChoppingTrees
             n.m_OnClick = click;
             n.m_OnDouble = doubleClick;
             n.m_Phase = UnityEngine.Random.value * 10f;
+            // Selectable so a controller can move between nodes with the D-pad (A selects, A again buys).
+            var sel = rt.gameObject.AddComponent<Selectable>();
+            sel.transition = Selectable.Transition.None;
 
             // Everything that scales on hover and purchase lives under Body; the counter and name stay put.
             n.m_Body = UIFactory.Rect("Body", rt);
@@ -231,6 +234,25 @@ namespace ChoppingTrees
         {
             m_HoverTarget = 0f;
             m_OnHover?.Invoke(null);
+        }
+
+        public void OnSelect(BaseEventData e)
+        {
+            m_HoverTarget = 1f;
+            if (GameInput.UsingGamepad) AudioManager.Ui("ui_hover", 0.25f);
+            m_OnHover?.Invoke(this);
+        }
+
+        public void OnDeselect(BaseEventData e)
+        {
+            m_HoverTarget = 0f;
+            m_OnHover?.Invoke(null);
+        }
+
+        public void OnSubmit(BaseEventData e)
+        {
+            if (Selected) m_OnDouble?.Invoke(this);
+            else m_OnClick?.Invoke(this);
         }
 
         public void OnPointerClick(PointerEventData e)

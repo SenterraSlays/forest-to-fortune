@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: wood_price
     level: 1
   sortOrder: 2
+  legacy: 0
   treePosition: {x: 2.85, y: 2.75}
   icon: magnet

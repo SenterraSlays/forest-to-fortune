@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: forest_charter
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: forest_charter
+  displayName: Forest Charter
+  description: Start every run with the forest gates already open.
+  category: 4
+  effect: 25
+  targetId: 
+  maxLevel: 2
+  baseCost: 0
+  costGrowth: 1
+  explicitCosts:
+  - 4
+  - 10
+  effectPerLevel: 1
+  levelNames: []
+  requires: []
+  sortOrder: 3
+  legacy: 1
+  treePosition: {x: 0, y: 0}
+  icon: pine

@@ -30,7 +30,10 @@ namespace ChoppingTrees
         }
 
         /// <summary>Small rotational kick in degrees (x = pitch, y = yaw, z = roll).</summary>
-        public void Kick(Vector3 degrees) => m_KickVel += degrees * 18f;
+        public void Kick(Vector3 degrees)
+        {
+            if (GameSettings.Data.cameraShake) m_KickVel += degrees * 18f;
+        }
 
         void LateUpdate()
         {
@@ -39,7 +42,7 @@ namespace ChoppingTrees
             m_KickVel += (-m_Kick * 260f - m_KickVel * 30f) * dt;
             m_Kick += m_KickVel * dt;
 
-            float bobWeight = m_Motor != null && m_Motor.Grounded ? Mathf.Clamp01(m_Motor.HorizontalSpeed / 5f) : 0f;
+            float bobWeight = m_Motor != null && m_Motor.Grounded && GameSettings.Data.headBob ? Mathf.Clamp01(m_Motor.HorizontalSpeed / 5f) : 0f;
             float phase = m_Motor != null ? m_Motor.StrideDistance * 1.9f : 0f;
             Vector3 bob = new Vector3(Mathf.Cos(phase) * m_BobAmount * 0.6f, Mathf.Abs(Mathf.Sin(phase)) * m_BobAmount, 0f) * bobWeight;
             transform.localPosition = m_BasePos + bob;

@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: sawmill_speed
     level: 1
   sortOrder: 7
+  legacy: 0
   treePosition: {x: 1.55, y: 5.15}
   icon: saw

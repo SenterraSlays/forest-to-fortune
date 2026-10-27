@@ -81,12 +81,38 @@ namespace ChoppingTrees
                     return Pair("Regrowth speed", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.TreeCashBonus:
                     return Pair("Goldbark cash", Pct(e * lv), Pct(e * (lv + 1)), maxed);
+                case UpgradeEffect.StartingAxe:
+                {
+                    var axe = up.FirstWithEffect(UpgradeEffect.AxeTier);
+                    string now = lv > 0 && axe != null ? axe.LevelName(lv) : m.Db.config.baseAxeName;
+                    string next = axe != null ? axe.LevelName(lv + 1) : "";
+                    return maxed ? $"Every run starts with the <b>{now}</b>" : $"Every run starts with{Arrow}<color=#FBBD52>{next}</color>";
+                }
+                case UpgradeEffect.StartingMoney:
+                    return Pair("Starting money", NumberUtil.Money(Upgrades.StartingMoneyFor(e, lv)), NumberUtil.Money(Upgrades.StartingMoneyFor(e, lv + 1)), maxed);
+                case UpgradeEffect.StartingMachines:
+                {
+                    var def = m.Db.Machine(u.targetId);
+                    return Pair("Free " + (def != null ? def.displayName + "s" : "machines") + " each run", lv.ToString(), (lv + 1).ToString(), maxed);
+                }
+                case UpgradeEffect.StartingAreas:
+                {
+                    var areas = new List<ForestAreaDef>();
+                    foreach (var a in m.Db.areas) if (a != null && !a.unlockedByDefault) areas.Add(a);
+                    areas.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
+                    var names = areas.ConvertAll(a => a.displayName);
+                    string Opened(int n) => n <= 0 ? "none" : string.Join(" + ", names.GetRange(0, System.Math.Min(n, names.Count)));
+                    return maxed ? $"Every run starts with <b>{Opened(lv)}</b> open" : $"Open from the start: {Opened(lv)}{Arrow}<color=#FBBD52>{Opened(lv + 1)}</color>";
+                }
+                case UpgradeEffect.BackpackBonus:
+                    return Pair("Backpack capacity", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.BackpackCapacity:
                 {
                     var cfg = m.Db.config;
-                    string now = NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv));
+                    double bonus = up.BackpackMultiplier;
+                    string now = NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv) * bonus);
                     if (maxed) return $"Carries {now} wood";
-                    return Pair("Carries", now, NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv + 1)), false) + " wood";
+                    return Pair("Carries", now, NumberUtil.Format(Upgrades.CapacityForTier(cfg, lv + 1) * bonus), false) + " wood";
                 }
                 case UpgradeEffect.OfflineHours:
                 {

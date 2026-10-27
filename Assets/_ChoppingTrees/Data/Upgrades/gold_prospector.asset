@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: area_ridge
     level: 1
   sortOrder: 3
+  legacy: 0
   treePosition: {x: -4.2, y: 5.5}
   icon: nugget

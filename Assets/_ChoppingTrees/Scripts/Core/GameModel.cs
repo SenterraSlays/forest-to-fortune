@@ -40,6 +40,13 @@ namespace ChoppingTrees
             Upgrades = new Upgrades(State, db);
             Market = new Market(State, db, Upgrades);
             Production = new Production(State, db, Upgrades);
+            // Saves from before skill points existed get the points their rebirths earned.
+            int owed = State.Rebirths * db.config.rebirthSkillPoints - State.SkillPointsEarned;
+            if (owed > 0)
+            {
+                State.SkillPoints += owed;
+                State.SkillPointsEarned += owed;
+            }
         }
 
         /// <summary>Real-time update: production, play time and automatic selling (any AutoSell
@@ -99,8 +106,34 @@ namespace ChoppingTrees
         public bool TryBuy(UpgradeDef u, out string failure)
         {
             if (!Upgrades.TryBuy(u, out failure)) return false;
+            // Legacy perks that grant a head start apply right away, not only after the next rebirth.
+            if (u.legacy) GrantRunStart(false);
             Purchased?.Invoke(u);
             return true;
+        }
+
+        /// <summary>
+        /// Gives what Legacy perks promise every run: the heirloom axe, free machines and open
+        /// forests (raised to at least those levels), and the starting money when a run begins.
+        /// </summary>
+        public void GrantRunStart(bool money)
+        {
+            void AtLeast(UpgradeDef u, int level)
+            {
+                if (u == null || level <= 0) return;
+                level = Math.Min(level, u.maxLevel);
+                if (State.Level(u.id) < level) State.SetLevel(u.id, level);
+            }
+            AtLeast(Upgrades.FirstWithEffect(UpgradeEffect.AxeTier), Upgrades.StartingAxeTier);
+            foreach (var m in Db.machines)
+                if (m != null) AtLeast(Db.CountUpgradeFor(m.id), Upgrades.StartingMachines(m.id));
+            int areas = Upgrades.StartingAreas;
+            var locked = new List<ForestAreaDef>();
+            foreach (var a in Db.areas) if (a != null && !a.unlockedByDefault) locked.Add(a);
+            locked.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
+            for (int i = 0; i < Math.Min(areas, locked.Count); i++) AtLeast(Db.AreaUpgradeFor(locked[i].id), 1);
+            Upgrades.MarkDirty();
+            if (money) State.Money = NumberUtil.Add(State.Money, Upgrades.StartingMoney);
         }
 
         /// <summary>Sells the yard stock, plus the backpack unless it's an automatic sale.</summary>
@@ -120,7 +153,8 @@ namespace ChoppingTrees
         /// <summary>
         /// Buys <paramref name="count"/> rebirths at once: resets money, upgrades (so machines and
         /// forests), the yard stock and the backpack, and adds to the rebirth count, which raises
-        /// all earnings. Lifetime stats and the tutorial state are kept.
+        /// all earnings and gives skill points. Legacy perks, lifetime stats and the tutorial state
+        /// are kept, and the Legacy head starts are granted to the new run.
         /// </summary>
         public bool TryRebirth(int count, out string failure)
         {
@@ -129,13 +163,25 @@ namespace ChoppingTrees
             double cost = RebirthCost(count);
             if (State.Money + 1e-9 < cost) { failure = "Need " + NumberUtil.Money(cost - State.Money) + " more"; return false; }
             State.Rebirths += count;
+            int points = count * Db.config.rebirthSkillPoints;
+            State.SkillPoints += points;
+            State.SkillPointsEarned += points;
             State.Money = Db.config.startingMoney;
             State.Resources.Clear();
             State.Backpack.Clear();
+            // Legacy perks are kept; everything else in the skill tree starts over.
+            var keep = new Dictionary<string, int>();
+            foreach (var kv in State.Levels)
+            {
+                var u = Db.Upgrade(kv.Key);
+                if (u != null && u.legacy) keep[kv.Key] = kv.Value;
+            }
             State.Levels.Clear();
+            foreach (var kv in keep) State.Levels[kv.Key] = kv.Value;
             State.LastSavedUtc = DateTime.UtcNow;
             m_AutoSellTimer = 0;
             Upgrades.MarkDirty();
+            GrantRunStart(true);
             Reborn?.Invoke(count);
             return true;
         }

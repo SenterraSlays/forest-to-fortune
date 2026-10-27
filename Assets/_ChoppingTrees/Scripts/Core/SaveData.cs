@@ -26,6 +26,9 @@ namespace ChoppingTrees
         public long treesFelled;
         /// <summary>Added in 1.4; older files load as 0.</summary>
         public int rebirths;
+        /// <summary>Added in 1.5; older files get the points their rebirths earned (see GameModel).</summary>
+        public int skillPoints;
+        public int skillPointsEarned;
         public double playSeconds;
         public int tutorialStep;
         public bool tutorialDone;
@@ -78,7 +81,41 @@ namespace ChoppingTrees
         /// <summary>0 = unlimited (only used with V-Sync off).</summary>
         public int frameRateCap;
         public FpsCounterMode fpsCounter = FpsCounterMode.Off;
+
+        [Header("Quality (see QualityPresets)")]
+        public QualityPreset qualityPreset = QualityPreset.High;
+        public ShadowQuality shadows = ShadowQuality.High;
+        public TextureQuality textures = TextureQuality.Full;
+        public bool anisotropic = true;
+        public DetailLevel detail = DetailLevel.High;
+        public bool bloom = true;
+        public EffectsQuality effects = EffectsQuality.High;
+        [Tooltip("Exposure offset, -1..1.")]
+        public float brightness;
+
+        [Header("Audio")]
+        public float effectsVolume = 1f;
+        public float ambienceVolume = 1f;
+        public float interfaceVolume = 1f;
+
+        [Header("Controller")]
+        public float stickSensitivity = 1f;
+        public bool invertStickY;
+        public bool vibration = true;
+        public float stickDeadZone = 0.15f;
+
+        [Header("Comfort and interface")]
+        public bool headBob = true;
+        public bool cameraShake = true;
+        public bool damageNumbers = true;
+        public float uiScale = 1f;
     }
+
+    public enum QualityPreset { Low, Medium, High, Ultra, Custom }
+    public enum ShadowQuality { Off, Low, Medium, High, Ultra }
+    public enum TextureQuality { Full, Half, Quarter }
+    public enum DetailLevel { Low, Medium, High, Ultra }
+    public enum EffectsQuality { Low, Medium, High }
 
     public enum UpscalerSetting { Off, FSR1, STP, DLSS, FSR2 }
     public enum UpscaleQuality { NativeAA, Quality, Balanced, Performance }

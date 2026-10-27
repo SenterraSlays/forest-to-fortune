@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: sawmill_count
     level: 1
   sortOrder: 1
+  legacy: 0
   treePosition: {x: 2.75, y: 4.1}
   icon: star

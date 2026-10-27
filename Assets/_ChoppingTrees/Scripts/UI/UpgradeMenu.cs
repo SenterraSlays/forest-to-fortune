@@ -40,7 +40,8 @@ namespace ChoppingTrees
         class Heading
         {
             public UpgradeCategory category;
-            public RectTransform rect;
+            public RectTransform rect, fill;
+            public TextMeshProUGUI count;
         }
 
         readonly List<SkillNode> m_Nodes = new List<SkillNode>();
@@ -59,11 +60,23 @@ namespace ChoppingTrees
 
         // detail panel
         Image m_DBezel, m_DFace, m_DIcon;
-        TextMeshProUGUI m_DName, m_DCategory, m_DLevel, m_DDesc, m_DEffect, m_DEffectCaption, m_DReq, m_DCost, m_DStatus;
+        TextMeshProUGUI m_DName, m_DCategory, m_DLevel, m_DDesc, m_DEffect, m_DEffectCaption, m_DCost, m_DStatus;
         Image m_DEffectBar;
         RectTransform m_DLevelBar;
         UIButton m_Buy;
-        TextMeshProUGUI m_Money;
+        TextMeshProUGUI m_Money, m_SkillPoints, m_DTag, m_Hint;
+        Image m_DBanner, m_DHalo;
+        GameObject m_DPipRow, m_DBarRow;
+        readonly List<Image> m_DPips = new List<Image>();
+        TextMeshProUGUI m_DPipText;
+        class ReqRow
+        {
+            public GameObject go;
+            public Image icon;
+            public TextMeshProUGUI text;
+        }
+        readonly List<ReqRow> m_DReqRows = new List<ReqRow>();
+        const int MaxPips = 15;
 
         // production panel
         class Stat
@@ -82,21 +95,17 @@ namespace ChoppingTrees
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
 
-            var window = UIFactory.Window(Root, "Skill Tree", "leaf", new Vector2(1840, 1000), out var body, "Grow your operation: every branch unlocks the next");
+            var window = UIFactory.Window(Root, "Workbench", "leaf", new Vector2(1840, 1000), out var body, "Skill tree: spend money to grow your operation, one branch at a time");
             m_Window = window.rectTransform;
             m_WindowShadow = (RectTransform)Root.Find("WindowShadow");
+            UIFactory.TopTrim(m_Window, UIStyle.Accent);
 
-            // Money chip and close button in the header.
+            // Currency chips, Rebirth and close in the header.
             var header = window.transform.Find("Header");
-            var chip = UIFactory.Surface(header, "Money", UIStyle.Inset);
-            chip.rectTransform.Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-104, 0), new Vector2(260, 52));
-            UIFactory.HStack(chip, 10f, new RectOffset(16, 18, 6, 6), TextAnchor.MiddleRight);
-            UIFactory.Icon(chip.transform, "coin", UIStyle.Money, 28f);
-            m_Money = UIFactory.Text(chip.transform, "$0", 30, UIStyle.Money, true, TextAlignmentOptions.Right);
-            m_Money.textWrappingMode = TextWrappingModes.NoWrap;
-            m_Money.Layout(-1, -1, 1);
+            m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-104, 0), 260);
+            m_SkillPoints = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-380, 0), 150);
             var rebirth = UIFactory.Button(header, "Rebirth", () => RebirthMenu.Instance.Open(), 20, ButtonStyle.Ghost, "rebirth");
-            ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-380, 0), new Vector2(160, 52));
+            ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-546, 0), new Vector2(170, 52));
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
 
@@ -228,15 +237,15 @@ namespace ChoppingTrees
             var headingLayer = UIFactory.Rect("Headings", m_Content);
             headingLayer.Stretch();
             var cats = new List<UpgradeCategory>();
-            foreach (var u in db.upgrades) if (u != null && !cats.Contains(u.category)) cats.Add(u.category);
-            foreach (var c in cats) m_Headings.Add(new Heading { category = c, rect = HeadingFor(headingLayer, c) });
+            foreach (var u in db.upgrades) if (u != null && !u.legacy && !cats.Contains(u.category)) cats.Add(u.category);
+            foreach (var c in cats) m_Headings.Add(HeadingFor(headingLayer, c));
 
             // Links first so nodes (and their labels) draw on top.
             m_LinkLayer = UIFactory.Rect("Links", m_Content);
             m_LinkLayer.Stretch();
             foreach (var u in db.upgrades)
             {
-                if (u == null) continue;
+                if (u == null || u.legacy) continue;
                 // Draw links to prerequisites in the same branch; a node with none in its branch
                 // links to its first prerequisite. Every prerequisite is still listed in the details.
                 var parents = new List<UpgradeDef.Requirement>();
@@ -287,31 +296,35 @@ namespace ChoppingTrees
             nodeLayer.Stretch();
             foreach (var u in db.upgrades)
             {
-                if (u == null) continue;
+                if (u == null || u.legacy) continue;
                 m_Nodes.Add(SkillNode.Create(nodeLayer, u, Vector2.zero, Hover, Select, Buy));
             }
         }
 
-        RectTransform HeadingFor(RectTransform parent, UpgradeCategory c)
+        /// <summary>Branch heading: icon, letter-spaced title, levels owned and a progress bar.</summary>
+        Heading HeadingFor(RectTransform parent, UpgradeCategory c)
         {
             Color col = UIStyle.CategoryColor(c);
             var rt = UIFactory.Rect("Heading_" + c, parent);
-            rt.Place(Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(240, 44));
+            rt.Place(Vector2.zero, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(260, 52));
             var row = UIFactory.Rect("Row", rt);
-            row.Place(new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(240, 26));
+            row.Place(new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(260, 26));
             UIFactory.HStack(row, 9f, null, TextAnchor.MiddleCenter);
             UIFactory.Icon(row, UIStyle.CategoryIcon(c), col, 20f);
             var t = UIFactory.Caption(row, UIStyle.CategoryTitle(c), col, 16f);
             t.characterSpacing = 12f;
-            // A short rule under the heading that fades out at both ends.
-            for (int side = -1; side <= 1; side += 2)
-            {
-                var line = UIFactory.Panel(rt, "Rule", new Color(col.r, col.g, col.b, 0.55f), false);
-                line.sprite = UIIcons.GradientH;
-                line.rectTransform.Place(new Vector2(0.5f, 0f), new Vector2(0f, 0.5f), new Vector2(0f, 8f), new Vector2(70f, 2f));
-                if (side < 0) line.rectTransform.localRotation = Quaternion.Euler(0, 0, 180f);
-            }
-            return rt;
+            var count = UIFactory.Text(row, "", 15, UIStyle.Muted, true);
+            count.textWrappingMode = TextWrappingModes.NoWrap;
+            // Progress bar: how many of the branch's levels are owned.
+            var track = UIFactory.Panel(rt, "Track", new Color(col.r, col.g, col.b, 0.16f));
+            track.sprite = UIStyle.RoundedSmall;
+            track.rectTransform.Place(new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 12f), new Vector2(170f, 4f));
+            var fill = UIFactory.Panel(track.transform, "Fill", col);
+            fill.sprite = UIStyle.RoundedSmall;
+            fill.rectTransform.anchorMin = Vector2.zero;
+            fill.rectTransform.anchorMax = new Vector2(0f, 1f);
+            fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
+            return new Heading { category = c, rect = rt, fill = fill.rectTransform, count = count };
         }
 
         void AddFlowDot(SkillLink l)
@@ -402,48 +415,83 @@ namespace ChoppingTrees
 
         // ------------------------------------------------------------------ details
 
+        /// <summary>
+        /// Detail panel: a hero banner tinted with the branch colour (large rimmed icon, branch,
+        /// name, milestone tag), level pips, then cards for the description, the next level and
+        /// the requirements, and a price footer with the buy button.
+        /// </summary>
         void BuildDetails(RectTransform body)
         {
-            var panel = UIFactory.Surface(body, "Details", new Color(0.115f, 0.13f, 0.108f, 0.99f));
+            var panel = UIFactory.Surface(body, "Details", new Color(0.1f, 0.115f, 0.095f, 0.99f));
             panel.rectTransform.anchorMin = new Vector2(1, 0);
             panel.rectTransform.anchorMax = new Vector2(1, 1);
             panel.rectTransform.pivot = new Vector2(1, 0.5f);
             panel.rectTransform.offsetMin = new Vector2(-446, 28);
             panel.rectTransform.offsetMax = new Vector2(-28, -18);
-            UIFactory.VStack(panel, 10f, new RectOffset(26, 26, 24, 24));
+            UIFactory.VStack(panel, 10f, new RectOffset(24, 24, 22, 22));
 
-            var head = UIFactory.Rect("Head", panel.transform);
-            UIFactory.HStack(head, 16f);
-            var badge = UIFactory.Rect("Badge", head);
-            badge.Layout(80, 80);
+            // Banner behind the hero: branch colour fading down into the panel.
+            m_DBanner = UIFactory.Panel(panel.transform, "Banner", UIStyle.Accent);
+            m_DBanner.sprite = UIIcons.GradientV;
+            m_DBanner.type = Image.Type.Simple;
+            var br = m_DBanner.rectTransform;
+            br.anchorMin = new Vector2(0, 1);
+            br.anchorMax = new Vector2(1, 1);
+            br.pivot = new Vector2(0.5f, 0.5f); // flipped about its centre so it stays inside the panel
+            br.sizeDelta = new Vector2(-4, 230);
+            br.anchoredPosition = new Vector2(0, -2 - 115);
+            br.localRotation = Quaternion.Euler(0, 0, 180f);
+            m_DBanner.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+
+            var hero = UIFactory.Rect("Hero", panel.transform);
+            UIFactory.VStack(hero, 4f, new RectOffset(0, 0, 4, 2), TextAnchor.UpperCenter, false);
+            var badge = UIFactory.Rect("Badge", hero);
+            badge.Layout(108, 108);
+            m_DHalo = UIFactory.Panel(badge, "Halo", UIStyle.Accent, false);
+            m_DHalo.sprite = UIIcons.Glow;
+            m_DHalo.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(220, 220));
             m_DBezel = UIFactory.Panel(badge, "Bezel", UIStyle.Accent, false);
             m_DBezel.sprite = UIIcons.Bezel;
             m_DBezel.rectTransform.Stretch();
             m_DFace = UIFactory.Panel(badge, "Face", UIStyle.Card, false);
             m_DFace.sprite = UIIcons.Face;
-            m_DFace.rectTransform.Stretch(8, 8, 8, 8);
-            m_DIcon = UIFactory.Icon(badge, "dot", UIStyle.Text, 38f);
+            m_DFace.rectTransform.Stretch(11, 11, 11, 11);
+            m_DIcon = UIFactory.Icon(badge, "dot", UIStyle.Text, 50f);
             m_DIcon.rectTransform.anchoredPosition = Vector2.zero;
-            var titles = UIFactory.Rect("Titles", head);
-            UIFactory.VStack(titles, 2f);
-            titles.Layout(-1, -1, 1);
-            m_DCategory = UIFactory.Caption(titles, "", UIStyle.Accent, 13f);
-            m_DName = UIFactory.Text(titles, "", 28, UIStyle.Text, true);
+            m_DCategory = UIFactory.Caption(hero, "", UIStyle.Accent, 13f);
+            m_DCategory.alignment = TextAlignmentOptions.Center;
+            m_DName = UIFactory.Text(hero, "", 30, UIStyle.Text, true, TextAlignmentOptions.Center);
+            m_DTag = UIFactory.Pill(hero, "MILESTONE", new Color(1f, 0.83f, 0.4f, 0.16f), UIStyle.Money, 13f);
+            m_DTag.characterSpacing = 6f;
 
-            var levelRow = UIFactory.Rect("Level", panel.transform);
-            UIFactory.HStack(levelRow, 12f);
-            m_DLevel = UIFactory.Text(levelRow, "", 17, UIStyle.Muted, true);
+            // Level: pips for up to 15 levels, a bar beyond that.
+            var level = UIFactory.Rect("Level", panel.transform);
+            UIFactory.HStack(level, 10f, new RectOffset(0, 0, 4, 2), TextAnchor.MiddleCenter);
+            m_DPipRow = UIFactory.Rect("Pips", level).gameObject;
+            UIFactory.HStack(m_DPipRow.GetComponent<RectTransform>(), 4f, null, TextAnchor.MiddleCenter);
+            for (int i = 0; i < MaxPips; i++)
+            {
+                var pip = UIFactory.Panel(m_DPipRow.transform, "Pip", UIStyle.Inset);
+                pip.sprite = UIStyle.RoundedSmall;
+                pip.Layout(14, 8);
+                m_DPips.Add(pip);
+            }
+            var barRow = UIFactory.Rect("BarRow", level);
+            barRow.Layout(200, 8);
+            UIFactory.HStack(barRow, 0f);
+            m_DLevelBar = UIFactory.Bar(barRow, 8, UIStyle.Accent);
+            m_DBarRow = barRow.gameObject;
+            m_DLevel = UIFactory.Text(level, "", 16, UIStyle.Muted, true);
             m_DLevel.textWrappingMode = TextWrappingModes.NoWrap;
-            m_DLevel.Layout(118);
-            m_DLevelBar = UIFactory.Bar(levelRow, 8, UIStyle.Accent);
 
-            Rule(panel.transform);
-            m_DDesc = UIFactory.Text(panel.transform, "", 19, UIStyle.Muted);
+            var about = Card(panel.transform);
+            m_DDesc = UIFactory.Text(about, "", 18, UIStyle.Muted);
             m_DDesc.lineSpacing = 4f;
 
             m_DEffectCaption = UIFactory.Caption(panel.transform, "Next level", UIStyle.Dim, 13f);
-            var eff = UIFactory.Panel(panel.transform, "EffectBox", new Color(0.06f, 0.07f, 0.058f, 1f));
-            UIFactory.VStack(eff, 0f, new RectOffset(18, 16, 12, 13));
+            var eff = UIFactory.Panel(panel.transform, "EffectBox", new Color(0.055f, 0.065f, 0.052f, 1f));
+            UIFactory.Border(eff.transform, new Color(1f, 0.95f, 0.82f, 0.07f));
+            UIFactory.VStack(eff, 0f, new RectOffset(20, 16, 13, 14));
             m_DEffectBar = UIFactory.Panel(eff.transform, "Accent", UIStyle.Accent, false);
             m_DEffectBar.rectTransform.anchorMin = new Vector2(0, 0);
             m_DEffectBar.rectTransform.anchorMax = new Vector2(0, 1);
@@ -455,23 +503,42 @@ namespace ChoppingTrees
             m_DEffect.lineSpacing = 6f;
 
             UIFactory.Caption(panel.transform, "Requirements", UIStyle.Dim, 13f);
-            m_DReq = UIFactory.Text(panel.transform, "", 18, UIStyle.Text);
-            m_DReq.lineSpacing = 6f;
+            var reqs = UIFactory.Rect("Requirements", panel.transform);
+            UIFactory.VStack(reqs, 6f);
+            for (int i = 0; i < 3; i++)
+            {
+                var row = UIFactory.Panel(reqs, "Req", new Color(0.055f, 0.065f, 0.052f, 1f));
+                UIFactory.HStack(row, 10f, new RectOffset(12, 12, 7, 7));
+                var ic = UIFactory.Icon(row.transform, "check", UIStyle.Good, 18f);
+                var t = UIFactory.Text(row.transform, "", 17, UIStyle.Text);
+                t.Layout(-1, -1, 1);
+                m_DReqRows.Add(new ReqRow { go = row.gameObject, icon = ic, text = t });
+            }
 
             var spacer = UIFactory.Rect("Spacer", panel.transform);
             spacer.Layout(-1, -1, -1, 1);
 
-            Rule(panel.transform);
-            var costRow = UIFactory.Rect("Cost", panel.transform);
+            // Price footer.
+            var footer = UIFactory.Panel(panel.transform, "Footer", new Color(0.055f, 0.065f, 0.052f, 1f));
+            UIFactory.Border(footer.transform, new Color(1f, 0.83f, 0.4f, 0.12f));
+            UIFactory.VStack(footer, 8f, new RectOffset(18, 18, 14, 16));
+            var costRow = UIFactory.Rect("Cost", footer.transform);
             UIFactory.HStack(costRow, 10f, null, TextAnchor.MiddleLeft);
             UIFactory.Icon(costRow, "coin", UIStyle.Money, 30f);
-            m_DCost = UIFactory.Text(costRow, "", 32, UIStyle.Money, true);
+            m_DCost = UIFactory.Text(costRow, "", 34, UIStyle.Money, true);
             m_DCost.textWrappingMode = TextWrappingModes.NoWrap;
-            m_DStatus = UIFactory.Text(panel.transform, "", 17, UIStyle.Muted);
-            m_Buy = UIFactory.Button(panel.transform, "Buy", () => Buy(m_Selected), 26, ButtonStyle.Primary, "check");
-            m_Buy.Layout(-1, 64);
-            var hint = UIFactory.Text(panel.transform, "Tip: double-click a node to buy it", 14, UIStyle.Dim, false, TextAlignmentOptions.Center);
-            hint.Layout(-1, 20);
+            m_DStatus = UIFactory.Text(footer.transform, "", 16, UIStyle.Muted);
+            m_Buy = UIFactory.Button(footer.transform, "Buy", () => Buy(m_Selected), 26, ButtonStyle.Primary, "check");
+            m_Buy.Layout(-1, 62);
+            m_Hint = UIFactory.Text(panel.transform, "", 14, UIStyle.Dim, false, TextAlignmentOptions.Center);
+            m_Hint.Layout(-1, 18);
+        }
+
+        static RectTransform Card(Transform parent)
+        {
+            var c = UIFactory.Panel(parent, "Card", new Color(1f, 0.95f, 0.82f, 0.035f));
+            UIFactory.VStack(c, 0f, new RectOffset(16, 16, 12, 13));
+            return c.rectTransform;
         }
 
         static void Rule(Transform parent)
@@ -507,8 +574,13 @@ namespace ChoppingTrees
         void Hover(SkillNode n)
         {
             m_Hovered = n;
+            // Controller focus can move off-screen: keep the focused node in view.
+            if (n != null && GameInput.UsingGamepad) m_View.EnsureVisible(n.Rect.anchoredPosition);
             RefreshDetails();
         }
+
+        /// <summary>A controller starts on the selected node.</summary>
+        public override GameObject DefaultSelection() => m_Selected != null ? m_Selected.gameObject : base.DefaultSelection();
 
         void Select(SkillNode n)
         {
@@ -570,7 +642,17 @@ namespace ChoppingTrees
             var model = Game.Instance.Model;
             var up = model.Upgrades;
             m_Money.text = NumberUtil.Money(model.State.Money);
+            m_SkillPoints.text = model.State.SkillPoints + " SP";
+            m_Hint.text = GameInput.UsingGamepad ? "A: select, A again: buy  ·  Right stick: pan  ·  LT / RT: zoom" : "Double-click a node to buy it";
             foreach (var n in m_Nodes) n.Refresh(model, n == m_Selected);
+            foreach (var h in m_Headings)
+            {
+                int owned = 0, total = 0;
+                foreach (var n in m_Nodes)
+                    if (n.Def.category == h.category) { owned += up.Level(n.Def); total += n.Def.maxLevel; }
+                h.count.text = $"{owned}/{total}";
+                h.fill.anchorMax = new Vector2(total > 0 ? owned / (float)total : 0f, 1f);
+            }
 
             foreach (var l in m_Links)
             {
@@ -624,13 +706,26 @@ namespace ChoppingTrees
             bool locked = !maxed && up.IsLocked(u);
             Color cat = UIStyle.CategoryColor(u.category);
 
+            Color tone = maxed ? UIStyle.Money : locked ? new Color(0.45f, 0.46f, 0.42f) : cat;
+            m_DBanner.color = new Color(tone.r, tone.g, tone.b, 0.22f);
+            m_DHalo.color = new Color(tone.r, tone.g, tone.b, locked ? 0.08f : 0.25f);
             m_DBezel.color = maxed ? UIStyle.Money : locked ? new Color(0.36f, 0.37f, 0.34f) : cat;
             m_DFace.color = Color.Lerp(new Color(0.1f, 0.115f, 0.095f), maxed ? UIStyle.Money : cat, locked ? 0.04f : 0.2f);
             m_DIcon.sprite = UIIcons.Get(string.IsNullOrEmpty(u.icon) ? "dot" : u.icon);
             m_DIcon.color = locked ? UIStyle.Muted : maxed ? Color.Lerp(UIStyle.Money, Color.white, 0.35f) : UIStyle.Text;
-            m_DCategory.text = (UIStyle.CategoryTitle(u.category) + (SkillNode.IsMilestone(u) ? "  ·  milestone" : "")).ToUpperInvariant();
+            m_DCategory.text = UIStyle.CategoryTitle(u.category).ToUpperInvariant() + (locked ? "  ·  LOCKED" : "");
             m_DCategory.color = cat;
             m_DName.text = lv > 0 && u.LevelName(lv) != null ? u.LevelName(lv) : u.displayName;
+            m_DTag.transform.parent.gameObject.SetActive(SkillNode.IsMilestone(u));
+
+            bool pips = u.maxLevel > 1 && u.maxLevel <= MaxPips;
+            m_DPipRow.SetActive(pips);
+            m_DBarRow.SetActive(!pips && u.maxLevel > 1);
+            for (int i = 0; i < m_DPips.Count; i++)
+            {
+                m_DPips[i].gameObject.SetActive(i < u.maxLevel);
+                m_DPips[i].color = i < lv ? (maxed ? UIStyle.Money : cat) : new Color(1f, 0.95f, 0.82f, 0.1f);
+            }
             m_DLevel.text = u.maxLevel == 1 ? (lv > 0 ? "Owned" : "Not owned") : $"Level {lv} / {u.maxLevel}";
             UIFactory.SetBar(m_DLevelBar, u.maxLevel <= 0 ? 0 : lv / (float)u.maxLevel);
             m_DLevelBar.GetComponent<Image>().color = maxed ? UIStyle.Money : cat;
@@ -639,18 +734,28 @@ namespace ChoppingTrees
             m_DEffect.text = UpgradeText.Effect(model, u);
             m_DEffectBar.color = maxed ? UIStyle.Money : cat;
 
-            var req = new StringBuilder();
-            if (u.requires == null || u.requires.Length == 0) req.Append("<color=#86CC61>✓</color>  Nothing - ready from the start");
+            // Requirement rows: a check or a cross, then the upgrade (and level) needed.
+            int shown = 0;
+            void Row(bool ok, string text)
+            {
+                if (shown >= m_DReqRows.Count) return;
+                var row = m_DReqRows[shown++];
+                row.go.SetActive(true);
+                row.icon.sprite = UIIcons.Get(ok ? "check" : "close");
+                row.icon.color = ok ? UIStyle.Good : UIStyle.Bad;
+                row.text.text = text;
+                row.text.color = ok ? UIStyle.Text : UIStyle.Muted;
+            }
+            if (u.requires == null || u.requires.Length == 0) Row(true, "Nothing - ready from the start");
             else
                 foreach (var r in u.requires)
                 {
                     var other = Game.Instance.Db.Upgrade(r.upgradeId);
                     if (other == null) continue;
-                    bool ok = up.Level(other) >= r.level;
                     string name = other.LevelName(r.level) ?? (r.level > 1 ? $"{other.displayName} Lv {r.level}" : other.displayName);
-                    req.Append(ok ? $"<color=#86CC61>✓</color>  {name}\n" : $"<color=#E8705F>✕</color>  <color=#B5AE9C>{name}</color>\n");
+                    Row(up.Level(other) >= r.level, name);
                 }
-            m_DReq.text = req.ToString().TrimEnd('\n');
+            for (int i = shown; i < m_DReqRows.Count; i++) m_DReqRows[i].go.SetActive(false);
 
             if (maxed)
             {

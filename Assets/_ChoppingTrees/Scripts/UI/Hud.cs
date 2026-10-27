@@ -53,6 +53,8 @@ namespace ChoppingTrees
         float m_PackPunch, m_PackShake;
         GameObject m_YardCaption;
         TextMeshProUGUI m_RebirthBadge;
+        RectTransform m_UseCap;
+        readonly List<(RectTransform cap, string action)> m_HintCaps = new List<(RectTransform, string)>();
         int m_LastRebirths;
 
         GameObject m_FpsRoot;
@@ -241,7 +243,7 @@ namespace ChoppingTrees
             UIFactory.Fit(prompt, true, true);
             var row = UIFactory.Rect("Row", prompt.transform);
             UIFactory.HStack(row, 10f, null, TextAnchor.MiddleCenter);
-            UIFactory.KeyCap(row, "E", 30f);
+            m_UseCap = UIFactory.KeyCap(row, GameInput.Key("use"), 30f);
             m_Prompt = UIFactory.Text(row, "", 23, UIStyle.Text, true);
             m_Prompt.textWrappingMode = TextWrappingModes.NoWrap;
             m_PromptDetail = UIFactory.Text(prompt.transform, "", 18, UIStyle.Muted, false, TextAlignmentOptions.Center);
@@ -270,16 +272,17 @@ namespace ChoppingTrees
             UIFactory.Fit(controls, true, false);
             void Hint(string key, string what, bool last = false)
             {
-                UIFactory.KeyCap(controls, key, 26f);
+                m_HintCaps.Add((UIFactory.KeyCap(controls, GameInput.Key(key), 26f), key));
                 var t = UIFactory.Text(controls, what, 16, new Color(1, 1, 1, 0.8f));
                 t.textWrappingMode = TextWrappingModes.NoWrap;
                 if (!last) UIFactory.Rect("Gap", controls).Layout(10, 26);
             }
-            Hint("LMB", "Chop");
-            Hint("E", "Use");
-            Hint("Shift", "Sprint");
-            Hint("Space", "Jump");
-            Hint("Esc", "Menu", true);
+            Hint("chop", "Chop");
+            Hint("use", "Use");
+            Hint("sprint", "Sprint");
+            Hint("jump", "Jump");
+            Hint("menu", "Menu", true);
+            GameInput.DeviceChanged += RelabelKeys;
             m_Controls = controls.gameObject.AddComponent<CanvasGroup>();
 
             var saved = UIFactory.Surface(Root, "Saved", UIStyle.Hud);
@@ -291,6 +294,15 @@ namespace ChoppingTrees
             m_Saved = saved.gameObject.AddComponent<CanvasGroup>();
             m_Saved.alpha = 0f;
         }
+
+        /// <summary>Key caps show keyboard keys or controller buttons, whichever was used last.</summary>
+        void RelabelKeys()
+        {
+            if (m_UseCap != null) UIFactory.SetKeyCap(m_UseCap, GameInput.Key("use"));
+            foreach (var (cap, action) in m_HintCaps) if (cap != null) UIFactory.SetKeyCap(cap, GameInput.Key(action));
+        }
+
+        void OnDestroy() => GameInput.DeviceChanged -= RelabelKeys;
 
         void OnHit(HitResult r, ChoppableTree tree)
         {
@@ -306,8 +318,7 @@ namespace ChoppingTrees
             var model = game.Model;
             float dt = Time.unscaledDeltaTime;
 
-            var kb = Keyboard.current;
-            if (kb != null && kb.f3Key.wasPressedThisFrame)
+            if (GameInput.FpsTogglePressed)
             {
                 var s = GameSettings.Data;
                 s.fpsCounter = (FpsCounterMode)(((int)s.fpsCounter + 1) % 3);

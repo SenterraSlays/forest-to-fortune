@@ -29,6 +29,8 @@ namespace ChoppingTrees
         public static readonly Color Bad = new Color(0.92f, 0.42f, 0.33f);
         public static readonly Color Button = new Color(0.20f, 0.225f, 0.185f, 1f);
         public static readonly Color ButtonDisabled = new Color(0.15f, 0.16f, 0.14f, 1f);
+        /// <summary>Skill points and Legacy perks.</summary>
+        public static readonly Color Skill = new Color(0.74f, 0.62f, 0.92f);
 
         public static TMP_FontAsset Body, Bold;
 
@@ -45,7 +47,7 @@ namespace ChoppingTrees
             UpgradeCategory.Automation => new Color(0.97f, 0.73f, 0.27f),
             UpgradeCategory.Economy => new Color(0.42f, 0.80f, 0.62f),
             UpgradeCategory.Forest => new Color(0.45f, 0.72f, 0.92f),
-            _ => new Color(0.74f, 0.62f, 0.92f), // reserved for a fifth branch
+            _ => new Color(0.74f, 0.62f, 0.92f), // Legacy (skill point perks)
         };
 
         public static string CategoryIcon(UpgradeCategory c) => c switch
@@ -54,7 +56,7 @@ namespace ChoppingTrees
             UpgradeCategory.Automation => "gear",
             UpgradeCategory.Economy => "coin",
             UpgradeCategory.Forest => "pine",
-            _ => "star",
+            _ => "rebirth",
         };
 
         /// <summary>Heading for a skill tree branch.</summary>
@@ -274,6 +276,19 @@ namespace ChoppingTrees
             return cap.rectTransform;
         }
 
+        /// <summary>Changes a key cap's label and fits its width.</summary>
+        public static void SetKeyCap(RectTransform cap, string key)
+        {
+            var t = cap.GetComponentInChildren<TextMeshProUGUI>();
+            if (t == null || t.text == key) return;
+            t.text = key;
+            float h = cap.sizeDelta.y;
+            float w = Mathf.Max(h, t.GetPreferredValues(key).x + 16f);
+            var le = cap.GetComponent<LayoutElement>();
+            le.preferredWidth = le.minWidth = w;
+            cap.sizeDelta = new Vector2(w, h);
+        }
+
         public static LayoutElement Layout(this Component c, float prefW = -1, float prefH = -1, float flexW = -1, float flexH = -1, float minH = -1)
         {
             var le = c.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
@@ -432,6 +447,40 @@ namespace ChoppingTrees
             Arrow("chevron_right", 1);
             label.transform.SetSiblingIndex(2);
             return label;
+        }
+
+        /// <summary>Thin line across the top of a window that glows in the middle and fades out to
+        /// both ends (the accent trim used on the big screens).</summary>
+        public static void TopTrim(RectTransform window, Color color, float width = 0.7f)
+        {
+            for (int side = -1; side <= 1; side += 2)
+            {
+                var line = Panel(window, "Trim", color, false);
+                line.sprite = UIIcons.GradientH;
+                var rt = line.rectTransform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+                rt.pivot = new Vector2(0f, 0.5f);
+                rt.anchoredPosition = new Vector2(0f, -1.5f);
+                rt.sizeDelta = new Vector2(window.rect.width * width * 0.5f, 2.5f);
+                if (side < 0) rt.localRotation = Quaternion.Euler(0, 0, 180f);
+                line.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            }
+        }
+
+        /// <summary>Header chip with an icon and a value (money, skill points).</summary>
+        public static TextMeshProUGUI Chip(Transform parent, string icon, Color color, Vector2 rightPos, float width)
+        {
+            var chip = Surface(parent, "Chip_" + icon, UIStyle.Inset);
+            chip.rectTransform.Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), rightPos, new Vector2(width, 52));
+            HStack(chip, 10f, new RectOffset(16, 18, 6, 6), TextAnchor.MiddleRight);
+            var glow = Panel(chip.transform, "Glow", new Color(color.r, color.g, color.b, 0.07f));
+            glow.rectTransform.Stretch();
+            glow.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Icon(chip.transform, icon, color, 28f);
+            var t = Text(chip.transform, "", 30, color, true, TextAlignmentOptions.Right);
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.Layout(-1, -1, 1);
+            return t;
         }
 
         /// <summary>On/off switch styled as a button that turns green when on.</summary>

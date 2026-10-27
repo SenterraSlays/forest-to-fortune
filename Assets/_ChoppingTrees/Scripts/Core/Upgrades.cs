@@ -19,7 +19,9 @@ namespace ChoppingTrees
         // cached aggregates
         int m_AxeTier, m_BackpackTier;
         float m_DamageMult, m_SpeedMult, m_AutoSellSeconds, m_OfflineHours, m_ProductionBonus;
-        float m_MagnetBonus, m_WoodYield, m_CritChance, m_MoveSpeed, m_Discount, m_SellBonus, m_LuckyChance, m_Regrowth, m_TreeCash;
+        float m_MagnetBonus, m_WoodYield, m_CritChance, m_MoveSpeed, m_Discount, m_SellBonus, m_LuckyChance, m_Regrowth, m_TreeCash, m_PackBonus, m_StartMoneyBase;
+        int m_StartAxe, m_StartAreas, m_StartMoneyLevel;
+        readonly Dictionary<string, int> m_StartMachines = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_ProcessorYield = new Dictionary<string, double>();
         readonly Dictionary<string, int> m_MachineCounts = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_MachineMult = new Dictionary<string, double>();
@@ -45,7 +47,7 @@ namespace ChoppingTrees
             if (u.IsMaxed(Level(u))) return "Maxed";
             string missing = MissingRequirement(u);
             if (missing != null) return missing;
-            if (checkMoney && m_State.Money + 1e-9 < NextCost(u)) return "Not enough money";
+            if (checkMoney && !CanAfford(u)) return u.legacy ? "Not enough skill points" : "Not enough money";
             return null;
         }
 
@@ -66,12 +68,18 @@ namespace ChoppingTrees
         public bool IsLocked(UpgradeDef u) => MissingRequirement(u) != null;
 
         /// <summary>Buys one level. Money and level change together or not at all.</summary>
+        /// <summary>Money for normal upgrades, skill points for Legacy perks.</summary>
+        public bool CanAfford(UpgradeDef u) => u.legacy ? m_State.SkillPoints >= SkillPointCost(u) : m_State.Money + 1e-9 >= NextCost(u);
+
+        /// <summary>Whole skill points for the next level of a Legacy perk.</summary>
+        public int SkillPointCost(UpgradeDef u) => (int)Math.Ceiling(NextCost(u) - 1e-9);
+
         public bool TryBuy(UpgradeDef u, out string failure)
         {
             failure = Blocker(u);
             if (failure != null) return false;
-            double cost = NextCost(u);
-            m_State.Money = NumberUtil.SafePositive(m_State.Money - cost);
+            if (u.legacy) m_State.SkillPoints -= SkillPointCost(u);
+            else m_State.Money = NumberUtil.SafePositive(m_State.Money - NextCost(u));
             m_State.SetLevel(u.id, Level(u) + 1);
             m_Version++;
             return true;
@@ -118,7 +126,16 @@ namespace ChoppingTrees
         public int BackpackTier { get { Refresh(); return m_BackpackTier; } }
 
         /// <summary>How much the player can carry by hand (machines fill the yard instead).</summary>
-        public double BackpackCapacity => CapacityForTier(m_Db.config, BackpackTier);
+        public double BackpackCapacity => CapacityForTier(m_Db.config, BackpackTier) * BackpackMultiplier;
+        public double BackpackMultiplier { get { Refresh(); return 1 + m_PackBonus; } }
+
+        // ---------- what every run starts with (Legacy perks)
+
+        public int StartingAxeTier { get { Refresh(); return m_StartAxe; } }
+        public int StartingAreas { get { Refresh(); return m_StartAreas; } }
+        public int StartingMachines(string machineId) { Refresh(); return m_StartMachines.TryGetValue(machineId, out var v) ? v : 0; }
+        public double StartingMoney { get { Refresh(); return StartingMoneyFor(m_StartMoneyBase, m_StartMoneyLevel); } }
+        public static double StartingMoneyFor(double basePerLevel, int level) => level <= 0 ? 0 : basePerLevel * Math.Pow(5, level - 1);
 
         public static double CapacityForTier(GameConfig cfg, int tier)
         {
@@ -197,7 +214,9 @@ namespace ChoppingTrees
             m_AutoSellSeconds = 0f;
             m_OfflineHours = 0f;
             m_ProductionBonus = 0f;
-            m_MagnetBonus = m_WoodYield = m_CritChance = m_MoveSpeed = m_Discount = m_SellBonus = m_LuckyChance = m_Regrowth = m_TreeCash = 0f;
+            m_MagnetBonus = m_WoodYield = m_CritChance = m_MoveSpeed = m_Discount = m_SellBonus = m_LuckyChance = m_Regrowth = m_TreeCash = m_PackBonus = m_StartMoneyBase = 0f;
+            m_StartAxe = m_StartAreas = m_StartMoneyLevel = 0;
+            m_StartMachines.Clear();
             m_ProcessorYield.Clear();
             m_MachineCounts.Clear();
             m_MachineMult.Clear();
@@ -240,6 +259,13 @@ namespace ChoppingTrees
                     case UpgradeEffect.LuckyFind: m_LuckyChance += e * lv; break;
                     case UpgradeEffect.TreeRegrowth: m_Regrowth += e * lv; break;
                     case UpgradeEffect.TreeCashBonus: m_TreeCash += e * lv; break;
+                    case UpgradeEffect.StartingAxe: m_StartAxe = Math.Max(m_StartAxe, lv); break;
+                    case UpgradeEffect.StartingMoney:
+                        if (lv > m_StartMoneyLevel) { m_StartMoneyLevel = lv; m_StartMoneyBase = e; }
+                        break;
+                    case UpgradeEffect.BackpackBonus: m_PackBonus += e * lv; break;
+                    case UpgradeEffect.StartingAreas: m_StartAreas = Math.Max(m_StartAreas, lv); break;
+                    case UpgradeEffect.StartingMachines: m_StartMachines[t] = Math.Max(m_StartMachines.TryGetValue(t, out var sm) ? sm : 0, lv); break;
                 }
             }
 

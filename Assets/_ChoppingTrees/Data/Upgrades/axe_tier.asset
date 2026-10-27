@@ -34,5 +34,6 @@ MonoBehaviour:
   - Ironbreaker
   requires: []
   sortOrder: 0
+  legacy: 0
   treePosition: {x: -2.75, y: 1.35}
   icon: axe

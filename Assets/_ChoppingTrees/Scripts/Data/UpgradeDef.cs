@@ -28,6 +28,8 @@ namespace ChoppingTrees
         [Tooltip("Other upgrades that must reach a level before this one can be bought.")]
         public Requirement[] requires;
         public int sortOrder;
+        [Tooltip("Legacy perk: bought with skill points and kept through rebirths.")]
+        public bool legacy;
 
         [Header("Skill tree")]
         [Tooltip("Node position in tree units: x = -4..4 (left to right), y = 0..5 (trunk to crown).")]

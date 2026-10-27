@@ -2,87 +2,233 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ChoppingTrees
 {
     /// <summary>
-    /// Controls, audio, display, graphics (upscaler, quality, render scale, anti-aliasing) and
-    /// gameplay settings. Changes apply at once and save on close. Upscalers the hardware check
+    /// Settings in five tabs. <b>Graphics</b>: Low / Medium / High / Ultra presets (Custom once
+    /// anything is changed by hand), upscaler, render scale, anti-aliasing, shadows, textures,
+    /// filtering, scenery detail, effects and bloom. <b>Display</b>: monitor, mode, resolution,
+    /// V-Sync, frame cap and brightness. <b>Audio</b>: master and per-group volumes.
+    /// <b>Controls</b>: mouse and controller look, vibration, dead zone, field of view and camera
+    /// comfort, plus the controller layout. <b>Interface</b>: UI scale, FPS counter, hints and
+    /// damage numbers. Changes apply at once and save on close. Upscalers the hardware check
     /// rejects are skipped when cycling and listed with the reason.
     /// </summary>
     public class SettingsMenu : UIScreen
     {
         public static SettingsMenu Instance { get; private set; }
 
-        TextMeshProUGUI m_DisplayNote;
-        TextMeshProUGUI m_UpscalerNote, m_Quality, m_Scale, m_Aa;
-        /// <summary>Every selector label with its source, refreshed whenever the menu opens or a value changes.</summary>
+        static readonly string[] TabNames = { "Graphics", "Display", "Audio", "Controls", "Interface" };
+        static readonly string[] TabIcons = { "star", "chart", "bolt", "axe", "leaf" };
+
+        TextMeshProUGUI m_DisplayNote, m_UpscalerNote, m_PresetNote;
+        readonly UIButton[] m_PresetButtons = new UIButton[4];
+        readonly List<RectTransform> m_Pages = new List<RectTransform>();
+        readonly List<UIButton> m_Tabs = new List<UIButton>();
+        readonly List<Image> m_TabBars = new List<Image>();
+        int m_Tab;
+
+        /// <summary>Every selector, toggle and slider with its source, refreshed whenever the menu opens or a value changes.</summary>
         static readonly List<(TextMeshProUGUI label, Func<string> get)> s_Cyclers = new List<(TextMeshProUGUI, Func<string>)>();
+        static readonly List<(UIButton button, Func<bool> get, string on, string off)> s_Toggles = new List<(UIButton, Func<bool>, string, string)>();
+        static readonly List<(Slider slider, TextMeshProUGUI text, Func<float> get, Func<float, string> format)> s_Sliders = new List<(Slider, TextMeshProUGUI, Func<float>, Func<float, string>)>();
         static SettingsData S => GameSettings.Data;
 
         protected override void Build()
         {
             Instance = this;
             s_Cyclers.Clear();
+            s_Toggles.Clear();
+            s_Sliders.Clear();
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            UIFactory.Window(Root, "Settings", "gear", new Vector2(1320, 960), out var body);
+            var window = UIFactory.Window(Root, "Settings", "gear", new Vector2(1440, 980), out var body, "Graphics, display, audio, controls and interface");
+            UIFactory.TopTrim(window.rectTransform, UIStyle.Accent);
 
-            var cols = UIFactory.Rect("Columns", body);
-            cols.Stretch(32, 32, 24, 104);
-            var h = UIFactory.HStack(cols, 24f);
+            // Tab list on the left.
+            var nav = UIFactory.Panel(body, "Nav", new Color(0.075f, 0.085f, 0.07f, 1f));
+            nav.rectTransform.anchorMin = new Vector2(0, 0);
+            nav.rectTransform.anchorMax = new Vector2(0, 1);
+            nav.rectTransform.pivot = new Vector2(0, 0.5f);
+            nav.rectTransform.offsetMin = new Vector2(28, 104);
+            nav.rectTransform.offsetMax = new Vector2(28 + 250, -20);
+            UIFactory.Border(nav.transform, UIStyle.Border);
+            UIFactory.VStack(nav, 6f, new RectOffset(10, 10, 12, 12));
+            for (int i = 0; i < TabNames.Length; i++)
+            {
+                int index = i;
+                var b = UIFactory.Button(nav.transform, TabNames[i], () => ShowTab(index), 21, ButtonStyle.Tab, TabIcons[i]);
+                b.Layout(-1, 54);
+                var content = b.transform.Find("Content").GetComponent<HorizontalLayoutGroup>();
+                content.childAlignment = TextAnchor.MiddleLeft;
+                content.padding = new RectOffset(14, 0, 0, 0);
+                var bar = UIFactory.Panel(b.transform, "Bar", UIStyle.Accent);
+                bar.sprite = UIStyle.RoundedSmall;
+                bar.rectTransform.Place(new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(2, 0), new Vector2(4, 30));
+                m_Tabs.Add(b);
+                m_TabBars.Add(bar);
+            }
+
+            // Pages on the right.
+            var pages = UIFactory.Rect("Pages", body);
+            pages.Stretch(28 + 250 + 26, 32, 20, 104);
+            BuildGraphics(Page(pages));
+            BuildDisplay(Page(pages));
+            BuildAudio(Page(pages));
+            BuildControls(Page(pages));
+            BuildInterface(Page(pages));
+
+            // Footer.
+            var reset = UIFactory.Button(body, "Reset to defaults", ResetDefaults, 20, ButtonStyle.Ghost, "refresh");
+            ((RectTransform)reset.transform).Place(new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(28, 28), new Vector2(250, 56));
+            var done = UIFactory.Button(body, "Done", Close, 24, ButtonStyle.Primary, "check");
+            ((RectTransform)done.transform).Place(new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-32, 28), new Vector2(300, 60));
+            ShowTab(0, false);
+        }
+
+        RectTransform Page(RectTransform parent)
+        {
+            var p = UIFactory.Rect("Page", parent);
+            p.Stretch();
+            m_Pages.Add(p);
+            return p;
+        }
+
+        // ------------------------------------------------------------------ pages
+
+        void BuildGraphics(RectTransform page)
+        {
+            UIFactory.VStack(page, 16f);
+            var preset = UIFactory.Surface(page, "Preset", UIStyle.Card);
+            UIFactory.VStack(preset, 10f, new RectOffset(22, 22, 16, 18));
+            var head = UIFactory.Rect("Head", preset.transform);
+            UIFactory.HStack(head, 10f);
+            UIFactory.Icon(head, "star", UIStyle.Accent, 20f);
+            UIFactory.Caption(head, "Quality preset", UIStyle.Accent, 16f);
+            var row = UIFactory.Rect("Buttons", preset.transform);
+            UIFactory.HStack(row, 8f);
+            for (int i = 0; i < 4; i++)
+            {
+                var p = (QualityPreset)i;
+                var b = UIFactory.Button(row, QualityPresets.Names[i], () => SetPreset(p), 21, ButtonStyle.Ghost);
+                b.Layout(-1, 50, 1);
+                m_PresetButtons[i] = b;
+            }
+            m_PresetNote = UIFactory.Text(preset.transform, "", 16, UIStyle.Muted);
+
+            var cols = UIFactory.Rect("Columns", page);
+            var h = UIFactory.HStack(cols, 18f, null, TextAnchor.UpperLeft);
             h.childForceExpandWidth = true;
-            h.childForceExpandHeight = true;
-            var left = Column(cols);
-            var right = Column(cols);
+            cols.Layout(-1, -1, -1, 1);
+            var left = Section(cols, "Resolution and upscaling", "chart");
+            CyclerRow(left, "Upscaler", "DLSS / FSR / STP sharpen a lower resolution", () => GraphicsCapabilities.Label(S.upscaler), StepUpscaler);
+            CyclerRow(left, "Upscaler quality", "Lower modes render fewer pixels", QualityText, d => { S.upscaleQuality = (UpscaleQuality)Cycle((int)S.upscaleQuality, d, 4); GameSettings.Apply(); });
+            CyclerRow(left, "Render scale", "Below 100% is faster but softer", () => Mathf.RoundToInt(S.renderScale * 100) + "%", d =>
+            {
+                float[] steps = { 0.5f, 0.6f, 0.67f, 0.75f, 0.85f, 1f };
+                int i = Array.FindIndex(steps, x => Mathf.Abs(x - S.renderScale) < 0.01f);
+                S.renderScale = steps[Cycle(i < 0 ? steps.Length - 1 : i, d, steps.Length)];
+                QualityChanged();
+            });
+            CyclerRow(left, "Anti-aliasing", "Smooths jagged edges", AaText, d => { S.antiAliasing = (AntiAliasingSetting)Cycle((int)S.antiAliasing, d, 4); QualityChanged(); });
+            m_UpscalerNote = UIFactory.Text(left, "", 15, UIStyle.Muted);
 
-            var controls = Section(left, "Controls", "axe");
-            SliderRow(controls, "Mouse sensitivity", 0.1f, 4f, S.mouseSensitivity, v => S.mouseSensitivity = v, v => v.ToString("0.00"));
-            ToggleRow(controls, "Invert mouse Y", () => S.invertY, v => S.invertY = v);
-            SliderRow(controls, "Field of view", 60f, 100f, S.fieldOfView, v => S.fieldOfView = Mathf.Round(v), v => Mathf.Round(v).ToString("0"));
+            var right = Section(cols, "Detail", "pine");
+            CyclerRow(right, "Shadows", "Range and sharpness of shadows", () => S.shadows.ToString(), d => { S.shadows = (ShadowQuality)Cycle((int)S.shadows, d, 5); QualityChanged(); });
+            CyclerRow(right, "Textures", "Lower saves video memory", () => S.textures switch { TextureQuality.Full => "Full", TextureQuality.Half => "Half", _ => "Quarter" },
+                d => { S.textures = (TextureQuality)Cycle((int)S.textures, d, 3); QualityChanged(); });
+            ToggleRow(right, "Anisotropic filtering", "Sharper ground at an angle", () => S.anisotropic, v => { S.anisotropic = v; QualityChanged(); });
+            CyclerRow(right, "Scenery detail", "Grass, flowers and small props", () => S.detail.ToString(), d => { S.detail = (DetailLevel)Cycle((int)S.detail, d, 4); QualityChanged(); });
+            CyclerRow(right, "Effects", "Wood chips, leaves and dust", () => S.effects.ToString(), d => { S.effects = (EffectsQuality)Cycle((int)S.effects, d, 3); QualityChanged(); });
+            ToggleRow(right, "Bloom", "Soft glow around bright lights", () => S.bloom, v => { S.bloom = v; QualityChanged(); });
+        }
 
-            var audio = Section(left, "Audio", "bolt");
-            SliderRow(audio, "Master volume", 0f, 1f, S.masterVolume, v => { S.masterVolume = v; AudioListener.volume = v; }, v => Mathf.RoundToInt(v * 100) + "%");
-
-            var gameplay = Section(left, "Interface", "leaf");
-            ToggleRow(gameplay, "Tutorial hints", () => S.showTutorial, v => S.showTutorial = v);
-            CyclerRow(gameplay, "FPS counter (F3)", () => S.fpsCounter switch { FpsCounterMode.Fps => "FPS", FpsCounterMode.Detailed => "Detailed", _ => "Off" },
-                d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
-
-            var display = Section(right, "Display", "chart");
-            CyclerRow(display, "Monitor", MonitorText, StepMonitor);
-            CyclerRow(display, "Display mode", () => GameSettings.WindowModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
+        void BuildDisplay(RectTransform page)
+        {
+            UIFactory.VStack(page, 16f);
+            var display = Section(page, "Display", "chart");
+            CyclerRow(display, "Monitor", "Which screen the game runs on", MonitorText, StepMonitor);
+            CyclerRow(display, "Display mode", "Borderless switches apps fastest", () => GameSettings.WindowModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
                 d => { S.displayMode = Cycle(S.displayMode, d, GameSettings.WindowModes.Length); GameSettings.Apply(); });
-            CyclerRow(display, "Resolution", ResText, StepResolution);
-            ToggleRow(display, "V-Sync", () => S.vSync, v => { S.vSync = v; GameSettings.Apply(); });
+            CyclerRow(display, "Resolution", "Native is the sharpest", ResText, StepResolution);
+            ToggleRow(display, "V-Sync", "No tearing; caps FPS to the refresh rate", () => S.vSync, v => { S.vSync = v; GameSettings.Apply(); });
             m_DisplayNote = UIFactory.Text(display, "", 16, UIStyle.Accent);
-            CyclerRow(display, "Frame rate cap", () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
+            CyclerRow(display, "Frame rate cap", "Only used with V-Sync off", () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
             {
                 int[] caps = { 0, 30, 60, 120, 144, 165, 240 };
                 int i = Array.IndexOf(caps, S.frameRateCap);
                 S.frameRateCap = caps[Cycle(i < 0 ? 0 : i, d, caps.Length)];
                 GameSettings.Apply();
             });
-
-            var gfx = Section(right, "Graphics", "star");
-            CyclerRow(gfx, "Upscaler", () => GraphicsCapabilities.Label(S.upscaler), StepUpscaler);
-            m_Quality = CyclerRow(gfx, "Upscaler quality", QualityText, d => { S.upscaleQuality = (UpscaleQuality)Cycle((int)S.upscaleQuality, d, 4); GameSettings.Apply(); RefreshLabels(); });
-            m_Scale = CyclerRow(gfx, "Render scale", () => Mathf.RoundToInt(S.renderScale * 100) + "%", d =>
-            {
-                float[] steps = { 0.5f, 0.6f, 0.67f, 0.75f, 0.85f, 1f };
-                int i = Array.FindIndex(steps, x => Mathf.Abs(x - S.renderScale) < 0.01f);
-                S.renderScale = steps[Cycle(i < 0 ? steps.Length - 1 : i, d, steps.Length)];
-                GameSettings.Apply();
-            });
-            m_Aa = CyclerRow(gfx, "Anti-aliasing", AaText, d => { S.antiAliasing = (AntiAliasingSetting)Cycle((int)S.antiAliasing, d, 4); GameSettings.Apply(); });
-            m_UpscalerNote = UIFactory.Text(gfx, "", 16, UIStyle.Muted);
-            m_UpscalerNote.Layout(-1, 66);
-
-            var back = UIFactory.Button(body, "Done", Close, 24, ButtonStyle.Primary, "check");
-            ((RectTransform)back.transform).Place(new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0, 30), new Vector2(320, 60));
-            RefreshLabels();
+            var picture = Section(page, "Picture", "star");
+            SliderRow(picture, "Brightness", "Exposure of the whole image", -1f, 1f, () => S.brightness, v => { S.brightness = v; GameSettings.Apply(); },
+                v => (v >= 0 ? "+" : "") + Mathf.RoundToInt(v * 100) + "%");
         }
+
+        void BuildAudio(RectTransform page)
+        {
+            UIFactory.VStack(page, 16f);
+            var audio = Section(page, "Volume", "bolt");
+            string Pct(float v) => Mathf.RoundToInt(v * 100) + "%";
+            SliderRow(audio, "Master", "Everything", 0f, 1f, () => S.masterVolume, v => { S.masterVolume = v; AudioListener.volume = v; }, Pct);
+            SliderRow(audio, "Effects", "Chopping, falling trees, pickups", 0f, 1f, () => S.effectsVolume, v => { S.effectsVolume = v; GameSettings.Apply(); }, Pct);
+            SliderRow(audio, "Ambience and machines", "Wind, birds and running machines", 0f, 1f, () => S.ambienceVolume, v => { S.ambienceVolume = v; GameSettings.Apply(); }, Pct);
+            SliderRow(audio, "Interface", "Menus, purchases and alerts", 0f, 1f, () => S.interfaceVolume, v => { S.interfaceVolume = v; GameSettings.Apply(); }, Pct);
+        }
+
+        void BuildControls(RectTransform page)
+        {
+            var h = UIFactory.HStack(page, 18f, null, TextAnchor.UpperLeft);
+            h.childForceExpandWidth = true;
+            var left = UIFactory.Rect("Left", page);
+            UIFactory.VStack(left, 16f);
+            var mouse = Section(left, "Mouse", "axe");
+            SliderRow(mouse, "Sensitivity", "How fast the mouse turns the view", 0.1f, 4f, () => S.mouseSensitivity, v => S.mouseSensitivity = v, v => v.ToString("0.00"));
+            ToggleRow(mouse, "Invert Y", "Push up to look down", () => S.invertY, v => S.invertY = v);
+            var pad = Section(left, "Controller", "gear");
+            SliderRow(pad, "Look sensitivity", "How fast the right stick turns", 0.2f, 3f, () => S.stickSensitivity, v => S.stickSensitivity = v, v => v.ToString("0.00"));
+            ToggleRow(pad, "Invert Y", "Push up to look down", () => S.invertStickY, v => S.invertStickY = v);
+            ToggleRow(pad, "Vibration", "Rumble on hits and felled trees", () => S.vibration, v => S.vibration = v);
+            SliderRow(pad, "Stick dead zone", "Raise if the view drifts", 0.05f, 0.4f, () => S.stickDeadZone, v => S.stickDeadZone = v, v => Mathf.RoundToInt(v * 100) + "%");
+
+            var right = UIFactory.Rect("Right", page);
+            UIFactory.VStack(right, 16f);
+            var cam = Section(right, "Camera", "leaf");
+            SliderRow(cam, "Field of view", "Wider shows more", 60f, 100f, () => S.fieldOfView, v => S.fieldOfView = Mathf.Round(v), v => Mathf.Round(v).ToString("0"));
+            ToggleRow(cam, "Head bob", "View sways while walking", () => S.headBob, v => S.headBob = v);
+            ToggleRow(cam, "Camera shake", "Kick on hits and falling trees", () => S.cameraShake, v => S.cameraShake = v);
+            var layout = Section(right, "Controller layout", "gear");
+            var t = UIFactory.Text(layout, ControllerLayoutText(), 17, UIStyle.Text);
+            t.lineSpacing = 10f;
+        }
+
+        void BuildInterface(RectTransform page)
+        {
+            UIFactory.VStack(page, 16f);
+            var ui = Section(page, "Interface", "leaf");
+            SliderRow(ui, "Interface scale", "Size of menus and the HUD", 0.75f, 1.25f, () => S.uiScale, v => S.uiScale = Mathf.Round(v * 20f) / 20f,
+                v => Mathf.RoundToInt(Mathf.Round(v * 20f) * 5f) + "%");
+            CyclerRow(ui, "FPS counter (F3)", "Frame rate, frame times and upscaler", () => S.fpsCounter switch { FpsCounterMode.Fps => "FPS", FpsCounterMode.Detailed => "Detailed", _ => "Off" },
+                d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
+            ToggleRow(ui, "Tutorial hints", "Step-by-step goals for new players", () => S.showTutorial, v => S.showTutorial = v);
+            ToggleRow(ui, "Damage numbers", "Show the damage of each hit", () => S.damageNumbers, v => S.damageNumbers = v);
+        }
+
+        /// <summary>The controller bindings, in the same words as the HUD prompts.</summary>
+        public static string ControllerLayoutText() =>
+            "<color=#F5B545>Left stick</color>   Move  (click: sprint)\n" +
+            "<color=#F5B545>Right stick</color>   Look\n" +
+            "<color=#F5B545>RT / R2</color>   Chop (hold to keep swinging)\n" +
+            "<color=#F5B545>A / Cross</color>   Jump\n" +
+            "<color=#F5B545>X / Square</color>   Use (sell, workbench, gates)\n" +
+            "<color=#F5B545>Start / Options</color>   Pause menu\n" +
+            "<color=#F5B545>D-pad / stick, A, B</color>   Menus: move, select, back\n" +
+            "<color=#F5B545>Skill tree</color>   Right stick pans, LT / RT zoom";
+
+        // ------------------------------------------------------------------ behaviour
 
         void OnDestroy()
         {
@@ -99,6 +245,45 @@ namespace ChoppingTrees
         {
             GameSettings.Apply();
             GameSettings.Save();
+        }
+
+        void ShowTab(int index, bool sound = true)
+        {
+            m_Tab = index;
+            for (int i = 0; i < m_Pages.Count; i++) m_Pages[i].gameObject.SetActive(i == index);
+            for (int i = 0; i < m_Tabs.Count; i++)
+            {
+                bool on = i == index;
+                m_Tabs[i].SetColor(on ? new Color(1f, 0.95f, 0.82f, 0.07f) : new Color(0, 0, 0, 0));
+                m_Tabs[i].Label.color = on ? UIStyle.Text : UIStyle.Muted;
+                m_TabBars[i].gameObject.SetActive(on);
+            }
+            if (sound) AudioManager.Ui("ui_click", 0.4f);
+            RefreshLabels();
+        }
+
+        void SetPreset(QualityPreset p)
+        {
+            QualityPresets.Apply(S, p);
+            GameSettings.Apply();
+            AudioManager.Ui("ui_click", 0.5f);
+            RefreshLabels();
+        }
+
+        /// <summary>A quality option changed by hand: the preset becomes whichever one still matches, or Custom.</summary>
+        static void QualityChanged()
+        {
+            S.qualityPreset = QualityPresets.Detect(S);
+            GameSettings.Apply();
+        }
+
+        void ResetDefaults()
+        {
+            ConfirmDialog.Ask("Reset settings?", "Every setting goes back to its default (High quality, native resolution, all volumes at full).", "Reset", () =>
+            {
+                GameSettings.ResetToDefaults();
+                RefreshLabels();
+            });
         }
 
         static int Cycle(int value, int dir, int count) => ((value + dir) % count + count) % count;
@@ -122,10 +307,7 @@ namespace ChoppingTrees
             GameSettings.Apply();
         }
 
-        static string MonitorText()
-        {
-            return DisplayModes.Name(DisplayModes.Current);
-        }
+        static string MonitorText() => DisplayModes.Name(DisplayModes.Current);
 
         static void StepMonitor(int d)
         {
@@ -147,7 +329,7 @@ namespace ChoppingTrees
 
         static string AaText() => GraphicsCapabilities.IsTemporal(GraphicsService.ActiveUpscaler) ? "By upscaler" : S.antiAliasing.ToString();
 
-        void StepUpscaler(int d)
+        static void StepUpscaler(int d)
         {
             var values = (UpscalerSetting[])Enum.GetValues(typeof(UpscalerSetting));
             int i = Array.IndexOf(values, S.upscaler);
@@ -159,76 +341,99 @@ namespace ChoppingTrees
             }
             S.upscaler = values[i];
             GameSettings.Apply();
-            RefreshLabels();
         }
 
         void RefreshLabels()
         {
             foreach (var (label, get) in s_Cyclers) if (label != null) label.text = get();
+            foreach (var (button, get, on, off) in s_Toggles)
+            {
+                if (button == null) continue;
+                bool v = get();
+                button.Label.text = v ? on : off;
+                button.SetColor(v ? UIFactory.StyleColor(ButtonStyle.Success) : UIStyle.Button);
+            }
+            foreach (var (slider, text, get, format) in s_Sliders)
+            {
+                if (slider == null) continue;
+                slider.SetValueWithoutNotify(get());
+                text.text = format(get());
+            }
+            for (int i = 0; i < m_PresetButtons.Length; i++)
+                m_PresetButtons[i].SetStyle((int)S.qualityPreset == i ? ButtonStyle.Primary : ButtonStyle.Ghost);
+            m_PresetNote.text = S.qualityPreset == QualityPreset.Custom
+                ? "<color=#F5B545>Custom</color>: you changed options below. Pick a preset to go back to one."
+                : QualityPresets.Descriptions[(int)S.qualityPreset];
             if (m_DisplayNote != null)
             {
                 m_DisplayNote.text = GameSettings.DisplayNotice;
                 m_DisplayNote.gameObject.SetActive(!string.IsNullOrEmpty(GameSettings.DisplayNotice));
             }
-            if (m_UpscalerNote == null) return;
             var missing = new List<string>();
             foreach (UpscalerSetting u in Enum.GetValues(typeof(UpscalerSetting)))
                 if (!GraphicsCapabilities.IsSupported(u)) missing.Add(GraphicsCapabilities.Label(u));
             string active = $"Running: <color=#F5B545>{GraphicsService.Describe()}</color>.";
             string note = string.IsNullOrEmpty(GraphicsService.Notice) ? "" : "\n<color=#E8705F>" + GraphicsService.Notice + "</color>";
-            m_UpscalerNote.text = (missing.Count == 0 ? active + " All upscalers are available on this PC." : active + " Not available on this PC: " + string.Join(", ", missing) + ".") + note;
+            m_UpscalerNote.text = (missing.Count == 0 ? active + " All upscalers work on this PC." : active + " Not available here: " + string.Join(", ", missing) + ".") + note;
         }
 
-        static RectTransform Column(Transform parent)
-        {
-            var col = UIFactory.Rect("Column", parent);
-            UIFactory.VStack(col, 18f);
-            return col;
-        }
+        // ------------------------------------------------------------------ rows
 
         static Transform Section(Transform parent, string title, string icon)
         {
             var card = UIFactory.Surface(parent, title, UIStyle.Card);
-            UIFactory.VStack(card, 8f, new RectOffset(22, 22, 16, 18));
+            UIFactory.VStack(card, 4f, new RectOffset(22, 22, 14, 16));
             var head = UIFactory.Rect("Head", card.transform);
             UIFactory.HStack(head, 10f);
             UIFactory.Icon(head, icon, UIStyle.Accent, 20f);
-            UIFactory.Caption(head, title, UIStyle.Accent, 16f);
-            head.Layout(-1, 30);
+            UIFactory.Caption(head, title, UIStyle.Accent, 15f);
+            head.Layout(-1, 32);
             return card.transform;
         }
 
-        static RectTransform Row(Transform parent, string label)
+        /// <summary>A row: label with a short hint under it on the left, the control on the right.</summary>
+        static RectTransform Row(Transform parent, string label, string hint)
         {
             var row = UIFactory.Rect(label, parent);
-            UIFactory.HStack(row, 16f);
-            row.Layout(-1, 50);
-            var t = UIFactory.Text(row, label, 21, UIStyle.Text);
+            UIFactory.HStack(row, 14f);
+            row.Layout(-1, 58);
+            var texts = UIFactory.Rect("Texts", row);
+            UIFactory.VStack(texts, 0f, null, TextAnchor.MiddleLeft);
+            texts.Layout(-1, -1, 1);
+            var t = UIFactory.Text(texts, label, 20, UIStyle.Text);
             t.textWrappingMode = TextWrappingModes.NoWrap;
-            t.Layout(-1, -1, 1);
+            if (!string.IsNullOrEmpty(hint))
+            {
+                var h = UIFactory.Text(texts, hint, 14, UIStyle.Dim);
+                h.textWrappingMode = TextWrappingModes.NoWrap;
+                h.overflowMode = TextOverflowModes.Ellipsis;
+            }
             return row;
         }
 
-        static void SliderRow(Transform parent, string label, float min, float max, float value, Action<float> set, Func<float, string> format)
+        static void SliderRow(Transform parent, string label, string hint, float min, float max, Func<float> get, Action<float> set, Func<float, string> format)
         {
-            var row = Row(parent, label);
+            var row = Row(parent, label, hint);
             TextMeshProUGUI text = null;
-            var slider = UIFactory.Slider(row, min, max, value, v => { set(v); text.text = format(v); });
-            slider.Layout(220, 30);
-            text = UIFactory.Text(row, format(value), 19, UIStyle.Muted, true, TextAlignmentOptions.Right);
-            text.Layout(64);
+            var slider = UIFactory.Slider(row, min, max, get(), v => { set(v); text.text = format(v); });
+            slider.Layout(200, 30);
+            text = UIFactory.Text(row, format(get()), 18, UIStyle.Muted, true, TextAlignmentOptions.Right);
+            text.Layout(62);
+            s_Sliders.Add((slider, text, get, format));
         }
 
-        static void ToggleRow(Transform parent, string label, Func<bool> get, Action<bool> set)
+        static void ToggleRow(Transform parent, string label, string hint, Func<bool> get, Action<bool> set)
         {
-            var row = Row(parent, label);
-            UIFactory.Toggle(row, get, set).Layout(130, 42);
+            var row = Row(parent, label, hint);
+            var b = UIFactory.Toggle(row, get, v => { set(v); Instance?.RefreshLabels(); });
+            b.Layout(120, 42);
+            s_Toggles.Add((b, get, "On", "Off"));
         }
 
-        static TextMeshProUGUI CyclerRow(Transform parent, string label, Func<string> get, Action<int> step)
+        static TextMeshProUGUI CyclerRow(Transform parent, string label, string hint, Func<string> get, Action<int> step)
         {
-            var row = Row(parent, label);
-            var text = UIFactory.Cycler(row, get, d => { step(d); Instance?.RefreshLabels(); }, 280f);
+            var row = Row(parent, label, hint);
+            var text = UIFactory.Cycler(row, get, d => { step(d); Instance?.RefreshLabels(); }, 250f);
             s_Cyclers.Add((text, get));
             return text;
         }

@@ -40,5 +40,6 @@ MonoBehaviour:
   - upgradeId: axe_tier
     level: 1
   sortOrder: 3
+  legacy: 0
   treePosition: {x: -1.65, y: 2.5}
   icon: backpack

@@ -70,7 +70,7 @@ namespace ChoppingTrees
             float dt = Time.deltaTime;
             UpdateAim();
 
-            bool input = UIState.GameplayInput && Mouse.current != null && Mouse.current.leftButton.isPressed;
+            bool input = UIState.GameplayInput && GameInput.ChopHeld;
             if (!Swinging && input) BeginSwing();
 
             if (Swinging)
@@ -133,16 +133,20 @@ namespace ChoppingTrees
                 case HitResult.Felled:
                     AudioManager.Sfx("tree_hit", hit.point, 1f, tree.Type.soundPitch);
                     Effects.WoodChips(hit.point, hit.normal, tree.Type.chipColor, result == HitResult.Felled ? 22 : 12, tree.transform.position.y);
-                    if (crit) FloatingText.Show(hit.point + hit.normal * 0.2f, "CRIT -" + NumberUtil.Format(damage, true), new Color(1f, 0.72f, 0.25f), 1f);
-                    else FloatingText.Show(hit.point + hit.normal * 0.2f, "-" + NumberUtil.Format(damage, true), new Color(1f, 0.95f, 0.85f), 0.7f);
+                    if (GameSettings.Data.damageNumbers)
+                        FloatingText.Show(hit.point + hit.normal * 0.2f, (crit ? "CRIT -" : "-") + NumberUtil.Format(damage, true),
+                            crit ? new Color(1f, 0.72f, 0.25f) : new Color(1f, 0.95f, 0.85f), crit ? 1f : 0.7f);
                     m_HitStop = 0.045f;
                     m_Recoil = 1f;
+                    if (result == HitResult.Felled) GameInput.Rumble(0.55f, 0.7f, 0.28f);
+                    else GameInput.Rumble(crit ? 0.35f : 0.15f, crit ? 0.5f : 0.3f, 0.08f);
                     if (CameraFx.Instance != null) CameraFx.Instance.Kick(new Vector3(1.4f, Random.Range(-0.4f, 0.4f), -0.8f));
                     break;
                 case HitResult.TooTough:
                     AudioManager.Sfx("axe_clang", hit.point, 0.9f);
                     Effects.Sparkle(hit.point + hit.normal * 0.05f, new Color(1f, 0.85f, 0.5f), 6);
                     m_Recoil = 1.4f;
+                    GameInput.Rumble(0.7f, 0.15f, 0.12f);
                     if (CameraFx.Instance != null) CameraFx.Instance.Kick(new Vector3(2f, 0f, 1.2f));
                     break;
             }

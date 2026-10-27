@@ -34,5 +34,6 @@ MonoBehaviour:
   levelNames: []
   requires: []
   sortOrder: 0
+  legacy: 0
   treePosition: {x: 0, y: 1.35}
   icon: saw

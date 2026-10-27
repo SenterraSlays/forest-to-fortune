@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: axe_tier
     level: 1
   sortOrder: 1
+  legacy: 0
   treePosition: {x: -2.75, y: 2.6}
   icon: gem

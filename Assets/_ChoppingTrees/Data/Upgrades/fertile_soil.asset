@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: area_grove
     level: 1
   sortOrder: 2
+  legacy: 0
   treePosition: {x: -5.25, y: 3.75}
   icon: sprout

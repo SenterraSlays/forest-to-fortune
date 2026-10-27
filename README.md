@@ -12,18 +12,22 @@ work for you (even while the game is closed), and two gated forests open up as y
 **Built game:** `Builds/Windows/ChoppingTrees.exe`. The build output isn't part of the source;
 rebuild it with *Tools > Chopping Trees > Build Windows Player*.
 
-| Action | Input |
-| --- | --- |
-| Move / sprint / jump | WASD / Left Shift / Space |
-| Look | Mouse |
-| Chop (hold to keep swinging) | Left mouse button |
-| Use (sell, workbench, gates) | E |
-| Hide tutorial hints | H |
-| Cycle the FPS counter (off / FPS / detailed) | F3 |
-| Pause menu / close menus | Esc |
+| Action | Keyboard and mouse | Controller |
+| --- | --- | --- |
+| Move / sprint / jump | WASD / Left Shift / Space | Left stick / click left stick / A (Cross) |
+| Look | Mouse | Right stick |
+| Chop (hold to keep swinging) | Left mouse button | RT (R2) |
+| Use (sell, workbench, gates) | E | X (Square) |
+| Hide tutorial hints | H | View / Select |
+| Cycle the FPS counter (off / FPS / detailed) | F3 | (Settings) |
+| Pause menu / close menus | Esc | Start (Options) / B (Circle) |
+| Menus | Mouse | D-pad or stick to move, A to select, B to go back |
+| Skill tree | Drag, scroll | D-pad between nodes (A selects, A again buys), right stick pans, LT / RT zoom |
 
-No input setup is needed: the game reads the keyboard and mouse directly through the Input
-System package. Gamepads aren't supported.
+No input setup is needed: the game reads the devices directly through the Input System
+package. Whichever you used last decides the button prompts (keys or controller buttons), and a
+controller always has a focused element in menus. Controller look speed, invert, dead zone and
+vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*.
 
 ### The loop
 
@@ -61,6 +65,23 @@ System package. Gamepads aren't supported.
    Buy x1, x5, x10 or as many as you can afford at once (the price is the sum of the single prices).
    A rebirth resets money, every upgrade (axes, backpack, machines, forests) and all wood; it keeps
    your rebirths, lifetime stats and settings. The HUD shows the current multiplier next to your money.
+   Each rebirth also gives a **skill point**. Spend them on the *Legacy Perks* tab of the Rebirth
+   screen; Legacy perks are never reset:
+
+   | Perk | Levels | What it does |
+   | --- | --- | --- |
+   | Heirloom Axe | 3 | Every run starts with the Steel, Lumberjack's or Tempered axe |
+   | Head Start | 4 | Every run starts with $500, $2,500, $12,500 or $62,500 |
+   | Starter Kit | 4 | Every run starts with 1 to 4 Auto-Choppers |
+   | Forest Charter | 2 | Every run starts with the Old Grove (and Ironwood Ridge) open |
+   | Titan Grip | 10 | +50% axe damage per level |
+   | Quick Hands | 5 | +10% swing speed per level |
+   | Deep Pockets | 5 | +50% backpack capacity per level |
+   | Lodestone | 5 | +3 m log magnet range per level |
+   | Master Engineer | 10 | +25% output for every machine per level |
+   | Silver Tongue | 10 | +15% on every sale per level |
+
+   Head starts apply as soon as you buy them and again at the start of every run.
 
 | Tree | Area | Axe needed | HP | Wood |
 | --- | --- | --- | --- | --- |
@@ -73,6 +94,14 @@ System package. Gamepads aren't supported.
 | Goldbark | Ironwood Ridge | Ironbreaker | 2,600 | 1,500 + $12,000 |
 
 ### Graphics and performance
+
+*Settings* has five tabs: Graphics, Display, Audio, Controls and Interface. The **quality preset**
+(Low, Medium, High, Ultra) sets shadows (off to 140 m soft shadows with 4 cascades), texture
+quality, anisotropic filtering, scenery detail (how much grass, flowers and small props are shown),
+effects density, bloom, render scale and anti-aliasing; changing any of them by hand shows
+*Custom*. Display adds brightness; Audio has separate effects, ambience/machines and interface
+volumes; Controls has mouse and controller look, vibration, dead zone, field of view, head bob and
+camera shake; Interface has UI scale, the FPS counter, tutorial hints and damage numbers.
 
 *Settings > Graphics* offers four upscalers through URP's upscaler framework, each with a
 quality level (Native/DLAA, Quality, Balanced, Performance):

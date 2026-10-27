@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: foreman
     level: 1
   sortOrder: 6
+  legacy: 0
   treePosition: {x: 0.5, y: 4.35}
   icon: wrench

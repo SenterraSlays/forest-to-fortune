@@ -23,6 +23,8 @@ namespace ChoppingTrees
         public long TreesFelled;
         /// <summary>Rebirths done; kept through rebirths (each one boosts earnings).</summary>
         public int Rebirths;
+        /// <summary>Unspent skill points (from rebirths) and all ever earned.</summary>
+        public int SkillPoints, SkillPointsEarned;
         public double PlaySeconds;
         public int TutorialStep;
         public bool TutorialDone;
@@ -80,6 +82,8 @@ namespace ChoppingTrees
                 totalWoodChopped = NumberUtil.SafePositive(TotalWoodChopped),
                 treesFelled = Math.Max(0, TreesFelled),
                 rebirths = Math.Max(0, Rebirths),
+                skillPoints = Math.Max(0, SkillPoints),
+                skillPointsEarned = Math.Max(0, SkillPointsEarned),
                 playSeconds = NumberUtil.SafePositive(PlaySeconds),
                 tutorialStep = TutorialStep,
                 tutorialDone = TutorialDone,
@@ -103,6 +107,8 @@ namespace ChoppingTrees
             s.TotalWoodChopped = NumberUtil.SafePositive(d.totalWoodChopped);
             s.TreesFelled = Math.Max(0, d.treesFelled);
             s.Rebirths = Math.Max(0, d.rebirths);
+            s.SkillPoints = Math.Max(0, d.skillPoints);
+            s.SkillPointsEarned = Math.Max(0, d.skillPointsEarned);
             s.PlaySeconds = NumberUtil.SafePositive(d.playSeconds);
             s.TutorialStep = Math.Max(0, d.tutorialStep);
             s.TutorialDone = d.tutorialDone;

@@ -87,7 +87,30 @@ namespace ChoppingTrees
 
         void Update()
         {
-            if (m_Ready) Apply(false);
+            if (!m_Ready) return;
+            if (GameInput.UsingGamepad)
+            {
+                // Right stick pans, RT zooms in, LT zooms out.
+                Vector2 stick = GameInput.PanStick;
+                if (stick.sqrMagnitude > 0f) m_TargetPan = Clamp(m_TargetPan - stick * (900f * Time.unscaledDeltaTime), m_TargetZoom);
+                float z = GameInput.ZoomAxis;
+                if (Mathf.Abs(z) > 0.05f) ZoomBy(1f + z * 1.6f * Time.unscaledDeltaTime, Vector2.zero);
+            }
+            Apply(false);
+        }
+
+        /// <summary>Pans so a point of the tree (content coordinates, origin bottom-left) is comfortably in view.</summary>
+        public void EnsureVisible(Vector2 contentPoint, float margin = 140f)
+        {
+            float s = m_Fit * m_TargetZoom;
+            Vector2 p = m_TargetPan + (contentPoint - m_Size * 0.5f) * s;
+            Vector2 half = m_Viewport.rect.size * 0.5f - Vector2.one * margin;
+            Vector2 shift = Vector2.zero;
+            if (p.x > half.x) shift.x = half.x - p.x;
+            else if (p.x < -half.x) shift.x = -half.x - p.x;
+            if (p.y > half.y) shift.y = half.y - p.y;
+            else if (p.y < -half.y) shift.y = -half.y - p.y;
+            if (shift != Vector2.zero) m_TargetPan = Clamp(m_TargetPan + shift, m_TargetZoom);
         }
 
         Vector2 LocalPoint(PointerEventData e)

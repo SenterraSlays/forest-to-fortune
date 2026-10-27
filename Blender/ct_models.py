@@ -910,59 +910,267 @@ def Sawmill():
 
 @model
 def Market():
-    parts = [box("Counter", (3.6, 0.9, 1.0), (0, 0.6, 0.5), "M_Wood", 0.02),
-             box("Top", (3.8, 1.05, 0.08), (0, 0.6, 1.04), "M_Plank", 0.01),
-             box("Back", (3.6, 0.15, 2.6), (0, -1.1, 1.3), "M_WoodDark"),
-             box("Shelf", (3.4, 0.5, 0.06), (0, -0.85, 1.5), "M_Plank")]
-    for x in (-1.8, 1.8):
-        for y in (1.05, -1.1):
-            parts.append(box("Post", (0.14, 0.14, 3.0), (x, y, 1.5), "M_WoodDark"))
-    for i in range(8):
-        parts.append(box("Awning", (0.48, 2.6, 0.06), (-1.68 + i * 0.48, 0.15, 3.1), "M_PaintRed" if i % 2 else "M_Canvas", rot=(-0.28, 0, 0)))
-    for i in range(5):
-        parts.append(fcyl("Round", 0.18, 0.4, (-1.3 + i * 0.6, -0.85, 1.75), "M_WoodCut", rot=(math.radians(90), 0, 0), verts=9))
-    parts.append(box("Cashbox", (0.45, 0.35, 0.25), (1.2, 0.6, 1.2), "M_PaintGreen", 0.02))
-    parts.append(box("ScaleBase", (0.5, 0.4, 0.06), (-1.0, 0.6, 1.11), "M_Metal"))
-    parts.append(box("ScalePost", (0.05, 0.05, 0.5), (-1.0, 0.6, 1.36), "M_Metal"))
-    parts.append(box("ScaleBeam", (0.6, 0.04, 0.04), (-1.0, 0.6, 1.6), "M_Metal"))
-    parts.append(box("Sign", (2.6, 0.1, 0.6), (0, 1.2, 3.55), "M_Sign", 0.02))
-    parts.append(box("SignFrame", (2.7, 0.08, 0.7), (0, 1.15, 3.55), "M_WoodDark"))
+    """Lumber Market: a timber-framed stall on a plank floor with a shingled gable roof, a sales
+    counter (register, scale, coins), stocked shelves, a log pile, crates, a chalk price board
+    and lanterns. Front is +Y."""
+    p = []
+    rad = math.radians
+    # Floor: boards along Y on a dark sill, plus a stone step at the front.
+    p.append(span("Sill", -2.55, 2.55, -1.75, 1.75, 0.0, 0.14, "M_WoodDark"))
+    for i in range(10):
+        x0 = -2.5 + i * 0.5
+        p.append(span("Board", x0 + 0.01, x0 + 0.49, -1.7, 1.7, 0.14, 0.2, "M_Plank" if i % 2 else "M_Wood", 0.01))
+    p.append(span("Step", -1.1, 1.1, 1.75, 2.15, 0.0, 0.1, "M_StoneDark", 0.02))
+
+    # Frame: four posts, beams and knee braces.
+    for x in (-2.3, 2.3):
+        for y in (-1.5, 1.5):
+            p.append(box("Post", (0.2, 0.2, 3.0), (x, y, 1.7), "M_WoodDark", 0.02))
+            p.append(box("PostFoot", (0.3, 0.3, 0.12), (x, y, 0.26), "M_StoneDark", 0.02))
+            p.append(box("Brace", (0.09, 0.09, 0.85), (x - math.copysign(0.3, x), y, 2.88), "M_WoodDark", rot=(0, rad(45) * math.copysign(1, x), 0)))
+    for y in (-1.5, 1.5):
+        p.append(span("Beam", -2.45, 2.45, y - 0.12, y + 0.12, 3.12, 3.34, "M_WoodDark", 0.015))
+    for x in (-2.3, 2.3):
+        p.append(span("SideBeam", x - 0.11, x + 0.11, -1.6, 1.6, 3.12, 3.32, "M_WoodDark"))
+
+    # Gable roof along X with shingle rows and a ridge cap.
+    roof = prism("Roof", [(-2.1, 3.2), (0, 4.24), (2.1, 3.2), (2.1, 3.34), (0, 4.38), (-2.1, 3.34)], 5.4, "M_Roof")
+    p.append(roof)
+    slope = math.atan2(1.04, 2.1)
+    for s in (-1, 1):
+        for k in range(5):
+            f = 0.1 + k * 0.19
+            y = s * 2.1 * (1 - f)
+            z = 3.34 + f * 1.04 + 0.03
+            p.append(box("Shingle", (5.42, 0.42, 0.045), (0, y, z), "M_WoodDark" if k % 2 else "M_Roof", rot=(-slope * s, 0, 0)))
+    p.append(box("Ridge", (5.5, 0.22, 0.12), (0, 0, 4.4), "M_WoodDark", 0.02))
+    for x in (-2.32, 2.32):
+        p.append(prism("Gable", [(-1.55, 3.34), (1.55, 3.34), (0, 4.1)], 0.08, "M_Plank"))
+        p[-1].location.x = x
+    # Coin emblem on both gables.
+    for x in (-2.38, 2.38):
+        p.append(fcyl("Coin", 0.3, 0.05, (x, 0, 3.72), "M_Gold", rot=(0, rad(90), 0), verts=16))
+        p.append(fcyl("CoinRim", 0.22, 0.07, (x, 0, 3.72), "M_Paint", rot=(0, rad(90), 0), verts=16))
+    # Striped valance under the front eave.
+    for i in range(18):
+        x = -2.55 + i * 0.3
+        p.append(box("Valance", (0.29, 0.03, 0.26), (x + 0.15, 2.06, 3.08), "M_PaintRed" if i % 2 else "M_Canvas", rot=(rad(-8), 0, 0)))
+
+    # Sales counter with plank front, register, scale and coins.
+    p.append(span("Counter", -1.95, 1.95, 0.8, 1.3, 0.2, 1.14, "M_Wood"))
+    for i in range(13):
+        x = -1.9 + i * 0.3
+        p.append(span("CounterSlat", x, x + 0.06, 1.3, 1.33, 0.25, 1.1, "M_WoodDark"))
+    p.append(span("CounterTop", -2.05, 2.05, 0.74, 1.4, 1.14, 1.22, "M_Plank", 0.015))
+    p.append(span("SideCounter", -1.95, -1.45, -0.2, 0.8, 0.2, 1.14, "M_Wood"))
+    p.append(span("SideTop", -2.05, -1.38, -0.25, 0.8, 1.14, 1.22, "M_Plank", 0.015))
+    # Cash register.
+    p.append(box("Register", (0.55, 0.42, 0.28), (1.25, 1.02, 1.36), "M_PaintGreen", 0.02))
+    p.append(box("Keys", (0.5, 0.22, 0.12), (1.25, 1.15, 1.52), "M_MetalDark", rot=(rad(-25), 0, 0)))
+    p.append(box("Display", (0.32, 0.06, 0.16), (1.25, 0.88, 1.62), "M_MetalDark"))
+    p.append(box("Trim", (0.57, 0.44, 0.03), (1.25, 1.02, 1.23), "M_Gold"))
+    # Platform scale with a dial.
+    p.append(box("ScaleBase", (0.5, 0.36, 0.06), (-0.95, 1.05, 1.25), "M_Metal", 0.01))
+    p.append(box("ScalePost", (0.06, 0.06, 0.32), (-0.95, 0.92, 1.44), "M_Metal"))
+    p.append(fcyl("Dial", 0.13, 0.04, (-0.95, 0.94, 1.66), "M_Canvas", rot=(rad(90), 0, 0), verts=16))
+    p.append(fcyl("DialRim", 0.145, 0.03, (-0.95, 0.92, 1.66), "M_Metal", rot=(rad(90), 0, 0), verts=16))
+    p.append(box("Needle", (0.015, 0.01, 0.1), (-0.93, 0.965, 1.69), "M_PaintRed", rot=(0, rad(-30), 0)))
+    p.append(fcyl("Pan", 0.2, 0.03, (-0.95, 1.05, 1.32), "M_Steel", verts=16))
+    p.extend(log_x("ScaleLog", 0.09, 0.32, (-0.95, 1.05, 1.42), "M_Bark", 8))
+    for i, (x, h) in enumerate([(0.2, 0.08), (0.32, 0.12), (0.44, 0.06)]):
+        p.append(fcyl("Coins", 0.06, h, (x, 1.1, 1.22 + h / 2), "M_Gold", verts=10))
+
+    # Back wall with battens and two stocked shelves.
+    p.append(span("BackWall", -2.25, 2.25, -1.58, -1.42, 0.2, 3.12, "M_WoodDark"))
+    for i in range(10):
+        x = -2.15 + i * 0.48
+        p.append(span("Batten", x, x + 0.08, -1.42, -1.38, 0.2, 3.1, "M_Wood"))
+    for z in (1.15, 2.05):
+        p.append(span("Shelf", -2.1, 2.1, -1.4, -0.95, z, z + 0.06, "M_Plank", 0.01))
+        for k in range(4):
+            p.append(box("Bracket", (0.05, 0.4, 0.05), (-1.8 + k * 1.2, -1.18, z - 0.06), "M_MetalDark"))
+    for i in range(6):  # log rounds, cut ends to the front
+        x = -1.85 + i * 0.36
+        r = 0.15 + 0.03 * (i % 2)
+        p.append(fcyl("Round", r, 0.4, (x, -1.15, 1.21 + r), "M_Bark", rot=(rad(90), 0, 0), verts=10))
+        p.append(fcyl("RoundCut", r * 0.88, 0.02, (x, -0.95, 1.21 + r), "M_WoodCut", rot=(rad(90), 0, 0), verts=10))
+    for layer in range(4):  # plank stacks on the top shelf
+        for side in (-1, 1):
+            p.append(box("PlankStack", (1.3, 0.36, 0.07), (side * 1.0, -1.17, 2.15 + layer * 0.075), "M_Plank" if layer % 2 else "M_WoodCut", 0.008))
+
+    # Hanging sign under the front beam.
+    p.append(box("SignBoard", (2.8, 0.08, 0.6), (0, 1.62, 2.72), "M_Sign", 0.02))
+    p.append(box("SignFrame", (2.92, 0.06, 0.72), (0, 1.57, 2.72), "M_WoodDark"))
     for x in (-1.2, 1.2):
-        parts.append(box("SignRope", (0.03, 0.03, 0.5), (x, 1.15, 3.1), "M_Rope"))
-    parts.append(col("Counter", (3.8, 1.0, 1.1), (0, 0.6, 0.55)))
-    parts.append(col("Back", (3.8, 0.4, 3.0), (0, -1.0, 1.5)))
-    empty("SignAnchor", (0, 1.27, 3.55))
-    empty("EffectPoint", (0, 0.6, 1.4))
-    finish("Market", parts)
+        p.append(box("SignRope", (0.03, 0.03, 0.22), (x, 1.6, 3.06), "M_Rope"))
+
+    # Lanterns at the front posts.
+    for x in (-2.3, 2.3):
+        lx = x - math.copysign(0.32, x)
+        p.append(box("LanternArm", (0.36, 0.04, 0.04), (x - math.copysign(0.16, x), 1.62, 2.95), "M_MetalDark"))
+        p.append(box("LanternChain", (0.02, 0.02, 0.16), (lx, 1.62, 2.85), "M_MetalDark"))
+        p.append(box("LanternCap", (0.2, 0.2, 0.05), (lx, 1.62, 2.75), "M_MetalDark", 0.01))
+        p.append(box("LanternGlow", (0.12, 0.12, 0.18), (lx, 1.62, 2.62), "M_Glow"))
+        p.append(box("LanternBase", (0.18, 0.18, 0.04), (lx, 1.62, 2.51), "M_MetalDark"))
+
+    # Log pile on the right, crates of planks on the left, a chalk price board in front.
+    for row, (z, xs) in enumerate([(0.2, (2.95, 3.37, 3.79)), (0.55, (3.16, 3.58)), (0.9, (3.37,))]):
+        for x in xs:
+            p.extend(log_y("PileLog", 0.2, 1.7, (x, 0.05, z), "M_Bark", 9))
+    for x, y, yaw in [(-3.05, 0.5, 8), (-3.05, -0.45, -5)]:
+        p.append(box("Crate", (0.75, 0.75, 0.62), (x, y, 0.31), "M_Wood", 0.02, rot=(0, 0, rad(yaw))))
+        for z in (0.1, 0.52):
+            p.append(box("CrateBand", (0.78, 0.78, 0.07), (x, y, z), "M_WoodDark", rot=(0, 0, rad(yaw))))
+    for k in range(3):
+        p.append(box("CratePlank", (1.0, 0.16, 0.05), (-3.05, 0.5 + (k - 1) * 0.18, 0.66), "M_Plank", 0.005, rot=(0, 0, rad(8))))
+    for s in (-1, 1):
+        p.append(box("BoardLeg", (0.05, 0.05, 1.05), (-1.95 + s * 0.38, 2.55 + s * 0.0, 0.52), "M_Wood", rot=(rad(12) * s, 0, 0)))
+    p.append(box("Chalkboard", (0.8, 0.04, 0.62), (-1.95, 2.6, 0.78), "M_MetalDark", rot=(rad(-12), 0, 0)))
+    p.append(box("ChalkFrame", (0.88, 0.03, 0.7), (-1.95, 2.585, 0.78), "M_Wood", rot=(rad(-12), 0, 0)))
+    for k in range(3):
+        p.append(box("Chalk", (0.5 - k * 0.1, 0.01, 0.035), (-2.0 + k * 0.03, 2.635, 0.95 - k * 0.15), "M_Canvas", rot=(rad(-12), 0, 0)))
+    p.append(fcyl("ChalkCoin", 0.06, 0.012, (-1.62, 2.64, 0.95), "M_Gold", rot=(rad(78), 0, 0), verts=10))
+
+    # Collisions.
+    p.append(col_span("Counter", -2.05, 2.05, 0.74, 1.4, 0.0, 1.25))
+    p.append(col_span("SideCounter", -2.05, -1.38, -0.25, 0.8, 0.0, 1.25))
+    p.append(col_span("Back", -2.4, 2.4, -1.75, -0.95, 0.0, 3.2))
+    for x in (-2.3, 2.3):
+        p.append(col_span("FrontPost", x - 0.15, x + 0.15, 1.35, 1.65, 0.0, 3.3))
+    p.append(col_span("LogPile", 2.72, 4.02, -0.82, 0.92, 0.0, 1.1))
+    p.append(col_span("Crates", -3.45, -2.65, -0.85, 0.9, 0.0, 0.7))
+    p.append(col_span("Chalkboard", -2.4, -1.5, 2.35, 2.85, 0.0, 1.1))
+    empty("SignAnchor", (0, 1.67, 2.72))
+    empty("EffectPoint", (0, 1.05, 1.5))
+    finish("Market", p)
 
 
 @model
 def Workbench():
-    parts = [box("Top", (2.4, 1.0, 0.12), (0, 0.3, 0.95), "M_Plank", 0.01)]
-    for x in (-1.05, 1.05):
-        for y in (-0.1, 0.7):
-            parts.append(box("Leg", (0.12, 0.12, 0.9), (x, y, 0.45), "M_Wood"))
-    parts.append(box("Shelf", (2.2, 0.8, 0.06), (0, 0.3, 0.3), "M_Wood"))
-    parts.append(box("Board", (2.6, 0.12, 1.8), (0, -0.3, 1.9), "M_WoodDark"))
-    for i, x in enumerate((-0.8, -0.2, 0.4)):
-        parts.append(box("Handle", (0.05, 0.05, 0.75), (x, -0.22, 1.85), "M_Wood"))
-        parts.append(box("HeadSil", (0.04, 0.2, 0.14), (x + 0.08, -0.22, 2.17), "M_Steel" if i != 1 else "M_PaintRed"))
-    parts.append(box("Saw", (0.7, 0.02, 0.18), (0.9, -0.22, 1.7), "M_Steel"))
-    parts.append(box("Vise", (0.25, 0.3, 0.2), (-0.95, 0.75, 1.1), "M_MetalDark"))
-    parts.append(box("Hammer", (0.35, 0.05, 0.05), (0.3, 0.45, 1.04), "M_Wood"))
-    parts.append(box("HammerHead", (0.06, 0.14, 0.07), (0.47, 0.45, 1.05), "M_MetalDark"))
-    parts.append(fcyl("Stump", 0.35, 0.6, (1.75, 0.5, 0.3), "M_Bark", verts=9))
-    parts.append(box("Anvil", (0.5, 0.22, 0.2), (1.75, 0.5, 0.72), "M_MetalDark", 0.02))
-    parts.append(box("Horn", (0.2, 0.12, 0.1), (2.05, 0.5, 0.77), "M_MetalDark"))
-    parts.append(disc_x("Grind", 0.35, 0.12, (-1.75, 0.45, 0.7), "M_Stone", 14))
-    parts.append(box("GrindFrame", (0.2, 0.2, 0.7), (-1.75, 0.45, 0.35), "M_Wood"))
-    parts.append(box("Sign", (1.8, 0.08, 0.45), (0, -0.2, 3.05), "M_Sign", 0.02))
-    parts.append(col("Bench", (2.5, 1.1, 1.0), (0, 0.3, 0.5)))
-    parts.append(col("Board", (2.6, 0.3, 3.3), (0, -0.3, 1.65)))
-    parts.append(col("Anvil", (0.8, 0.8, 0.9), (1.75, 0.5, 0.45)))
-    parts.append(col("Grind", (0.6, 0.8, 1.1), (-1.75, 0.45, 0.55)))
-    empty("SignAnchor", (0, -0.15, 3.05))
-    finish("Workbench", parts)
+    """Workbench: a covered workshop corner on a plank deck. Laminated bench with a vise and
+    tools, a pegboard of tools and axes, a skill-tree blueprint, grindstone, anvil on a stump,
+    a sawhorse with a log and a hanging lantern. Front is +Y."""
+    p = []
+    rad = math.radians
+    # Deck.
+    p.append(span("Sill", -2.25, 2.25, -1.35, 1.35, 0.0, 0.1, "M_WoodDark"))
+    for i in range(9):
+        y0 = -1.3 + i * 0.29
+        p.append(span("Deck", -2.2, 2.2, y0 + 0.01, y0 + 0.28, 0.1, 0.16, "M_Plank" if i % 2 else "M_Wood", 0.01))
+
+    # Shed roof on four posts, sloping down to the front.
+    for x in (-2.05, 2.05):
+        p.append(box("BackPost", (0.18, 0.18, 3.1), (x, -1.15, 1.7), "M_WoodDark", 0.02))
+        p.append(box("FrontPost", (0.16, 0.16, 2.62), (x, 1.15, 1.46), "M_WoodDark", 0.02))
+        p.append(span("SideRail", x - 0.08, x + 0.08, -1.2, 1.2, 2.62, 2.74, "M_WoodDark"))
+    tilt = math.atan2(0.48, 2.9)
+    p.append(box("Roof", (4.7, 3.1, 0.1), (0, 0, 3.0), "M_Roof", rot=(-tilt, 0, 0)))
+    for k in range(6):
+        y = -1.3 + k * 0.5
+        z = 3.0 - math.tan(tilt) * y + 0.07
+        p.append(box("Shingle", (4.72, 0.46, 0.04), (0, y + 0.1, z), "M_WoodDark" if k % 2 else "M_Roof", rot=(-tilt, 0, 0)))
+    p.append(box("Fascia", (4.72, 0.06, 0.2), (0, 1.55, 2.72), "M_WoodDark"))
+
+    # Pegboard wall with peg holes.
+    p.append(span("Wall", -2.0, 2.0, -1.26, -1.12, 0.16, 2.75, "M_WoodDark"))
+    p.append(span("Pegboard", -1.85, 1.85, -1.12, -1.08, 1.1, 2.55, "M_Plank"))
+    for i in range(12):
+        for j in range(5):
+            p.append(box("Peg", (0.025, 0.012, 0.025), (-1.7 + i * 0.31, -1.072, 1.25 + j * 0.27), "M_WoodDark"))
+    # Axe rack: three axes of rising quality.
+    for k, (x, head) in enumerate([(-1.45, "M_Steel"), (-1.1, "M_PaintRed"), (-0.75, "M_Gold")]):
+        p.append(box("AxeHandle", (0.05, 0.05, 0.85), (x, -1.03, 1.75), "M_Wood"))
+        p.append(box("AxeHead", (0.05, 0.24, 0.16), (x + 0.05, -1.02, 2.12), head, 0.01, rot=(0, 0, rad(90))))
+        p.append(box("AxeGrip", (0.06, 0.06, 0.16), (x, -1.03, 1.4), "M_Leather"))
+    # Hand saw, hammer, chisels and a coil of rope.
+    p.append(box("SawBlade", (0.62, 0.015, 0.16), (0.05, -1.04, 2.2), "M_Steel", rot=(0, rad(-8), 0)))
+    p.append(box("SawHandle", (0.16, 0.04, 0.14), (-0.3, -1.04, 2.24), "M_Wood", 0.01))
+    p.append(box("HammerHandle", (0.04, 0.04, 0.38), (0.6, -1.04, 1.7), "M_Wood"))
+    p.append(box("HammerHead", (0.16, 0.06, 0.06), (0.6, -1.03, 1.9), "M_MetalDark"))
+    for i in range(4):
+        p.append(box("Chisel", (0.025, 0.025, 0.2 + i * 0.02), (0.85 + i * 0.09, -1.04, 1.45), "M_Steel"))
+        p.append(box("ChiselGrip", (0.04, 0.04, 0.08), (0.85 + i * 0.09, -1.04, 1.6 + i * 0.01), "M_Wood"))
+    p.append(fcyl("Rope", 0.17, 0.06, (1.55, -1.03, 1.8), "M_Rope", rot=(rad(90), 0, 0), verts=14))
+    p.append(fcyl("RopeHole", 0.09, 0.07, (1.55, -1.02, 1.8), "M_WoodDark", rot=(rad(90), 0, 0), verts=12))
+    # Blueprint of the skill tree, pinned on the board.
+    p.append(box("Blueprint", (0.62, 0.012, 0.44), (1.2, -1.06, 2.3), "M_PaintBlue"))
+    for a, b in [((1.2, 2.14), (1.2, 2.3)), ((1.2, 2.3), (1.02, 2.44)), ((1.2, 2.3), (1.38, 2.44))]:
+        p.append(ftube("Line", (a[0], -1.05, a[1]), (b[0], -1.05, b[1]), 0.008, 0.008, "M_Canvas", 4))
+    for x, z in [(1.2, 2.14), (1.2, 2.3), (1.02, 2.44), (1.38, 2.44)]:
+        p.append(fcyl("Node", 0.03, 0.01, (x, -1.048, z), "M_Canvas", rot=(rad(90), 0, 0), verts=10))
+
+    # The bench: laminated top, legs, stretchers, lower shelf, vise and dog holes.
+    for i in range(7):
+        y0 = -0.45 + i * 0.15
+        p.append(span("Top", -1.45, 1.45, y0, y0 + 0.15, 0.94, 1.06, "M_Plank" if i % 2 else "M_Wood", 0.008))
+    for x in (-1.3, 1.3):
+        for y in (-0.38, 0.5):
+            p.append(box("Leg", (0.14, 0.14, 0.8), (x, y, 0.54), "M_WoodDark", 0.015))
+        p.append(span("Stretcher", x - 0.06, x + 0.06, -0.38, 0.5, 0.3, 0.4, "M_WoodDark"))
+    p.append(span("Shelf", -1.3, 1.3, -0.4, 0.52, 0.4, 0.46, "M_Plank"))
+    for k in range(3):
+        p.append(box("ShelfBoard", (1.6, 0.22, 0.05), (-0.3, -0.1 + k * 0.03, 0.49 + k * 0.05), "M_WoodCut", 0.005))
+    p.append(box("Toolbox", (0.55, 0.3, 0.26), (0.75, 0.1, 0.59), "M_PaintRed", 0.02))
+    p.append(box("ToolboxHandle", (0.4, 0.04, 0.04), (0.75, 0.1, 0.76), "M_MetalDark"))
+    for i in range(4):
+        p.append(fcyl("DogHole", 0.025, 0.01, (-1.1 + i * 0.6, 0.45, 1.065), "M_WoodDark", verts=8))
+    p.append(box("ViseJaw", (0.42, 0.1, 0.24), (-1.15, 0.67, 0.95), "M_Wood", 0.01))
+    p.append(fcyl("ViseScrew", 0.03, 0.4, (-1.15, 0.72, 0.95), "M_Steel", rot=(rad(90), 0, 0), verts=8))
+    p.append(box("ViseBar", (0.36, 0.035, 0.035), (-1.15, 0.9, 0.95), "M_Wood"))
+    # Things on the bench: a plane, a mallet, an axe handle in progress, shavings.
+    p.append(box("Plane", (0.32, 0.08, 0.08), (0.2, 0.15, 1.1), "M_Wood", 0.01))
+    p.append(box("PlaneBlade", (0.04, 0.07, 0.1), (0.24, 0.15, 1.13), "M_Steel", rot=(0, rad(30), 0)))
+    p.append(box("PlaneKnob", (0.06, 0.05, 0.08), (0.06, 0.15, 1.17), "M_WoodDark"))
+    p.append(box("MalletHead", (0.18, 0.1, 0.1), (-0.5, 0.25, 1.11), "M_WoodDark", 0.01))
+    p.append(box("MalletHandle", (0.04, 0.3, 0.04), (-0.5, 0.05, 1.08), "M_Wood"))
+    p.append(ftube("NewHandle", (0.6, 0.35, 1.09), (1.25, 0.25, 1.09), 0.035, 0.028, "M_WoodCut", 7))
+    for i, (x, y) in enumerate([(0.75, 0.35), (0.9, 0.2), (1.05, 0.4), (0.35, 0.4)]):
+        p.append(box("Shaving", (0.09, 0.05, 0.015), (x, y, 1.07), "M_WoodCut", rot=(0, 0, rad(i * 37))))
+    for i, (x, y) in enumerate([(0.4, 0.75), (0.7, 0.9), (-0.2, 0.85), (1.0, 0.7)]):
+        p.append(box("FloorShaving", (0.12, 0.06, 0.02), (x, y, 0.17), "M_WoodCut", rot=(0, 0, rad(i * 53))))
+
+    # Grindstone (right) and anvil on a stump (left).
+    p.append(box("GrindFrameL", (0.07, 0.4, 0.75), (1.68, 0.6, 0.53), "M_Wood"))
+    p.append(box("GrindFrameR", (0.07, 0.4, 0.75), (2.02, 0.6, 0.53), "M_Wood"))
+    p.append(disc_x("Grind", 0.33, 0.16, (1.85, 0.6, 0.88), "M_Stone", 18))
+    p.append(disc_x("GrindAxle", 0.05, 0.5, (1.85, 0.6, 0.88), "M_MetalDark", 8))
+    p.append(box("Crank", (0.04, 0.04, 0.24), (2.1, 0.6, 0.98), "M_MetalDark"))
+    p.append(box("Trough", (0.36, 0.5, 0.16), (1.85, 0.6, 0.36), "M_WoodDark", 0.01))
+    p.append(fcyl("Stump", 0.3, 0.55, (-1.85, 0.55, 0.43), "M_Bark", verts=10))
+    p.append(fcyl("StumpTop", 0.27, 0.02, (-1.85, 0.55, 0.71), "M_WoodCut", verts=10))
+    p.append(box("Anvil", (0.42, 0.2, 0.16), (-1.85, 0.55, 0.88), "M_MetalDark", 0.02))
+    p.append(box("AnvilWaist", (0.2, 0.14, 0.12), (-1.85, 0.55, 0.76), "M_MetalDark"))
+    p.append(ftube("Horn", (-1.64, 0.55, 0.9), (-1.42, 0.55, 0.92), 0.08, 0.015, "M_MetalDark", 8))
+
+    # Sawhorse with a log, just off the deck.
+    for x in (2.75, 3.45):
+        for s in (-1, 1):
+            p.append(box("HorseLeg", (0.06, 0.06, 0.8), (x, 1.0 + s * 0.15, 0.38), "M_Wood", rot=(rad(18) * s, 0, 0)))
+    p.append(span("HorseBeam", 2.65, 3.55, 0.94, 1.06, 0.74, 0.82, "M_Wood"))
+    p.extend(log_x("HorseLog", 0.16, 1.2, (3.1, 1.0, 0.98), "M_Bark", 9))
+
+    # Hanging lantern under the roof.
+    p.append(box("LanternChain", (0.02, 0.02, 0.35), (0, 0.65, 2.62), "M_MetalDark"))
+    p.append(box("LanternCap", (0.2, 0.2, 0.05), (0, 0.65, 2.43), "M_MetalDark", 0.01))
+    p.append(box("LanternGlow", (0.12, 0.12, 0.18), (0, 0.65, 2.3), "M_Glow"))
+    p.append(box("LanternBase", (0.18, 0.18, 0.04), (0, 0.65, 2.19), "M_MetalDark"))
+
+    # Sign standing on the front edge of the roof, clear of the view into the workshop.
+    p.append(box("SignBoard", (2.0, 0.07, 0.42), (0, 1.5, 3.08), "M_Sign", 0.02))
+    p.append(box("SignFrame", (2.1, 0.05, 0.52), (0, 1.46, 3.08), "M_WoodDark"))
+    for x in (-0.8, 0.8):
+        p.append(box("SignPost", (0.06, 0.06, 0.5), (x, 1.42, 2.88), "M_WoodDark"))
+
+    # Collisions.
+    p.append(col_span("Bench", -1.5, 1.5, -0.5, 0.75, 0.0, 1.1))
+    p.append(col_span("Wall", -2.2, 2.2, -1.4, -1.0, 0.0, 3.0))
+    p.append(col_span("Grind", 1.6, 2.15, 0.3, 0.9, 0.0, 1.25))
+    p.append(col_span("Anvil", -2.15, -1.4, 0.25, 0.85, 0.0, 1.0))
+    p.append(col_span("Sawhorse", 2.6, 3.65, 0.7, 1.3, 0.0, 1.15))
+    for x in (-2.05, 2.05):
+        p.append(col_span("FrontPost", x - 0.12, x + 0.12, 1.03, 1.27, 0.0, 2.8))
+    empty("SignAnchor", (0, 1.54, 3.08))
+    finish("Workbench", p)
 
 
 @model

@@ -18,9 +18,8 @@ namespace ChoppingTrees
             if (Physics.SphereCast(m_Camera.position, 0.2f, m_Camera.forward, out var hit, m_Reach, GameLayers.AimMask, QueryTriggerInteraction.Collide))
                 Current = hit.collider.GetComponentInParent<IInteractable>();
             if (Current != null && Current.Prompt == null) Current = null;
-            var kb = Keyboard.current;
             // Interact even when it can't succeed: each interactable explains why it failed.
-            if (Current != null && kb != null && kb.eKey.wasPressedThisFrame) Current.Interact();
+            if (Current != null && GameInput.UsePressed) Current.Interact();
         }
     }
 }

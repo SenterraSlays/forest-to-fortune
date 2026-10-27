@@ -6,6 +6,8 @@ namespace ChoppingTrees
         Automation,
         Economy,
         Forest,
+        /// <summary>Rebirth perks bought with skill points (shown in the Rebirth screen, not the Workbench).</summary>
+        Legacy,
     }
 
     /// <summary>What an upgrade level changes. Effects are aggregated by <see cref="Upgrades"/>.</summary>
@@ -55,6 +57,16 @@ namespace ChoppingTrees
         TreeRegrowth,
         /// <summary>+effectPerLevel multiplier for the cash some trees (Goldbark) drop.</summary>
         TreeCashBonus,
+        /// <summary>Level = axe tier every run starts with.</summary>
+        StartingAxe,
+        /// <summary>Money every run starts with: effectPerLevel * 5^(level - 1).</summary>
+        StartingMoney,
+        /// <summary>+effectPerLevel backpack capacity multiplier.</summary>
+        BackpackBonus,
+        /// <summary>Level = how many locked forests (in order) every run starts with open.</summary>
+        StartingAreas,
+        /// <summary>Level = machines of <c>targetId</c> every run starts with.</summary>
+        StartingMachines,
     }
 
     public enum MachineKind

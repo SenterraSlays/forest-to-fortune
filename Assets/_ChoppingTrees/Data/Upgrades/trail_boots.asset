@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: clean_cuts
     level: 1
   sortOrder: 5
+  legacy: 0
   treePosition: {x: -1.65, y: 5.1}
   icon: boot

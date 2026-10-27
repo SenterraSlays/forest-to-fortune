@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ChoppingTrees
 {
@@ -13,6 +15,34 @@ namespace ChoppingTrees
         float m_Target;
 
         protected virtual bool Modal => true;
+
+        static readonly List<UIScreen> s_Stack = new List<UIScreen>();
+
+        /// <summary>The most recently opened modal screen that is still open (controller focus goes here).</summary>
+        public static UIScreen TopModal
+        {
+            get
+            {
+                for (int i = s_Stack.Count - 1; i >= 0; i--)
+                    if (s_Stack[i] != null && s_Stack[i].IsOpen) return s_Stack[i];
+                return null;
+            }
+        }
+
+        /// <summary>What a controller focuses when this screen opens: by default the first
+        /// interactable control (top-left first).</summary>
+        public virtual GameObject DefaultSelection()
+        {
+            Selectable best = null;
+            foreach (var s in GetComponentsInChildren<Selectable>())
+            {
+                if (!s.IsInteractable() || !s.isActiveAndEnabled) continue;
+                if (best == null) { best = s; continue; }
+                Vector3 a = s.transform.position, b = best.transform.position;
+                if (a.y > b.y + 1f || Mathf.Abs(a.y - b.y) <= 1f && a.x < b.x) best = s;
+            }
+            return best != null ? best.gameObject : null;
+        }
         protected virtual float FadeSpeed => 8f;
         public bool IsOpen { get; private set; }
 
@@ -41,7 +71,12 @@ namespace ChoppingTrees
             Group.interactable = true;
             Group.blocksRaycasts = Modal;
             transform.SetAsLastSibling();
-            if (Modal) UIState.SetOpen(this, true);
+            if (Modal)
+            {
+                UIState.SetOpen(this, true);
+                s_Stack.Remove(this);
+                s_Stack.Add(this);
+            }
             OnOpened();
         }
 
@@ -52,7 +87,14 @@ namespace ChoppingTrees
             m_Target = 0f;
             Group.interactable = false;
             Group.blocksRaycasts = false;
-            if (Modal) UIState.SetOpen(this, false);
+            if (Modal)
+            {
+                UIState.SetOpen(this, false);
+                s_Stack.Remove(this);
+                var es = UnityEngine.EventSystems.EventSystem.current;
+                if (es != null && es.currentSelectedGameObject != null && es.currentSelectedGameObject.transform.IsChildOf(transform))
+                    es.SetSelectedGameObject(null);
+            }
             OnClosed();
         }
 

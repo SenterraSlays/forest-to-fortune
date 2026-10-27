@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: chopper_count
     level: 1
   sortOrder: 1
+  legacy: 0
   treePosition: {x: -0.55, y: 2.6}
   icon: gear

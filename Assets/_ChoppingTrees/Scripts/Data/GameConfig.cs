@@ -48,6 +48,8 @@ namespace ChoppingTrees
         public double rebirthCostGrowth = 1.08;
         [Tooltip("Extra share of all money earned per rebirth (0.1 = +10% each).")]
         public double rebirthBonus = 0.1;
+        [Tooltip("Skill points granted per rebirth (spent on Legacy perks).")]
+        public int rebirthSkillPoints = 1;
 
         [Header("Economy")]
         public double startingMoney;

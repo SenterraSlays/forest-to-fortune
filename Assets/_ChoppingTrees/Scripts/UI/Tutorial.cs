@@ -116,8 +116,7 @@ namespace ChoppingTrees
 
         void Update()
         {
-            var kb = Keyboard.current;
-            if (kb != null && kb.hKey.wasPressedThisFrame && UIState.GameplayInput) m_Hidden = !m_Hidden;
+            if (GameInput.HintsTogglePressed && UIState.GameplayInput) m_Hidden = !m_Hidden;
             bool show = !m_Model.State.TutorialDone && GameSettings.Data.showTutorial && !m_Hidden
                         && Game.Instance.Phase == GamePhase.Playing && !UIState.AnyMenuOpen;
             m_Group.alpha = Mathf.MoveTowards(m_Group.alpha, show ? 1f : 0f, Time.unscaledDeltaTime * 5f);
@@ -135,7 +134,7 @@ namespace ChoppingTrees
             switch (Step)
             {
                 case StepChop:
-                    body = "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
+                    body = GameInput.UsingGamepad ? "Walk up to a tree and <b>hold RT</b> to chop it down." : "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
                     icon = "axe";
                     break;
                 case StepCollect:
@@ -143,12 +142,12 @@ namespace ChoppingTrees
                     icon = "log";
                     break;
                 case StepSell:
-                    body = "Take your wood to the <b>Lumber Market</b> and press <b>E</b> to sell it.";
+                    body = $"Take your wood to the <b>Lumber Market</b> and press <b>{GameInput.Key("use")}</b> to sell it.";
                     icon = "coin";
                     target = SellPoint.Instance != null ? SellPoint.Instance.transform : null;
                     break;
                 case StepUpgrade:
-                    body = "Open the <b>Workbench</b> skill tree (E) and unlock the <b>Steel Axe</b>.";
+                    body = $"Open the <b>Workbench</b> skill tree ({GameInput.Key("use")}) and unlock the <b>Steel Axe</b>.";
                     icon = "leaf";
                     target = UpgradeStation.Instance != null ? UpgradeStation.Instance.transform : null;
                     break;

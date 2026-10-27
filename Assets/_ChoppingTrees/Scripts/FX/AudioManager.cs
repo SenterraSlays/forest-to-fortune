@@ -13,6 +13,12 @@ namespace ChoppingTrees
         AudioSource[] m_Pool;
         AudioSource m_Ui;
         int m_Next;
+        /// <summary>Looping sources (wind, machines) with their base volume, for the ambience slider.</summary>
+        readonly System.Collections.Generic.List<(AudioSource source, float volume)> m_Loops = new System.Collections.Generic.List<(AudioSource, float)>();
+
+        static float EffectsVolume => GameSettings.Data.effectsVolume;
+        static float InterfaceVolume => GameSettings.Data.interfaceVolume;
+        static float AmbienceVolume => GameSettings.Data.ambienceVolume;
 
         void Awake()
         {
@@ -36,10 +42,21 @@ namespace ChoppingTrees
             m_Ui.playOnAwake = false;
             m_Ui.spatialBlend = 0f;
             m_Ui.ignoreListenerPause = true;
+            GameSettings.Changed += UpdateLoops;
+        }
+
+        void UpdateLoops()
+        {
+            for (int i = m_Loops.Count - 1; i >= 0; i--)
+            {
+                if (m_Loops[i].source == null) { m_Loops.RemoveAt(i); continue; }
+                m_Loops[i].source.volume = m_Loops[i].volume * AmbienceVolume;
+            }
         }
 
         void OnDestroy()
         {
+            GameSettings.Changed -= UpdateLoops;
             if (Instance == this) Instance = null;
         }
 
@@ -61,7 +78,7 @@ namespace ChoppingTrees
             m_Next = (m_Next + 1) % m_Pool.Length;
             s.transform.position = position;
             s.pitch = pitch * (1f + Random.Range(-pitchJitter, pitchJitter));
-            s.volume = v * volume;
+            s.volume = v * volume * EffectsVolume;
             s.clip = clip;
             s.Play();
         }
@@ -72,7 +89,7 @@ namespace ChoppingTrees
             var clip = Clip(name, out float v);
             if (clip == null) return;
             m_Ui.pitch = pitch * (1f + Random.Range(-pitchJitter, pitchJitter));
-            m_Ui.PlayOneShot(clip, v * volume);
+            m_Ui.PlayOneShot(clip, v * volume * InterfaceVolume);
         }
 
         public static void Sfx(string name, Vector3 pos, float volume = 1f, float pitch = 1f)
@@ -93,7 +110,8 @@ namespace ChoppingTrees
             var s = parent.gameObject.AddComponent<AudioSource>();
             s.clip = clip;
             s.loop = true;
-            s.volume = v * volume;
+            s.volume = v * volume * AmbienceVolume;
+            m_Loops.Add((s, v * volume));
             s.spatialBlend = parent == transform ? 0f : 1f;
             s.rolloffMode = AudioRolloffMode.Linear;
             s.minDistance = 2f;

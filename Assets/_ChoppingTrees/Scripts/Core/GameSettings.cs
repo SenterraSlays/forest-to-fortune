@@ -43,6 +43,17 @@ namespace ChoppingTrees
             d.displayMode = Mathf.Clamp(d.displayMode, 0, WindowModes.Length - 1);
             AudioListener.volume = d.masterVolume;
             d.renderScale = Mathf.Clamp(d.renderScale, 0.5f, 1f);
+            d.brightness = Mathf.Clamp(d.brightness, -1f, 1f);
+            d.uiScale = Mathf.Clamp(d.uiScale, 0.75f, 1.25f);
+            d.effectsVolume = Mathf.Clamp01(d.effectsVolume);
+            d.ambienceVolume = Mathf.Clamp01(d.ambienceVolume);
+            d.interfaceVolume = Mathf.Clamp01(d.interfaceVolume);
+            d.stickSensitivity = Mathf.Clamp(d.stickSensitivity, 0.2f, 3f);
+            d.stickDeadZone = Mathf.Clamp(d.stickDeadZone, 0.05f, 0.4f);
+            QualitySettings.globalTextureMipmapLimit = (int)d.textures;
+            QualitySettings.anisotropicFiltering = d.anisotropic ? AnisotropicFiltering.ForceEnable : AnisotropicFiltering.Disable;
+            QualitySettings.lodBias = d.detail switch { DetailLevel.Low => 0.6f, DetailLevel.Medium => 1f, DetailLevel.High => 1.5f, _ => 2.5f };
+            Effects.Density = d.effects switch { EffectsQuality.Low => 0.4f, EffectsQuality.Medium => 0.7f, _ => 1f };
             d.frameRateCap = Mathf.Clamp(d.frameRateCap, 0, 360);
             QualitySettings.vSyncCount = d.vSync ? 1 : 0;
             Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
@@ -100,6 +111,13 @@ namespace ChoppingTrees
             }
             if (Screen.width != size.x || Screen.height != size.y || Screen.fullScreenMode != mode)
                 Screen.SetResolution(size.x, size.y, mode);
+        }
+
+        /// <summary>Every setting back to its default (High preset, native resolution).</summary>
+        public static void ResetToDefaults()
+        {
+            s_Data = new SettingsData { version = SettingsData.CurrentVersion };
+            Apply();
         }
 
         public static void Save()

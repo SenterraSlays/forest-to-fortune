@@ -118,6 +118,23 @@ namespace ChoppingTrees.EditorTools
                     null, Req("area_grove", 1)),
                 Up("gold_prospector", "Gold Prospector", "Know where to look: Goldbark trees drop more cash.", UpgradeCategory.Forest, UpgradeEffect.TreeCashBonus, null, 5, 400000, 2.0, null, 0.25f, 3,
                     null, Req("area_ridge", 1)),
+
+                // ---- Legacy perks: bought with skill points (1 per rebirth), kept through rebirths.
+                // Costs are in skill points (rounded up).
+                Legacy(Up("heirloom_axe", "Heirloom Axe", "Start every run with a better axe already forged.", UpgradeCategory.Legacy, UpgradeEffect.StartingAxe, null, 3, 0, 1,
+                    new double[] { 2, 4, 8 }, 1, 0)),
+                Legacy(Up("head_start", "Head Start", "Start every run with money in your pocket.", UpgradeCategory.Legacy, UpgradeEffect.StartingMoney, null, 4, 0, 1,
+                    new double[] { 1, 2, 4, 8 }, 500, 1)),
+                Legacy(Up("starter_kit", "Starter Kit", "Start every run with Auto-Choppers already running.", UpgradeCategory.Legacy, UpgradeEffect.StartingMachines, "chopper", 4, 0, 1,
+                    new double[] { 2, 3, 5, 8 }, 1, 2)),
+                Legacy(Up("forest_charter", "Forest Charter", "Start every run with the forest gates already open.", UpgradeCategory.Legacy, UpgradeEffect.StartingAreas, null, 2, 0, 1,
+                    new double[] { 4, 10 }, 1, 3)),
+                Legacy(Up("titan_grip", "Titan Grip", "A grip that never tires: far more damage with every swing.", UpgradeCategory.Legacy, UpgradeEffect.AxeDamage, null, 10, 1, 1.3, null, 0.5f, 4)),
+                Legacy(Up("quick_hands", "Quick Hands", "Swing faster, forever.", UpgradeCategory.Legacy, UpgradeEffect.AxeSpeed, null, 5, 1, 1.5, null, 0.1f, 5)),
+                Legacy(Up("deep_pockets", "Deep Pockets", "Every backpack holds much more.", UpgradeCategory.Legacy, UpgradeEffect.BackpackBonus, null, 5, 1, 1.5, null, 0.5f, 6)),
+                Legacy(Up("lodestone", "Lodestone", "A permanently stronger log magnet.", UpgradeCategory.Legacy, UpgradeEffect.MagnetRange, null, 5, 1, 1.4, null, 3f, 7)),
+                Legacy(Up("master_engineer", "Master Engineer", "Every machine you build runs harder.", UpgradeCategory.Legacy, UpgradeEffect.ProductionBonus, null, 10, 1, 1.3, null, 0.25f, 8)),
+                Legacy(Up("silver_tongue", "Silver Tongue", "Buyers trust you: everything sells for more.", UpgradeCategory.Legacy, UpgradeEffect.SellBonus, null, 10, 1, 1.3, null, 0.15f, 9)),
                 Up("night_shift", "Night Shift", "Machines keep working longer while the game is closed.", UpgradeCategory.Economy, UpgradeEffect.OfflineHours, null, 5, 2000, 3, null, 2f, 3,
                     null, Req("wood_price", 1), Req("chopper_count", 1)),
 
@@ -164,6 +181,16 @@ namespace ChoppingTrees.EditorTools
             foreach (var u in ups)
                 if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }
 
+            // Legacy perks are shown as cards in the Rebirth screen (no tree position).
+            var legacyIcons = new Dictionary<string, string>
+            {
+                ["heirloom_axe"] = "axe", ["head_start"] = "coin", ["starter_kit"] = "saw", ["forest_charter"] = "pine",
+                ["titan_grip"] = "gem", ["quick_hands"] = "bolt", ["deep_pockets"] = "backpack", ["lodestone"] = "magnet",
+                ["master_engineer"] = "gear", ["silver_tongue"] = "tag",
+            };
+            foreach (var u in ups)
+                if (legacyIcons.TryGetValue(u.id, out var icon)) { u.icon = icon; u.treePosition = Vector2.zero; }
+
             // ---- config and database
             var cfg = Asset<GameConfig>($"{Data}/GameConfig.asset");
             // Wood carried by hand per backpack tier (machine output goes to the yard instead).
@@ -173,6 +200,7 @@ namespace ChoppingTrees.EditorTools
             cfg.rebirthBaseCost = 5000;
             cfg.rebirthCostGrowth = 1.08;
             cfg.rebirthBonus = 0.1;
+            cfg.rebirthSkillPoints = 1;
             var db = Asset<GameDatabase>(DatabasePath);
             db.config = cfg;
             db.resources = new[] { wood, planks };
@@ -213,7 +241,13 @@ namespace ChoppingTrees.EditorTools
             var u = Asset<UpgradeDef>($"{Data}/Upgrades/{id}.asset");
             u.id = id; u.displayName = name; u.description = desc; u.category = cat; u.effect = effect; u.targetId = target;
             u.maxLevel = max; u.baseCost = baseCost; u.costGrowth = growth; u.explicitCosts = costs; u.effectPerLevel = eff; u.sortOrder = sort;
-            u.levelNames = levelNames; u.requires = requires;
+            u.levelNames = levelNames; u.requires = requires; u.legacy = false;
+            return u;
+        }
+
+        static UpgradeDef Legacy(UpgradeDef u)
+        {
+            u.legacy = true;
             return u;
         }
     }

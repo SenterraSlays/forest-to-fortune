@@ -39,8 +39,10 @@ namespace ChoppingTrees
             canvas.sortingOrder = 10;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.referenceResolution = new Vector2(1920, 1080) / GameSettings.Data.uiScale;
             scaler.matchWidthOrHeight = 0.5f;
+            // Interface scale setting: a smaller reference resolution makes everything bigger.
+            GameSettings.Changed += () => { if (scaler != null) scaler.referenceResolution = new Vector2(1920, 1080) / GameSettings.Data.uiScale; };
             canvasGo.AddComponent<GraphicRaycaster>();
             var root = (RectTransform)canvasGo.transform;
 
@@ -82,19 +84,25 @@ namespace ChoppingTrees
 
         void Update()
         {
-            var kb = Keyboard.current;
-            if (kb == null || !kb.escapeKey.wasPressedThisFrame) return;
+            GameInput.Tick();
+            // Esc / Start: close the top menu or pause. B: back out of menus only.
+            bool menu = GameInput.MenuPressed;
+            bool back = GameInput.BackPressed && UIState.AnyMenuOpen;
+            if (!menu && !back) return;
             if (m_Confirm.IsOpen) m_Confirm.Close();
             else if (m_Settings.IsOpen) m_Settings.Close();
             else if (m_Offline.IsOpen) m_Offline.Close();
             else if (m_Rebirth.IsOpen) m_Rebirth.Close();
             else if (m_Upgrades.IsOpen) m_Upgrades.Close();
             else if (m_Pause.IsOpen) m_Pause.Close();
-            else if (Game.Instance.Phase == GamePhase.Playing) m_Pause.Open();
+            else if (menu && Game.Instance.Phase == GamePhase.Playing) m_Pause.Open();
         }
+
+        void OnDestroy() => GameInput.StopRumble();
 
         void OnApplicationFocus(bool focus)
         {
+            if (!focus) GameInput.StopRumble();
             // Re-lock the cursor when coming back to the window.
             if (focus) UIState.ApplyCursor();
         }

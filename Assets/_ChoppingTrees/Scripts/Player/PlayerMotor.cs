@@ -46,15 +46,12 @@ namespace ChoppingTrees
             Vector2 input = Vector2.zero;
             bool jump = false;
             Sprinting = false;
-            var kb = Keyboard.current;
-            if (UIState.GameplayInput && kb != null)
+            if (UIState.GameplayInput)
             {
-                if (kb.wKey.isPressed) input.y += 1f;
-                if (kb.sKey.isPressed) input.y -= 1f;
-                if (kb.dKey.isPressed) input.x += 1f;
-                if (kb.aKey.isPressed) input.x -= 1f;
-                jump = kb.spaceKey.wasPressedThisFrame;
-                Sprinting = kb.leftShiftKey.isPressed && input.y > 0.1f;
+                // Keyboard or left stick (see GameInput).
+                input = GameInput.Move;
+                jump = GameInput.JumpPressed;
+                Sprinting = GameInput.Sprint && input.y > 0.1f;
             }
             input = Vector2.ClampMagnitude(input, 1f);
 

@@ -28,5 +28,6 @@ MonoBehaviour:
   - upgradeId: sawmill_count
     level: 1
   sortOrder: 3
+  legacy: 0
   treePosition: {x: 1.55, y: 3.8}
   icon: bolt

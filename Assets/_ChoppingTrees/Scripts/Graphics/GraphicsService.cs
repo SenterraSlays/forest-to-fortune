@@ -9,7 +9,8 @@ namespace ChoppingTrees
     /// <summary>
     /// Applies the graphics settings: render scale and the upscaler (AMD FSR 1, Unity STP,
     /// NVIDIA DLSS or AMD FSR 2 through URP's upscaler framework, each only when the hardware
-    /// check passes) plus camera anti-aliasing. If an upscaler throws while rendering, the game
+    /// check passes) plus camera anti-aliasing, and the quality options: shadows, bloom,
+    /// brightness and how much small scenery (grass, flowers, mushrooms, twigs) is shown. If an upscaler throws while rendering, the game
     /// switches back to native rendering by itself. In the editor, changes to the shared URP asset
     /// are undone when play mode ends.
     /// </summary>
@@ -25,7 +26,13 @@ namespace ChoppingTrees
         bool m_FellBack;
         int m_RetryFrames;
         string m_OrigUpscaler;
-        float m_OrigRenderScale;
+        float m_OrigRenderScale, m_OrigShadowDistance;
+        int m_OrigShadowRes, m_OrigCascades;
+        Bloom m_Bloom;
+        ColorAdjustments m_Color;
+        float m_BaseExposure;
+        readonly System.Collections.Generic.List<GameObject> m_Scenery = new System.Collections.Generic.List<GameObject>();
+        DetailLevel m_SceneryLevel = (DetailLevel)(-1);
 
         void Awake()
         {
@@ -34,6 +41,9 @@ namespace ChoppingTrees
             {
                 m_OrigUpscaler = m_Asset.upscalerName;
                 m_OrigRenderScale = m_Asset.renderScale;
+                m_OrigShadowDistance = m_Asset.shadowDistance;
+                m_OrigShadowRes = m_Asset.mainLightShadowmapResolution;
+                m_OrigCascades = m_Asset.shadowCascadeCount;
             }
             else Debug.LogWarning("[Graphics] The active render pipeline is not URP; upscaling is unavailable.");
             Debug.Log("[Display] " + DisplayModes.Describe());
@@ -50,6 +60,12 @@ namespace ChoppingTrees
             if (m_Asset == null) return;
             m_Asset.upscalerName = m_OrigUpscaler;
             m_Asset.renderScale = m_OrigRenderScale;
+#endif
+#if UNITY_EDITOR
+            if (m_Asset == null) return;
+            m_Asset.shadowDistance = m_OrigShadowDistance;
+            m_Asset.mainLightShadowmapResolution = m_OrigShadowRes;
+            m_Asset.shadowCascadeCount = m_OrigCascades;
 #endif
         }
 
@@ -81,7 +97,69 @@ namespace ChoppingTrees
         public void Apply()
         {
             ApplyUpscaling(GameSettings.Data);
+            ApplyQuality(GameSettings.Data);
             Applied?.Invoke();
+        }
+
+        void ApplyQuality(SettingsData s)
+        {
+            if (m_Asset != null)
+            {
+                (float dist, int res, int cascades) = s.shadows switch
+                {
+                    ShadowQuality.Off => (0f, 512, 1),
+                    ShadowQuality.Low => (35f, 1024, 1),
+                    ShadowQuality.Medium => (60f, 2048, 2),
+                    ShadowQuality.High => (90f, 2048, 3),
+                    _ => (140f, 4096, 4),
+                };
+                m_Asset.shadowDistance = dist;
+                m_Asset.mainLightShadowmapResolution = res;
+                m_Asset.shadowCascadeCount = cascades;
+            }
+            var sun = RenderSettings.sun;
+            if (sun != null)
+                sun.shadows = s.shadows == ShadowQuality.Off ? LightShadows.None : s.shadows == ShadowQuality.Low ? LightShadows.Hard : LightShadows.Soft;
+
+            // Post-processing on a runtime copy of the profile (the asset is never changed).
+            if (m_Bloom == null && m_Color == null)
+            {
+                var volume = FindAnyObjectByType<Volume>();
+                if (volume != null)
+                {
+                    var profile = volume.profile;
+                    profile.TryGet(out m_Bloom);
+                    if (profile.TryGet(out m_Color)) m_BaseExposure = m_Color.postExposure.value;
+                }
+            }
+            if (m_Bloom != null) m_Bloom.active = s.bloom;
+            if (m_Color != null) m_Color.postExposure.Override(m_BaseExposure + s.brightness * 1.2f);
+
+            ApplyScenery(s.detail);
+        }
+
+        /// <summary>Shows a share of the small props: Low 35%, Medium 60%, High 85%, Ultra all.
+        /// The same props are always kept for a level (picked by position), so nothing flickers.</summary>
+        void ApplyScenery(DetailLevel level)
+        {
+            if (level == m_SceneryLevel) return;
+            m_SceneryLevel = level;
+            if (m_Scenery.Count == 0)
+            {
+                var props = GameObject.Find("Props");
+                if (props == null) return;
+                foreach (Transform t in props.transform)
+                    if (t.name.StartsWith("Grass") || t.name.StartsWith("Flower") || t.name.StartsWith("Mushrooms") || t.name.StartsWith("Branch"))
+                        m_Scenery.Add(t.gameObject);
+            }
+            float keep = level switch { DetailLevel.Low => 0.35f, DetailLevel.Medium => 0.6f, DetailLevel.High => 0.85f, _ => 1f };
+            foreach (var go in m_Scenery)
+            {
+                var p = go.transform.position;
+                float h = Mathf.Abs(Mathf.Sin(p.x * 12.9898f + p.z * 78.233f) * 43758.5453f) % 1f;
+                bool on = h < keep;
+                if (go.activeSelf != on) go.SetActive(on);
+            }
         }
 
         void ApplyUpscaling(SettingsData s)

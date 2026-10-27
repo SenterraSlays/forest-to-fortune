@@ -257,6 +257,59 @@ namespace ChoppingTrees.Tests
         }
 
         [Test]
+        public void RebirthsGiveSkillPointsForLegacyPerksThatAreKept()
+        {
+            var m = NewModel(1e9);
+            var axe = m_Db.Upgrade("heirloom_axe");
+            Assert.IsTrue(axe.legacy);
+            Assert.IsFalse(m.TryBuy(axe, out var why), "Legacy perks cost skill points, not money");
+            StringAssert.Contains("skill points", why);
+
+            Assert.IsTrue(m.TryRebirth(10, out _));
+            Assert.AreEqual(10 * m_Db.config.rebirthSkillPoints, m.State.SkillPoints);
+
+            // Buying applies the head start immediately: the axe and free choppers appear now.
+            Buy(m, m_Db, "heirloom_axe", 2);
+            Assert.AreEqual(10 - 2 - 4, m.State.SkillPoints, "costs 2 + 4 skill points");
+            Assert.AreEqual(2, m.Upgrades.AxeTier);
+            Buy(m, m_Db, "starter_kit");
+            Assert.AreEqual(1, m.Upgrades.MachineCount("chopper"));
+            Buy(m, m_Db, "head_start");
+            Assert.AreEqual(500, m.Upgrades.StartingMoney, 1e-9);
+            Assert.AreEqual(1, m.State.SkillPoints);
+
+            // The next rebirth keeps the perks and grants the head start again.
+            m.State.Money = 1e9;
+            Buy(m, m_Db, "axe_tier"); // a normal upgrade: this one resets
+            Assert.IsTrue(m.TryRebirth(1, out _));
+            Assert.AreEqual(2, m.Upgrades.Level(axe), "Legacy perks are kept");
+            Assert.AreEqual(2, m.Upgrades.AxeTier, "the heirloom axe, not the tier bought last run");
+            Assert.AreEqual(1, m.Upgrades.MachineCount("chopper"));
+            Assert.AreEqual(m_Db.config.startingMoney + 500, m.State.Money, 1e-9);
+            Assert.AreEqual(2, m.State.SkillPoints);
+            Assert.AreEqual(11, m.State.SkillPointsEarned);
+
+            Buy(m, m_Db, "deep_pockets");
+            Assert.AreEqual(Upgrades.CapacityForTier(m_Db.config, 0) * (1 + m_Db.Upgrade("deep_pockets").effectPerLevel), m.BackpackCapacity, 1e-6);
+        }
+
+        [Test]
+        public void ForestCharterOpensForestsEveryRunAndOldSavesGetTheirPoints()
+        {
+            var s = new GameState { HasPlayed = true, Rebirths = 15 };
+            var m = new GameModel(m_Db, s);
+            Assert.AreEqual(15, m.State.SkillPoints, "rebirths from before skill points existed still pay out");
+            Buy(m, m_Db, "forest_charter", 2);
+            Assert.IsTrue(m.Upgrades.AreaUnlocked(Array.Find(m_Db.areas, a => a.id == "grove")));
+            Assert.IsTrue(m.Upgrades.AreaUnlocked(Array.Find(m_Db.areas, a => a.id == "ridge")));
+            m.State.Money = 1e9;
+            Assert.IsTrue(m.TryRebirth(1, out _));
+            Assert.IsTrue(m.Upgrades.AreaUnlocked(Array.Find(m_Db.areas, a => a.id == "ridge")));
+            var again = new GameModel(m_Db, m.State);
+            Assert.AreEqual(m.State.SkillPoints, again.State.SkillPoints, "points are only owed once");
+        }
+
+        [Test]
         public void LogMagnetAddsRangePerLevel()
         {
             Assert.IsNull(m_Db.Upgrade("courier"), "the Wood Courier was replaced by the Log Magnet");
@@ -399,12 +452,13 @@ namespace ChoppingTrees.Tests
             foreach (var u in m_Db.upgrades)
             {
                 Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
+                if (u.legacy) continue; // Legacy perks are cards in the Rebirth screen, not tree nodes
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
                 Assert.That(u.treePosition.x, Is.InRange(-5.5f, 5.5f), u.id);
                 Assert.That(u.treePosition.y, Is.InRange(0f, 5.8f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.
-            var roots = System.Array.FindAll(m_Db.upgrades, u => u.requires == null || u.requires.Length == 0);
+            var roots = System.Array.FindAll(m_Db.upgrades, u => !u.legacy && (u.requires == null || u.requires.Length == 0));
             CollectionAssert.AreEquivalent(new[] { "axe_tier", "chopper_count", "wood_price" }, System.Array.ConvertAll(roots, u => u.id));
         }
 
