@@ -29,5 +29,5 @@ MonoBehaviour:
     level: 1
   sortOrder: 2
   legacy: 0
-  treePosition: {x: -2.75, y: 3.85}
+  treePosition: {x: -3.3, y: 3.95}
   icon: bolt

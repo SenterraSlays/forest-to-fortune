@@ -5,14 +5,20 @@ namespace ChoppingTrees
 {
     /// <summary>
     /// Makes the skill tree movable: drag with any mouse button to pan, scroll to zoom towards the
-    /// cursor. Zoom 1 (the default) shows the whole tree. The view eases to its target and is
-    /// clamped so the tree can't be lost.
+    /// cursor. The tree is bigger than the window: the default view is close to full size around
+    /// <see cref="Home"/> (the trunk), zooming all the way out (zoom 1) shows the whole tree. The
+    /// view eases to its target and is clamped so the tree can't be lost.
     /// Sits on the tree area; nodes still get their clicks (a drag that starts on a node pans
     /// instead of clicking it).
     /// </summary>
     public class SkillTreeView : MonoBehaviour, IBeginDragHandler, IDragHandler, IScrollHandler
     {
-        public const float MaxZoom = 2.2f;
+        public const float MaxZoom = 2.8f;
+        /// <summary>Scale of the default view (about full size).</summary>
+        const float HomeScale = 0.92f;
+
+        /// <summary>Content point (origin bottom-left) the default view is centred on.</summary>
+        public Vector2 Home { get; set; }
 
         RectTransform m_Viewport, m_Content;
         Vector2 m_Size;
@@ -43,11 +49,12 @@ namespace ChoppingTrees
             m_Ready = true;
         }
 
-        /// <summary>Back to the whole tree, centred.</summary>
+        /// <summary>Back to the default view: about full size, centred on <see cref="Home"/>.</summary>
         public void ResetView(bool instant = false)
         {
-            m_TargetZoom = 1f;
-            m_TargetPan = Vector2.zero;
+            m_TargetZoom = Mathf.Clamp(HomeScale / m_Fit, 1f, MaxZoom);
+            float s = m_Fit * m_TargetZoom;
+            m_TargetPan = Clamp(-(Home - m_Size * 0.5f) * s, m_TargetZoom, 0f);
             if (instant)
             {
                 m_Zoom = m_TargetZoom;

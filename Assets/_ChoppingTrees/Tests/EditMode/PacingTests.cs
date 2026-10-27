@@ -29,7 +29,7 @@ namespace ChoppingTrees.Tests
                 {
                     if (t.requiredAxeTier > up.AxeTier) continue;
                     // Perks: double-damage hits, faster walking, magnet range, more wood per tree, tree cash and lucky finds.
-                    double hits = System.Math.Ceiling(t.maxHealth / (up.AxeDamage * (1 + up.CritChance)));
+                    double hits = System.Math.Ceiling(t.maxHealth / (up.AxeDamage * (1 + up.CritChance * (up.CritMultiplier - 1))));
                     // + walking to the next tree and collecting; a longer log magnet range saves some of that.
                     double walk = 3.0 / up.MoveSpeedMultiplier * System.Math.Sqrt(m.Db.config.pickupMagnetRadius / up.MagnetRadius);
                     double seconds = hits * up.SwingSeconds + walk;

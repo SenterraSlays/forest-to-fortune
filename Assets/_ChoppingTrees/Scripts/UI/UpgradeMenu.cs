@@ -21,12 +21,14 @@ namespace ChoppingTrees
     {
         public static UpgradeMenu Instance { get; private set; }
 
-        // Tree units covered by the content (positions are x = -5.5..5.5, y = 0..6) and its size
+        // Tree units covered by the content (positions are x = -8..7, y = 0..8) and its size
         // in canvas units per tree unit. The band below the trunk leaves room for the overlays.
-        const float XMin = -5.95f, XMax = 5.95f, YMin = -1.25f, YMax = 6.35f;
+        const float XMin = -8.6f, XMax = 7.8f, YMin = -1.25f, YMax = 9.1f;
         const float UnitX = 136f, UnitY = 132f;
         static readonly Vector2 ContentSize = new Vector2((XMax - XMin) * UnitX, (YMax - YMin) * UnitY);
-        static readonly Vector2 RootPos = new Vector2(0f, 0.05f);
+        static readonly Vector2 RootPos = new Vector2(0.7f, 0.05f);
+        /// <summary>Where the default view looks: the trunk and the first rows of every branch.</summary>
+        static readonly Vector2 HomePos = new Vector2(0.2f, 3.3f);
         static readonly Color Wood = new Color(0.62f, 0.45f, 0.27f);
 
         class Pulse
@@ -154,6 +156,7 @@ namespace ChoppingTrees
             Vector2 area = m_TreeArea.rect.size;
             m_LastArea = area;
             Vector2 avail = area - new Vector2(16f, 16f);
+            m_View.Home = ToCanvas(HomePos);
             m_View.Configure(ContentSize, Mathf.Min(1f, avail.x / ContentSize.x, avail.y / ContentSize.y));
 
             foreach (var n in m_Nodes) n.Rect.anchoredPosition = ToCanvas(n.Def.treePosition);

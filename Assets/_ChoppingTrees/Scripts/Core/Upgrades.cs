@@ -21,6 +21,7 @@ namespace ChoppingTrees
         float m_DamageMult, m_SpeedMult, m_AutoSellSeconds, m_OfflineHours, m_ProductionBonus;
         float m_MagnetBonus, m_WoodYield, m_CritChance, m_MoveSpeed, m_Discount, m_SellBonus, m_LuckyChance, m_Regrowth, m_TreeCash, m_PackBonus, m_StartMoneyBase;
         int m_StartAxe, m_StartAreas, m_StartMoneyLevel;
+        float m_CritDamage, m_FellChance, m_UpgradeDiscount;
         readonly Dictionary<string, int> m_StartMachines = new Dictionary<string, int>();
         readonly Dictionary<string, double> m_ProcessorYield = new Dictionary<string, double>();
         readonly Dictionary<string, int> m_MachineCounts = new Dictionary<string, int>();
@@ -38,7 +39,18 @@ namespace ChoppingTrees
         public int Level(string id) => Level(m_Db.Upgrade(id));
 
         /// <summary>Price of the next level, after discounts (Spare Parts lowers machine prices).</summary>
-        public double NextCost(UpgradeDef u) => NumberUtil.Safe(u.CostForLevel(Level(u)) * (u.effect == UpgradeEffect.MachineCount ? 1.0 - MachineDiscount : 1.0));
+        public double NextCost(UpgradeDef u)
+        {
+            double mult = u.legacy ? 1.0 : u.effect == UpgradeEffect.MachineCount ? 1.0 - MachineDiscount : 1.0 - UpgradeDiscount;
+            return NumberUtil.Safe(u.CostForLevel(Level(u)) * mult);
+        }
+
+        /// <summary>Damage multiplier of a double-damage hit (2 plus Power Swing).</summary>
+        public float CritMultiplier { get { Refresh(); return 2f + m_CritDamage; } }
+        /// <summary>Chance (0..1) that a hit fells the tree outright.</summary>
+        public float FellChance { get { Refresh(); return Mathf.Clamp01(m_FellChance); } }
+        /// <summary>Share taken off non-machine upgrade prices (0..0.3).</summary>
+        public double UpgradeDiscount { get { Refresh(); return Mathf.Clamp(m_UpgradeDiscount, 0f, 0.3f); } }
 
         /// <summary>Why the upgrade can't be bought right now (null when it can).</summary>
         public string Blocker(UpgradeDef u, bool checkMoney = true)
@@ -216,6 +228,7 @@ namespace ChoppingTrees
             m_ProductionBonus = 0f;
             m_MagnetBonus = m_WoodYield = m_CritChance = m_MoveSpeed = m_Discount = m_SellBonus = m_LuckyChance = m_Regrowth = m_TreeCash = m_PackBonus = m_StartMoneyBase = 0f;
             m_StartAxe = m_StartAreas = m_StartMoneyLevel = 0;
+            m_CritDamage = m_FellChance = m_UpgradeDiscount = 0f;
             m_StartMachines.Clear();
             m_ProcessorYield.Clear();
             m_MachineCounts.Clear();
@@ -265,6 +278,9 @@ namespace ChoppingTrees
                         break;
                     case UpgradeEffect.BackpackBonus: m_PackBonus += e * lv; break;
                     case UpgradeEffect.StartingAreas: m_StartAreas = Math.Max(m_StartAreas, lv); break;
+                    case UpgradeEffect.CritDamage: m_CritDamage += e * lv; break;
+                    case UpgradeEffect.FellChance: m_FellChance += e * lv; break;
+                    case UpgradeEffect.UpgradeDiscount: m_UpgradeDiscount += e * lv; break;
                     case UpgradeEffect.StartingMachines: m_StartMachines[t] = Math.Max(m_StartMachines.TryGetValue(t, out var sm) ? sm : 0, lv); break;
                 }
             }

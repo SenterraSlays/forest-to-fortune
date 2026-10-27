@@ -35,5 +35,5 @@ MonoBehaviour:
     level: 1
   sortOrder: 5
   legacy: 0
-  treePosition: {x: -0.55, y: 3.95}
+  treePosition: {x: 0, y: 3.95}
   icon: crown

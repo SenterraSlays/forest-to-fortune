@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: old_growth
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: old_growth
+  displayName: Old Growth
+  description: 'Ancient trees: more wood from every tree you fell.'
+  category: 3
+  effect: 13
+  targetId: 
+  maxLevel: 5
+  baseCost: 30000
+  costGrowth: 2
+  explicitCosts: []
+  effectPerLevel: 0.1
+  levelNames: []
+  requires:
+  - upgradeId: area_grove
+    level: 1
+  sortOrder: 4
+  legacy: 0
+  treePosition: {x: -5.5, y: 3.95}
+  icon: pine

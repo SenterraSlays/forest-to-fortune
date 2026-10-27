@@ -27,6 +27,7 @@ namespace ChoppingTrees
             public TextMeshProUGUI level, effect;
             public readonly List<Image> pips = new List<Image>();
             public UIButton buy;
+            public SubmitSelectable select;
         }
 
         RectTransform m_RebirthTab, m_LegacyTab;
@@ -245,6 +246,7 @@ namespace ChoppingTrees
             foreach (var u in Game.Instance.Db.upgrades) if (u != null && u.legacy) perks.Add(u);
             perks.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
             foreach (var u in perks) m_Cards.Add(Card(grid, u));
+            WireGrid(g.constraintCount);
         }
 
         PerkCard Card(RectTransform grid, UpgradeDef u)
@@ -290,7 +292,27 @@ namespace ChoppingTrees
             c.effect.Layout(-1, -1, -1, 1);
             c.buy = UIFactory.Button(card.transform, "Unlock", () => BuyPerk(c), 17, ButtonStyle.Ghost, "star");
             c.buy.Layout(-1, 40);
+            // With a controller the whole card is the stop (A buys), even when it can't be afforded yet;
+            // the button is for the mouse.
+            c.buy.navigation = new Navigation { mode = Navigation.Mode.None };
+            c.select = card.gameObject.AddComponent<SubmitSelectable>();
+            c.select.Init(card, () => BuyPerk(c));
             return c;
+        }
+
+        /// <summary>Grid navigation between the perk cards (left / right along a row, up / down a column).</summary>
+        void WireGrid(int columns)
+        {
+            for (int i = 0; i < m_Cards.Count; i++)
+            {
+                var nav = new Navigation { mode = Navigation.Mode.Explicit };
+                int col = i % columns;
+                if (col > 0) nav.selectOnLeft = m_Cards[i - 1].select;
+                if (col < columns - 1 && i + 1 < m_Cards.Count) nav.selectOnRight = m_Cards[i + 1].select;
+                if (i - columns >= 0) nav.selectOnUp = m_Cards[i - columns].select;
+                if (i + columns < m_Cards.Count) nav.selectOnDown = m_Cards[i + columns].select;
+                m_Cards[i].select.navigation = nav;
+            }
         }
 
         void BuyPerk(PerkCard c)

@@ -54,12 +54,19 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    colour: a lock badge (locked, with dashed links), an up-arrow badge and a breathing ring (can
    buy), a progress arc around the rim (owned levels) and a gold check (maxed). Owned paths glow
    and carry a slow flow of light, and buying sends a pulse along the link into the node.
-   The tree is movable: drag it with any mouse button, scroll to zoom towards the cursor, and use
+   The tree has 54 upgrades and is bigger than the window: it opens near full size around the trunk;
+   drag it with any mouse button (or the right stick), scroll to zoom towards the cursor (or LT / RT), and use
    the buttons in the legend to zoom or go back to the whole-tree view.
    - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed) → Lucky Strike (chance of double damage); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness) → Clean Cuts (more wood per tree) → Trail Boots (move speed).
    - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers.
    - **Economy:** Market Contacts (wood price) → Log Magnet (pickup range), Night Shift (longer offline time) and Haggling (every sale pays more) → Lucky Finds (felled trees sometimes drop cash).
    - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash).
+   - **Later perks in every branch:** Honed Edge, Steady Rhythm, Cleave (chance to fell a tree in one
+     hit), Lucky Blade, Power Swing (bigger double-damage hits), Pack Mule, Timber Sense, Long Strides
+     (Axe); Twin Engines, Turbo Choppers, Fuel Efficiency, Assembly Line, Overtime Crew, Kiln Drying,
+     Overdrive Saws (Automation); Wood Brokers, Premium Planks, Strong Magnet, Long Nights, Export Deals,
+     Fortune's Favor, Bulk Buyer (cheaper non-machine upgrades) (Economy); Old Growth, Timber Rights,
+     Pathfinder, Ranger's Eye, Deep Roots, Forest Spirits, Golden Canopy (Forests).
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.

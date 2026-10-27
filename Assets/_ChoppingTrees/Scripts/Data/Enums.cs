@@ -67,6 +67,12 @@ namespace ChoppingTrees
         StartingAreas,
         /// <summary>Level = machines of <c>targetId</c> every run starts with.</summary>
         StartingMachines,
+        /// <summary>+effectPerLevel to the double-damage multiplier (base x2).</summary>
+        CritDamage,
+        /// <summary>+effectPerLevel chance per hit to fell the tree outright.</summary>
+        FellChance,
+        /// <summary>-effectPerLevel price for every skill tree upgrade that isn't a machine (capped at 30%).</summary>
+        UpgradeDiscount,
     }
 
     public enum MachineKind

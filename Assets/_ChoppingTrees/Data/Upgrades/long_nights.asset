@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: long_nights
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: long_nights
+  displayName: Long Nights
+  description: Machines keep earning far longer while the game is closed.
+  category: 2
+  effect: 8
+  targetId: 
+  maxLevel: 5
+  baseCost: 20000
+  costGrowth: 2.3
+  explicitCosts: []
+  effectPerLevel: 2
+  levelNames: []
+  requires:
+  - upgradeId: night_shift
+    level: 5
+  sortOrder: 9
+  legacy: 0
+  treePosition: {x: 5.8, y: 3.95}
+  icon: moon

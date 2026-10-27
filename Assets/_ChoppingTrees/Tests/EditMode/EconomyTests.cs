@@ -380,6 +380,47 @@ namespace ChoppingTrees.Tests
         }
 
         [Test]
+        public void EveryBranchHasPlentyOfUpgrades()
+        {
+            foreach (UpgradeCategory c in new[] { UpgradeCategory.Axe, UpgradeCategory.Automation, UpgradeCategory.Economy, UpgradeCategory.Forest })
+            {
+                int n = System.Array.FindAll(m_Db.upgrades, u => !u.legacy && u.category == c).Length;
+                Assert.GreaterOrEqual(n, 11, $"{c} has {n} upgrades");
+            }
+        }
+
+        [Test]
+        public void LateGamePerksChangeTheirNumbers()
+        {
+            var m = NewModel(1e15);
+            Assert.AreEqual(2f, m.Upgrades.CritMultiplier, 1e-6);
+            Buy(m, m_Db, "axe_tier");
+            Buy(m, m_Db, "axe_sharpen", 5);
+            Buy(m, m_Db, "axe_speed", 3);
+            Buy(m, m_Db, "lucky_strike", 5);
+            Buy(m, m_Db, "lucky_blade");
+            Buy(m, m_Db, "power_swing", 2);
+            Assert.AreEqual(2f + 2 * m_Db.Upgrade("power_swing").effectPerLevel, m.Upgrades.CritMultiplier, 1e-5);
+            Buy(m, m_Db, "steady_rhythm");
+            Buy(m, m_Db, "cleave", 3);
+            Assert.AreEqual(3 * m_Db.Upgrade("cleave").effectPerLevel, m.Upgrades.FellChance, 1e-5);
+
+            // Bulk Buyer: every upgrade but machines and Legacy perks gets cheaper.
+            Buy(m, m_Db, "wood_price", 2);
+            Buy(m, m_Db, "haggling");
+            Buy(m, m_Db, "lucky_finds", 3);
+            Buy(m, m_Db, "fortunes_favor");
+            var honed = m_Db.Upgrade("honed_edge");
+            var chopper = m_Db.Upgrade("chopper_count");
+            Buy(m, m_Db, "bulk_buyer", 5);
+            double off = 5 * m_Db.Upgrade("bulk_buyer").effectPerLevel;
+            Assert.AreEqual(honed.CostForLevel(0) * (1 - off), m.Upgrades.NextCost(honed), 1e-3);
+            Assert.AreEqual(chopper.CostForLevel(0), m.Upgrades.NextCost(chopper), 1e-3, "machines use Spare Parts instead");
+            var legacy = m_Db.Upgrade("titan_grip");
+            Assert.AreEqual(legacy.CostForLevel(0), m.Upgrades.NextCost(legacy), 1e-6, "skill point prices never change");
+        }
+
+        [Test]
         public void PrecisionSawsGetMorePlanksFromTheSameWood()
         {
             var m = NewModel(1e12);
@@ -454,8 +495,8 @@ namespace ChoppingTrees.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
                 if (u.legacy) continue; // Legacy perks are cards in the Rebirth screen, not tree nodes
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
-                Assert.That(u.treePosition.x, Is.InRange(-5.5f, 5.5f), u.id);
-                Assert.That(u.treePosition.y, Is.InRange(0f, 5.8f), u.id);
+                Assert.That(u.treePosition.x, Is.InRange(-8f, 7.5f), u.id);
+                Assert.That(u.treePosition.y, Is.InRange(0f, 8.5f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.
             var roots = System.Array.FindAll(m_Db.upgrades, u => !u.legacy && (u.requires == null || u.requires.Length == 0));

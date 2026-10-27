@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: golden_canopy
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: golden_canopy
+  displayName: Golden Canopy
+  description: Goldbark trees glitter with even more cash.
+  category: 3
+  effect: 21
+  targetId: 
+  maxLevel: 5
+  baseCost: 1500000
+  costGrowth: 2
+  explicitCosts: []
+  effectPerLevel: 0.25
+  levelNames: []
+  requires:
+  - upgradeId: gold_prospector
+    level: 3
+  sortOrder: 10
+  legacy: 0
+  treePosition: {x: -6.6, y: 6.55}
+  icon: star

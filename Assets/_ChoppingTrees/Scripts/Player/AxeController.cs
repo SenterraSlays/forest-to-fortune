@@ -125,7 +125,13 @@ namespace ChoppingTrees
             }
 
             bool crit = Random.value < m_Upgrades.CritChance;
-            float damage = m_Upgrades.AxeDamage * (crit ? 2f : 1f);
+            float damage = m_Upgrades.AxeDamage * (crit ? m_Upgrades.CritMultiplier : 1f);
+            // Cleave: sometimes a hit fells the tree outright (only trees this axe can cut).
+            if (m_Upgrades.FellChance > 0f && tree.Type.requiredAxeTier <= m_Upgrades.AxeTier && Random.value < m_Upgrades.FellChance)
+            {
+                damage = Mathf.Max(damage, (float)tree.Health + 1f);
+                crit = true;
+            }
             var result = tree.ReceiveHit(damage, m_Upgrades.AxeTier, hit.point, hit.normal, m_Camera.forward);
             switch (result)
             {

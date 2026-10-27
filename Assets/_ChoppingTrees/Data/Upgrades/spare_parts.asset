@@ -29,5 +29,5 @@ MonoBehaviour:
     level: 1
   sortOrder: 6
   legacy: 0
-  treePosition: {x: 0.5, y: 4.35}
+  treePosition: {x: 1.1, y: 3.95}
   icon: wrench

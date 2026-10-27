@@ -104,6 +104,12 @@ namespace ChoppingTrees
                     string Opened(int n) => n <= 0 ? "none" : string.Join(" + ", names.GetRange(0, System.Math.Min(n, names.Count)));
                     return maxed ? $"Every run starts with <b>{Opened(lv)}</b> open" : $"Open from the start: {Opened(lv)}{Arrow}<color=#FBBD52>{Opened(lv + 1)}</color>";
                 }
+                case UpgradeEffect.CritDamage:
+                    return Pair("Double-damage hits deal", "x" + (2f + e * lv).ToString("0.0#"), "x" + (2f + e * (lv + 1)).ToString("0.0#"), maxed);
+                case UpgradeEffect.FellChance:
+                    return Pair("Chance to fell in one hit", Pct(e * lv, false), Pct(e * (lv + 1), false), maxed);
+                case UpgradeEffect.UpgradeDiscount:
+                    return Pair("Upgrade prices", "-" + Pct(e * lv, false), "-" + Pct(e * (lv + 1), false), maxed) + "\n<color=#8F8A7C>Every upgrade except machines (up to -30%)</color>";
                 case UpgradeEffect.BackpackBonus:
                     return Pair("Backpack capacity", Pct(e * lv), Pct(e * (lv + 1)), maxed);
                 case UpgradeEffect.BackpackCapacity:
