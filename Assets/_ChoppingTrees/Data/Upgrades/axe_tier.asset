@@ -18,7 +18,7 @@ MonoBehaviour:
   category: 0
   effect: 0
   targetId: 
-  maxLevel: 7
+  maxLevel: 10
   baseCost: 0
   costGrowth: 1
   explicitCosts:
@@ -29,6 +29,9 @@ MonoBehaviour:
   - 1250000
   - 30000000
   - 750000000
+  - 20000000000
+  - 500000000000
+  - 15000000000000
   effectPerLevel: 1
   levelNames:
   - Steel Axe
@@ -38,6 +41,9 @@ MonoBehaviour:
   - Frostbite Axe
   - Emberforge Axe
   - Starsteel Axe
+  - Marshwarden Axe
+  - Sunforged Axe
+  - Moonsplitter
   requires: []
   sortOrder: 0
   legacy: 0

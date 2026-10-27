@@ -57,8 +57,8 @@ namespace ChoppingTrees
             m_StatTime = Stat(stats, "clock", UIStyle.CategoryColor(UpgradeCategory.Forest), "Played");
             m_Stats = stats.gameObject;
 
-            var credit = UIFactory.Text(Root, "Forest to Fortune  •  models built in Blender  •  v2.0", 16, new Color(1, 1, 1, 0.45f), false, TextAlignmentOptions.Right);
-            credit.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-30, 22), new Vector2(900, 30));
+            var version = UIFactory.Text(Root, "v" + Application.version, 28, new Color(1, 1, 1, 0.6f), true, TextAlignmentOptions.Right);
+            version.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-36, 26), new Vector2(400, 40));
 
             Game.Instance.PhaseChanged += p => { if (p == GamePhase.MainMenu) Open(); else Close(); };
         }

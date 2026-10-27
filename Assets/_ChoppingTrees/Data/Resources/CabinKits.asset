@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.ResourceDef
   id: cabins
   displayName: Cabin Kits
-  basePrice: 130
+  basePrice: 380
   color: {r: 0.93, g: 0.47, b: 0.33, a: 1}
   icon: house
   hiddenUntilProduced: 1
-  sortOrder: 3
+  sortOrder: 5

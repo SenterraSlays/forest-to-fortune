@@ -12,7 +12,7 @@ namespace ChoppingTrees
         public new static LegacyMenu Instance { get; private set; }
 
         protected override bool Legacy => true;
-        protected override Rect Bounds => Rect.MinMaxRect(-7.9f, -1.25f, 7.9f, 8.1f);
+        protected override Rect Bounds => Rect.MinMaxRect(-7.9f, -1.25f, 7.9f, 10.4f);
         protected override Vector2 RootPos => new Vector2(0f, 0.05f);
         protected override Vector2 HomePos => new Vector2(0f, 3.4f);
         protected override float HomeScale => 0.62f;

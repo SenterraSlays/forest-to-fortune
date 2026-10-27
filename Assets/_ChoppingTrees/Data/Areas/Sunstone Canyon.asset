@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d42d507ce0959f48a7c3374de32e139, type: 3}
+  m_Name: Sunstone Canyon
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.ForestAreaDef
+  id: canyon
+  displayName: Sunstone Canyon
+  description: Red rock, desert palms and blazing sunbark.
+  unlockedByDefault: 0
+  trees:
+  - {fileID: 11400000, guid: 661dd9cacd53caa449a8462ea9a49aed, type: 2}
+  - {fileID: 11400000, guid: 9fd408d1b5e507e45801f007048ee1c7, type: 2}
+  - {fileID: 11400000, guid: 7b7536a34fc901b4a9a2ba5bdf6109e3, type: 2}
+  weights:
+  - 0.45
+  - 0.4
+  - 0.15
+  sortOrder: 7

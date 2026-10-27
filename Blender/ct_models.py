@@ -1860,6 +1860,594 @@ def Glowcap():
     finish("Glowcap", parts)
 
 
+# ----------------------------------------------------------------- 2.2: the longer chain, three more forests, scenery
+
+COLORS.update({
+    "M_BarkWillow": (0.42, 0.36, 0.26), "M_LeafWillow": (0.58, 0.72, 0.36), "M_BarkCypress": (0.45, 0.34, 0.26),
+    "M_BarkPalm": (0.62, 0.50, 0.34), "M_LeafPalm": (0.36, 0.62, 0.26), "M_BarkSun": (0.70, 0.42, 0.22),
+    "M_LeafSun": (1.0, 0.62, 0.20), "M_BarkMoon": (0.78, 0.80, 0.88), "M_LeafMoon": (0.62, 0.68, 1.0),
+    "M_MoonGlow": (0.85, 0.90, 1.0), "M_Sandstone": (0.74, 0.44, 0.30), "M_Cactus": (0.30, 0.55, 0.32),
+    "M_Water": (0.25, 0.38, 0.42), "M_Reed": (0.55, 0.60, 0.32), "M_Fern": (0.24, 0.50, 0.22),
+    "M_Fabric": (0.62, 0.30, 0.32), "M_FabricBlue": (0.30, 0.42, 0.62), "M_Bogiron": (0.30, 0.36, 0.30),
+    "M_Sunsteel": (1.0, 0.72, 0.30), "M_Moonsteel": (0.82, 0.86, 1.0),
+})
+
+
+def tilted(o, pitch, yaw):
+    """Leans an object made along +X: down by pitch, then turned to yaw."""
+    o.rotation_euler = (0, pitch, yaw)
+    return o
+
+
+def sofa(name, loc, yaw=0.0, fabric="M_Fabric", width=1.0):
+    x, y, z = loc
+
+    def at(dx, dy, dz):
+        ox, oy = rot2(dx, dy, yaw)
+        return (x + ox, y + oy, z + dz)
+    p = [box(name + "Seat", (width, 0.55, 0.2), at(0, 0, 0.22), fabric, 0.03, rot=(0, 0, yaw)),
+         box(name + "Back", (width, 0.16, 0.42), at(0, -0.22, 0.48), fabric, 0.03, rot=(0, 0, yaw))]
+    for s in (-1, 1):
+        p.append(box(name + "Arm", (0.14, 0.55, 0.32), at(s * (width / 2 + 0.05), 0, 0.3), fabric, 0.03, rot=(0, 0, yaw)))
+        for t in (-1, 1):
+            p.append(box(name + "Leg", (0.05, 0.05, 0.1), at(s * (width / 2 - 0.05), t * 0.22, 0.05), "M_WoodDark", rot=(0, 0, yaw)))
+    p.append(box(name + "Cushion", (0.3, 0.12, 0.26), at(-width / 4, -0.08, 0.42), "M_Canvas", 0.03, rot=(0.3, 0, yaw)))
+    return p
+
+
+# ---- machines
+
+@model
+def PanelPress():
+    """Panel Press (machine "press"): planks come in on the back roller table, a hydraulic platen
+    presses them into panels, and panels roll out at the front. Moving parts: Platen (bobs up and
+    down), Roller_0..3 (spin about X), Panel (slides along Y). Front is +Y."""
+    base = [span("Floor", -2.3, 2.3, -2.2, 2.2, 0.0, 0.16, "M_StoneDark", 0.02)]
+    for x in (-1.0, 1.0):
+        for y in (-0.6, 0.6):
+            base.append(box("Column", (0.22, 0.22, 2.9), (x, y, 1.6), "M_PaintBlue", 0.02))
+    base.append(box("Crown", (2.5, 1.5, 0.45), (0, 0, 3.2), "M_PaintBlue", 0.04))
+    base.append(fcyl("Cylinder", 0.28, 0.7, (0, 0, 2.65), "M_Steel", verts=14))
+    base.append(box("Bed", (2.1, 1.4, 0.5), (0, 0, 0.42), "M_MetalDark", 0.03))
+    base.append(box("BedTop", (1.9, 1.25, 0.05), (0, 0, 0.7), "M_Steel"))
+    for y0, y1 in ((-2.1, -0.75), (0.75, 2.1)):
+        base.append(span("Table", -0.8, 0.8, y0, y1, 0.6, 0.68, "M_MetalDark"))
+        for x in (-0.75, 0.75):
+            for y in (y0 + 0.1, y1 - 0.1):
+                base.append(box("TableLeg", (0.07, 0.07, 0.6), (x, y, 0.38), "M_MetalDark"))
+    for layer in range(5):  # planks waiting at the back
+        base.append(box("InPlank", (1.3, 0.28, 0.07), (0, -1.95, 0.75 + layer * 0.075), "M_Plank" if layer % 2 else "M_WoodCut", 0.008))
+    for layer in range(6):  # finished panels at the side
+        base.append(box("OutPanel", (1.2, 0.9, 0.05), (1.75, 1.45, 0.21 + layer * 0.055), "M_WoodCut" if layer % 2 else "M_Plank", 0.006))
+    base.append(box("Control", (0.45, 0.32, 0.8), (-1.75, 0.9, 0.56), "M_Paint", 0.03))
+    base.append(box("Lamp", (0.1, 0.1, 0.1), (-1.75, 1.07, 0.85), "M_Glow"))
+    base.append(fcyl("GluePot", 0.22, 0.4, (-1.7, -1.4, 0.36), "M_MetalDark", verts=12))
+    base.append(fcyl("Glue", 0.19, 0.02, (-1.7, -1.4, 0.56), "M_Canvas", verts=12))
+    base.append(col("Press", (2.6, 1.6, 3.4), (0, 0, 1.7)))
+    base.append(col("Tables", (1.7, 4.2, 0.8), (0, 0, 0.4)))
+    base.append(col("Side", (1.3, 1.0, 0.6), (1.75, 1.45, 0.3)))
+    join([o for o in base if not o.name.startswith("COL_")], "Base", (0, 0, 0))
+
+    part("Platen", [box("Platen", (1.9, 1.3, 0.25), (0, 0, 1.75), "M_Steel", 0.02),
+                    fcyl("Rod", 0.12, 0.95, (0, 0, 2.3), "M_Steel", verts=10)], (0, 0, 1.75))
+    for i, y in enumerate((-1.75, -1.15, 1.15, 1.75)):
+        part("Roller_%d" % i, [fcyl("Roller", 0.06, 1.5, (0, y, 0.74), "M_Steel", rot=(0, math.radians(90), 0), verts=10)], (0, y, 0.74))
+    part("Panel", [box("Panel", (1.2, 0.9, 0.06), (0, 1.4, 0.83), "M_WoodCut", 0.008)], (0, 1.4, 0.83))
+    empty("WorkPoint", (0, 0.8, 1.0))
+    export("PanelPress")
+
+
+@model
+def InteriorStudio():
+    """Interior Studio (machine "studio"): a little showroom with a furnished corner, a packing
+    conveyor out front and a wall fan. Moving parts: Fan (spins about Y), Roller_0..3 (spin about
+    X), Crate (slides along Y on the conveyor), Arm (packing arm, swings about X). Front is +Y."""
+    w, d = 5.0, 4.0
+    base = [span("Floor", -w / 2, w / 2, -d / 2, d / 2, 0.0, 0.18, "M_Plank", 0.02)]
+    base.append(span("BackWall", -w / 2, w / 2, -d / 2, -d / 2 + 0.15, 0.18, 3.2, "M_Wood"))
+    base.append(span("SideWall", -w / 2, -w / 2 + 0.15, -d / 2, d / 2, 0.18, 3.2, "M_Wood"))
+    for i in range(7):
+        y = -d / 2 + 0.3 + i * 0.58
+        base.append(span("Batten", -w / 2 - 0.03, -w / 2, y, y + 0.07, 0.18, 3.15, "M_WoodDark"))
+    base.append(span("Roof", -w / 2 - 0.3, w / 2 + 0.3, -d / 2 - 0.2, d / 2 + 0.5, 3.2, 3.38, "M_Roof", 0.02))
+    base.append(box("Sign", (2.6, 0.08, 0.55), (-0.6, d / 2 + 0.5, 2.98), "M_Sign"))
+    base.append(box("SignTrim", (2.7, 0.06, 0.08), (-0.6, d / 2 + 0.53, 2.68), "M_Gold"))
+    for x in (w / 2 - 0.1,):
+        for y in (-d / 2 + 0.1, d / 2 - 0.1):
+            base.append(box("Post", (0.18, 0.18, 3.0), (x, y, 1.7), "M_WoodDark"))
+    base.append(box("FrontPost", (0.18, 0.18, 3.0), (-w / 2 + 0.1, d / 2 - 0.1, 1.7), "M_WoodDark"))
+    # Showroom corner: rug, sofa, lamp, a picture and a plant.
+    base.append(span("Rug", -2.2, 0.0, -1.7, 0.2, 0.18, 0.2, "M_FabricBlue"))
+    base += sofa("Sofa", (-1.1, -1.35, 0.18), 0.0, "M_Fabric", 1.4)
+    base += table("CoffeeTable", (-1.1, -0.4, 0.18), (0.8, 0.45), 0.35)
+    base.append(ftube("LampPole", (-2.1, -1.6, 0.18), (-2.1, -1.6, 1.6), 0.025, 0.025, "M_MetalDark", 6))
+    base.append(cone("Shade", 0.26, 0.15, 0.32, (-2.1, -1.6, 1.7), "M_Glow", 12))
+    base.append(box("Picture", (1.0, 0.04, 0.7), (-1.1, -d / 2 + 0.17, 2.0), "M_PaintBlue"))
+    base.append(box("Frame", (1.12, 0.03, 0.82), (-1.1, -d / 2 + 0.16, 2.0), "M_Gold"))
+    base.append(fcyl("Pot", 0.2, 0.35, (0.3, -1.6, 0.36), "M_PaintRed", verts=10))
+    base.append(ico("Plant", 0.35, (0.3, -1.6, 0.8), "M_Fern", 1, (1, 1, 1.2), 0.15, 812))
+    # Packing conveyor along Y on the right.
+    base.append(span("Conveyor", 1.0, 2.0, -1.5, 1.9, 0.62, 0.7, "M_MetalDark"))
+    for x in (1.05, 1.95):
+        for y in (-1.4, 1.8):
+            base.append(box("ConveyorLeg", (0.07, 0.07, 0.6), (x, y, 0.4), "M_MetalDark"))
+    base.append(box("ArmPost", (0.2, 0.2, 2.4), (2.25, -1.3, 1.38), "M_Paint", 0.02))
+    # Wall fan housing on the back wall.
+    base.append(fcyl("FanRing", 0.45, 0.12, (1.2, -d / 2 + 0.22, 2.4), "M_MetalDark", rot=(math.radians(90), 0, 0), verts=16))
+    base.append(col("Shell", (w, d, 3.4), (0, 0, 1.7)))
+    join([o for o in base if not o.name.startswith("COL_")], "Base", (0, 0, 0))
+
+    part("Fan", [box("Blade", (0.7, 0.03, 0.12), (1.2, -d / 2 + 0.3, 2.4), "M_Steel", rot=(0, k * math.pi / 3, 0)) for k in range(3)],
+         (1.2, -d / 2 + 0.3, 2.4))
+    for i, y in enumerate((-1.1, -0.3, 0.5, 1.3)):
+        part("Roller_%d" % i, [fcyl("Roller", 0.05, 0.95, (1.5, y, 0.75), "M_Steel", rot=(0, math.radians(90), 0), verts=10)], (1.5, y, 0.75))
+    crate = [box("Wrap", (0.8, 0.8, 0.6), (1.5, 0.2, 1.1), "M_Canvas", 0.03),
+             box("Strap", (0.82, 0.08, 0.62), (1.5, 0.2, 1.1), "M_PaintRed"),
+             box("Label", (0.3, 0.02, 0.2), (1.5, 0.61, 1.15), "M_Paint")]
+    part("Crate", crate, (1.5, 0.2, 1.1))
+    part("Arm", [box("Arm", (0.12, 1.4, 0.12), (2.25, -0.65, 2.45), "M_Paint", 0.02),
+                 box("Pad", (0.5, 0.2, 0.1), (2.0, 0.05, 2.35), "M_Rubber")], (2.25, -1.3, 2.45))
+    empty("WorkPoint", (1.5, 0.2, 1.4))
+    export("InteriorStudio")
+
+
+@model
+def LodgeBuilder():
+    """Lodge Builder (machine "lodge"): a two-storey log lodge going up under a gantry crane.
+    Moving parts like the Cabin Builder: Trolley (slides along X) with the Hook (bobs up and down,
+    carrying a bundle of logs). Front is +Y."""
+    W, D, H = 8.4, 6.4, 7.6
+    base = [span("Slab", -W / 2, W / 2, -D / 2, D / 2, 0.0, 0.2, "M_StoneDark", 0.03)]
+    for i in range(8):
+        z = 0.35 + i * 0.29
+        base += log_x("WallB", 0.15, 6.2, (0, -2.7, z), "M_Bark")
+        for xs in (-3.0, 3.0):
+            base += log_y("WallS", 0.15, 2.9, (xs, -1.25, z + 0.14), "M_Bark")
+    base.append(span("Floor2", -3.15, 3.15, -2.85, 0.3, 2.65, 2.8, "M_Plank"))
+    for x in (-3.0, -1.0, 1.0, 3.0):
+        for y in (-2.7, 0.2):
+            base.append(box("Post", (0.2, 0.2, 2.0), (x, y, 3.8), "M_Wood"))
+    base.append(span("Beam", -3.15, 3.15, -2.8, 0.3, 4.8, 4.95, "M_WoodDark"))
+    for x in (-3.0, -1.5, 0.0, 1.5, 3.0):
+        base.append(box("RafterA", (0.12, 2.0, 0.12), (x, -2.0, 5.5), "M_Wood", rot=(math.radians(35), 0, 0)))
+        base.append(box("RafterB", (0.12, 2.0, 0.12), (x, -0.4, 5.5), "M_Wood", rot=(math.radians(-35), 0, 0)))
+    base.append(span("Ridge", -3.25, 3.25, -1.27, -1.13, 6.05, 6.2, "M_WoodDark"))
+    base.append(box("RoofHalf", (3.6, 2.0, 0.1), (-1.6, -2.05, 5.55), "M_Roof", rot=(math.radians(35), 0, 0)))
+    base.append(box("Chimney", (0.85, 0.85, 6.2), (3.65, -1.6, 3.3), "M_Stone", 0.03))
+    base.append(box("ChimneyCap", (1.0, 1.0, 0.15), (3.65, -1.6, 6.45), "M_StoneDark"))
+    base.append(span("Porch", -3.0, 3.0, 0.3, 1.5, 0.2, 0.32, "M_Plank"))
+    for x in (-2.9, -1.0, 1.0, 2.9):
+        base.append(box("PorchPost", (0.14, 0.14, 2.3), (x, 1.4, 1.45), "M_WoodDark"))
+    base.append(span("PorchRoof", -3.1, 3.1, 0.2, 1.7, 2.6, 2.72, "M_Roof"))
+    base.append(box("Door", (0.9, 0.08, 1.9), (0, 0.27, 1.25), "M_WoodDark"))
+    for x in (-1.9, 1.9):
+        base.append(box("Window", (0.9, 0.06, 0.7), (x, 0.27, 1.4), "M_Glass"))
+    # Gantry crane over the site.
+    for x in (-W / 2 + 0.3, W / 2 - 0.3):
+        for y in (-3.0, 2.8):
+            base.append(box("GantryLeg", (0.32, 0.32, H), (x, y, H / 2), "M_Paint", 0.02))
+        base.append(span("GantryRail", x - 0.2, x + 0.2, -3.1, 2.9, H - 0.25, H + 0.05, "M_Paint"))
+    base.append(span("GantryBeam", -W / 2 + 0.1, W / 2 - 0.1, -0.35, 0.15, H - 0.1, H + 0.25, "M_Paint"))
+    # Cabin kits waiting at the front corner.
+    base += pallet("KitPallet", (1.6, 1.2), (2.9, 2.3, 0.2))
+    for j in range(3):
+        base.append(box("Kit", (1.4, 1.0, 0.18), (2.9, 2.3, 0.48 + j * 0.19), "M_Wood" if j % 2 else "M_Plank", 0.01))
+    base.append(box("KitStrap", (0.06, 1.12, 0.6), (2.9, 2.3, 0.62), "M_PaintRed"))
+    base.append(col("Lodge", (6.6, 3.4, 6.4), (0, -1.25, 3.2)))
+    base.append(col("Chimney", (0.9, 0.9, 6.4), (3.65, -1.6, 3.2)))
+    for x in (-W / 2 + 0.3, W / 2 - 0.3):
+        base.append(col("Leg", (0.5, 6.2, 2.0), (x, -0.1, 1.0)))
+    base.append(col("Kits", (1.7, 1.3, 1.2), (2.9, 2.3, 0.6)))
+    join([o for o in base if not o.name.startswith("COL_")], "Base", (0, 0, 0))
+
+    trolley = part("Trolley", [box("Carriage", (0.6, 0.6, 0.32), (0, -0.1, H + 0.05), "M_MetalDark", 0.02),
+                               disc_x("Pulley", 0.14, 0.08, (0.0, -0.1, H - 0.2), "M_Steel", 10)], (0, -0.1, H))
+    bundle = [ftube("Cable", (0, -0.1, H - 0.25), (0, -0.1, 4.6), 0.025, 0.025, "M_MetalDark", 4),
+              box("HookBlock", (0.2, 0.15, 0.26), (0, -0.1, 4.5), "M_Paint"),
+              box("Spreader", (2.0, 0.1, 0.1), (0, -0.1, 4.3), "M_MetalDark")]
+    for k in range(3):
+        bundle += log_x("Bundle", 0.14, 2.2, (0, -0.25 + k * 0.15, 3.95), "M_Bark", 8)
+    hook = part("Hook", bundle, (0, -0.1, H - 0.25))
+    parent(hook, trolley)
+    empty("WorkPoint", (0, 1.2, 1.6))
+    export("LodgeBuilder")
+
+
+# ---- goods in the yard
+
+@model
+def PanelPiece():
+    """Stock pile piece: a strapped stack of wood panels on a pallet."""
+    p = pallet("Pallet", (1.4, 1.05), (0, 0, 0))
+    for i in range(6):
+        p.append(box("Panel", (1.3, 0.95, 0.05), (0, 0, 0.155 + i * 0.052), "M_WoodCut" if i % 2 else "M_Plank", 0.006))
+    for x in (-0.45, 0.45):
+        p.append(box("StrapTop", (0.05, 0.99, 0.02), (x, 0, 0.47), "M_PaintBlue"))
+        for s in (-1, 1):
+            p.append(box("StrapSide", (0.05, 0.02, 0.34), (x, s * 0.49, 0.3), "M_PaintBlue"))
+    finish("PanelPiece", p)
+
+
+@model
+def RoomSet():
+    """Stock pile piece: a furnished room on a pallet: rug, sofa, lamp and a boxed extra."""
+    p = pallet("Pallet", (1.5, 1.2), (0, 0, 0))
+    p.append(box("Rug", (1.4, 1.1, 0.03), (0, 0, 0.145), "M_FabricBlue"))
+    p += sofa("Sofa", (-0.15, -0.2, 0.15), 0.0, "M_Fabric", 0.95)
+    p.append(ftube("LampPole", (0.55, 0.38, 0.16), (0.55, 0.38, 1.05), 0.02, 0.02, "M_MetalDark", 6))
+    p.append(cone("Shade", 0.18, 0.1, 0.22, (0.55, 0.38, 1.1), "M_Canvas", 10))
+    p.append(box("Box", (0.4, 0.35, 0.32), (0.5, -0.32, 0.32), "M_Canvas", 0.02))
+    p.append(box("Tape", (0.42, 0.06, 0.33), (0.5, -0.32, 0.32), "M_PaintRed"))
+    finish("RoomSet", p)
+
+
+@model
+def LodgeKit():
+    """Stock pile piece: a lodge, flat-packed: logs, roof panels, chimney stones, straps."""
+    p = pallet("Pallet", (2.0, 1.6), (0, 0, 0))
+    for layer in range(3):
+        for k in range(5):
+            p += log_x("Log", 0.1, 1.9, (0, -0.55 + k * 0.21 + (layer % 2) * 0.1, 0.25 + layer * 0.19), "M_Bark", 7)
+    top = 0.25 + 3 * 0.19
+    for k in range(3):
+        p.append(box("Roof", (1.8, 0.5, 0.06), (0, -0.4 + k * 0.42, top + 0.04 + k * 0.02), "M_Roof", 0.01))
+    for i, (x, y) in enumerate([(-0.6, 0.65), (-0.3, 0.68), (0.5, 0.66)]):
+        p.append(box("Stone", (0.25, 0.2, 0.18), (x, y, top + 0.2), "M_Stone" if i % 2 else "M_StoneDark", 0.02))
+    for x in (-0.7, 0.7):
+        p.append(box("Strap", (0.07, 1.62, 0.02), (x, 0, top + 0.12), "M_PaintRed"))
+    p.append(box("Tag", (0.26, 0.02, 0.18), (0.0, 0.82, 0.45), "M_Gold"))
+    finish("LodgeKit", p)
+
+
+# ---- trees
+
+@model
+def Tree_Willow():
+    """A weeping willow: a broad crown with curtains of leaves hanging to the ground."""
+    parts = [ftube("Trunk", (0, 0, 0), (0.15, 0, 3.6), 0.6, 0.42, "M_BarkWillow", 9)]
+    for (x, y, z) in [(1.8, 0.4, 4.6), (-1.7, 0.7, 4.8), (0.3, -1.8, 4.7), (-0.4, 1.7, 5.0)]:
+        parts.append(ftube("Branch", (0.1, 0, 3.2), (x, y, z), 0.3, 0.13, "M_BarkWillow", 6))
+    crown(parts, [(0, 0, 5.6, 2.3), (1.8, 0.4, 5.0, 1.6), (-1.7, 0.7, 5.1, 1.6), (0.3, -1.9, 5.0, 1.5), (-0.4, 1.8, 5.3, 1.5)],
+          ["M_LeafWillow", "M_Leaf"], 700)
+    rnd = random.Random(71)
+    for i in range(28):
+        a = i * math.tau / 28 + rnd.uniform(-0.1, 0.1)
+        r = rnd.uniform(2.0, 2.8)
+        top = rnd.uniform(4.6, 5.6)
+        length = rnd.uniform(2.6, 3.8)
+        parts.append(box("Drape", (0.4, 0.08, length), (math.cos(a) * r, math.sin(a) * r, top - length / 2), "M_LeafWillow" if i % 2 else "M_Leaf",
+                         rot=(0, 0, a + math.pi / 2)))
+    finish("Tree_Willow", parts)
+
+
+@model
+def Tree_Cypress():
+    """A tall swamp cypress with layered dark foliage and hanging moss."""
+    parts = [ftube("Trunk", (0, 0, 0), (0.1, 0, 11.8), 0.7, 0.14, "M_BarkCypress", 9)]
+    rnd = random.Random(73)
+    for i, z in enumerate([5.2, 6.5, 7.7, 8.9, 10.0, 11.0, 11.9]):
+        r = 2.1 - i * 0.24
+        for k in range(2):
+            a = rnd.uniform(0, math.tau)
+            parts.append(ico("Leaves", r, (math.cos(a) * 0.4, math.sin(a) * 0.4, z + k * 0.3), "M_LeafDark" if (i + k) % 2 else "M_LeafPine", 1,
+                             (1, 1, 0.55), 0.15, 730 + i * 2 + k))
+    for i in range(10):
+        a = rnd.uniform(0, math.tau)
+        r = rnd.uniform(1.0, 1.8)
+        z = rnd.uniform(5.0, 8.5)
+        parts.append(box("Moss", (0.12, 0.05, 1.0), (math.cos(a) * r, math.sin(a) * r, z - 0.5), "M_Grass", rot=(0, 0, a)))
+    finish("Tree_Cypress", parts)
+
+
+@model
+def Tree_Palm():
+    """A leaning desert palm with ringed bark, drooping fronds and coconuts."""
+    ctrl = [(0, 0, 0), (0.3, 0, 2.5), (0.9, 0.1, 5.0), (1.7, 0.2, 7.4), (2.4, 0.3, 9.2)]
+    pts = []
+    for i in range(len(ctrl) - 1):
+        a, b = ctrl[i], ctrl[i + 1]
+        for t in (0.0, 0.5):
+            pts.append(tuple(a[k] + (b[k] - a[k]) * t for k in range(3)))
+    pts.append(ctrl[-1])
+    parts = []
+    for i in range(len(pts) - 1):
+        r0 = 0.38 - i * 0.022
+        parts.append(ftube("Trunk", pts[i], pts[i + 1], r0, r0 - 0.022, "M_BarkPalm" if i % 2 else "M_WoodDark", 8))
+    top = ctrl[-1]
+    rnd = random.Random(75)
+    for f in range(9):
+        a = f * math.tau / 9 + rnd.uniform(-0.15, 0.15)
+        prev = top
+        for seg, (out, dz) in enumerate([(1.4, 0.5), (2.7, 0.1), (3.6, -0.9), (4.1, -1.9)]):
+            nxt = (top[0] + math.cos(a) * out, top[1] + math.sin(a) * out, top[2] + dz)
+            mid = tuple((prev[k] + nxt[k]) / 2 for k in range(3))
+            horiz = math.hypot(nxt[0] - prev[0], nxt[1] - prev[1])
+            length = math.hypot(horiz, nxt[2] - prev[2])
+            leaf = ico("Frond", 0.5, mid, "M_LeafPalm" if (f + seg) % 2 else "M_Leaf", 1, (length * 1.35 + 0.2, 0.8 - seg * 0.12, 0.07))
+            tilted(leaf, math.atan2(prev[2] - nxt[2], horiz), a)
+            parts.append(leaf)
+            prev = nxt
+    for k in range(4):
+        a = k * math.tau / 4 + 0.4
+        parts.append(ico("Coconut", 0.17, (top[0] + math.cos(a) * 0.3, top[1] + math.sin(a) * 0.3, top[2] - 0.35), "M_WoodDark", 1))
+    finish("Tree_Palm", parts)
+
+
+@model
+def Tree_Sunbark():
+    """A sunbark: orange bark and a wide, flat-topped crown of blazing leaves."""
+    parts = [ftube("Trunk", (0, 0, 0), (0.2, 0, 4.0), 0.6, 0.4, "M_BarkSun", 9)]
+    for (x, y, z) in [(2.4, 0.3, 6.2), (-2.2, 0.8, 6.4), (0.4, -2.3, 6.3), (-0.5, 2.1, 6.6)]:
+        parts.append(ftube("Branch", (0.15, 0, 3.6), (x, y, z), 0.3, 0.14, "M_BarkSun", 6))
+    for i, (x, y, z, r) in enumerate([(0, 0, 7.0, 2.6), (2.4, 0.3, 6.6, 1.9), (-2.2, 0.8, 6.8, 1.9), (0.4, -2.4, 6.7, 1.8), (-0.5, 2.2, 7.0, 1.8)]):
+        parts.append(ico("Canopy", r, (x, y, z), "M_LeafSun" if i % 2 == 0 else "M_LeafAutumn", 1, (1.25, 1.25, 0.38), 0.12, 760 + i))
+    rnd = random.Random(77)
+    for i in range(10):
+        a = rnd.uniform(0, math.tau)
+        r = rnd.uniform(1.0, 2.6)
+        parts.append(ico("Pod", 0.13, (math.cos(a) * r, math.sin(a) * r, rnd.uniform(6.1, 6.5)), "M_Glow", 0))
+    finish("Tree_Sunbark", parts)
+
+
+@model
+def Tree_Moonwood():
+    """A moonwood: a silver, twisting trunk under a pale blue crown hung with glowing orbs."""
+    pts = [(0, 0, 0), (0.3, 0.1, 3.0), (-0.1, 0.35, 6.0), (0.15, 0.05, 8.0)]
+    radii = [0.6, 0.48, 0.36, 0.24]
+    parts = [ftube("Trunk", pts[i], pts[i + 1], radii[i], radii[i + 1], "M_BarkMoon", 8) for i in range(3)]
+    for (x, y, z) in [(2.1, 0.4, 8.6), (-2.0, 0.6, 8.8), (0.3, -2.1, 8.7), (-0.2, 1.9, 9.1)]:
+        parts.append(ftube("Branch", (0.05, 0.1, 6.5), (x, y, z), 0.24, 0.1, "M_BarkMoon", 6))
+    crown(parts, [(0, 0, 9.6, 2.1), (2.1, 0.4, 8.9, 1.6), (-2.0, 0.6, 9.0, 1.6), (0.3, -2.1, 8.9, 1.5), (-0.2, 1.9, 9.4, 1.5)],
+          ["M_LeafMoon", "M_LeafCrystal"], 780)
+    rnd = random.Random(79)
+    for i in range(12):
+        a = rnd.uniform(0, math.tau)
+        r = rnd.uniform(1.2, 2.6)
+        z = rnd.uniform(7.2, 7.9)
+        parts.append(ftube("String", (math.cos(a) * r, math.sin(a) * r, z + 0.6), (math.cos(a) * r, math.sin(a) * r, z), 0.012, 0.012, "M_MoonGlow", 3))
+        parts.append(ico("Orb", 0.17, (math.cos(a) * r, math.sin(a) * r, z), "M_MoonGlow", 1))
+    finish("Tree_Moonwood", parts)
+
+
+@model
+def Stump_Willow():
+    stump("Stump_Willow", "M_BarkWillow")
+
+
+@model
+def Stump_Palm():
+    stump("Stump_Palm", "M_BarkPalm")
+
+
+@model
+def Stump_Sun():
+    stump("Stump_Sun", "M_BarkSun")
+
+
+@model
+def Stump_Moon():
+    stump("Stump_Moon", "M_BarkMoon")
+
+
+# ---- axes
+
+@model
+def Axe_8():
+    """Marshwarden Axe: a heavy bog-iron head on a willow haft bound with moss and rope."""
+    parts = [ftube("Handle", (0, 0, -0.24), (0, 0, 0.9), 0.027, 0.025, "M_BarkWillow", 8)]
+    for z in (-0.2, -0.13, -0.06, 0.45):
+        parts.append(fcyl("Wrap", 0.031, 0.05, (0, 0, z), "M_Rope" if z < 0 else "M_Grass", verts=8))
+    axe_head(parts, [(-0.08, 0.68), (0.06, 0.68), (0.15, 0.48), (0.3, 0.44), (0.31, 0.96), (0.07, 0.88), (-0.08, 0.9)], 0.06, "M_Bogiron", "M_Steel")
+    parts.append(box("Spike", (0.05, 0.14, 0.05), (0, -0.14, 0.8), "M_Bogiron"))
+    for z in (0.74, 0.84):
+        parts.append(ico("Rivet", 0.014, (0.032, 0.03, z), "M_Gold", 0))
+    finish("Axe_8", parts)
+
+
+@model
+def Axe_9():
+    """Sunforged Axe: a golden double-bit head with blazing edges and a sun disc at its heart."""
+    parts = [ftube("Handle", (0, 0, -0.24), (0, 0, 0.9), 0.026, 0.025, "M_WoodDark", 8)]
+    for z in (-0.2, 0.25, 0.55):
+        parts.append(fcyl("Band", 0.03, 0.045, (0, 0, z), "M_Sunsteel", verts=8))
+    prof = [(0.0, 0.64), (0.1, 0.66), (0.28, 0.56), (0.3, 0.98), (0.1, 0.9), (0.0, 0.92)]
+    axe_head(parts, prof, 0.058, "M_Sunsteel", "M_Glow")
+    back = [(-p[0] * 0.85, p[1]) for p in reversed(prof)]
+    parts.append(flat(prism("Head2", back, 0.058, "M_Sunsteel", 'X')))
+    parts.append(box("Edge2", (0.036, 0.02, 0.4), (0, -0.25, 0.77), "M_Glow"))
+    parts.append(disc_x("Sun", 0.07, 0.07, (0, 0, 0.78), "M_Glow", 14))
+    for k in range(8):
+        a = k * math.tau / 8
+        parts.append(box("Ray", (0.072, 0.02, 0.05), (0, math.cos(a) * 0.09, 0.78 + math.sin(a) * 0.09), "M_Sunsteel", rot=(a, 0, 0)))
+    finish("Axe_9", parts)
+
+
+@model
+def Axe_10():
+    """Moonsplitter: twin crescent blades of moonsteel with glowing edges and a moon at the top."""
+    parts = [ftube("Handle", (0, 0, -0.26), (0, 0.01, 0.94), 0.026, 0.025, "M_Moonsteel", 8)]
+    for z in (-0.22, -0.16, -0.1, -0.04):
+        parts.append(fcyl("Grip", 0.03, 0.05, (0, 0, z), "M_FabricBlue", verts=8))
+    prof = [(-0.04, 0.72), (0.08, 0.66), (0.2, 0.5), (0.34, 0.46), (0.36, 0.76), (0.34, 1.04), (0.2, 1.0), (0.08, 0.88), (-0.04, 0.86)]
+    axe_head(parts, prof, 0.05, "M_Moonsteel", "M_MoonGlow")
+    back = [(-p[0] * 0.8, p[1]) for p in reversed(prof)]
+    parts.append(flat(prism("Head2", back, 0.05, "M_Moonsteel", 'X')))
+    parts.append(box("Edge2", (0.032, 0.02, 0.5), (0, -0.285, 0.76), "M_MoonGlow"))
+    parts.append(ico("Moon", 0.05, (0, 0, 1.0), "M_MoonGlow", 1))
+    parts.append(ico("Gem", 0.04, (0.03, 0.0, 0.79), "M_CrystalViolet", 0))
+    finish("Axe_10", parts)
+
+
+# ---- scenery
+
+@model
+def Fern():
+    parts = []
+    rnd = random.Random(90)
+    for i in range(8):
+        a = i * math.tau / 8 + rnd.uniform(-0.2, 0.2)
+        length = rnd.uniform(0.55, 0.8)
+        leaf = ico("Frond", 0.5, (math.cos(a) * length * 0.45, math.sin(a) * length * 0.45, 0.22), "M_Fern" if i % 2 else "M_Leaf", 1,
+                   (length, 0.22, 0.03))
+        tilted(leaf, -0.45, a)
+        parts.append(leaf)
+    finish("Fern", parts)
+
+
+@model
+def Stump_Old():
+    """A weathered old stump with moss and a few mushrooms."""
+    parts = [fcyl("Stump", 0.45, 0.55, (0, 0, 0.27), "M_Bark", verts=10),
+             fcyl("Cut", 0.42, 0.03, (0, 0, 0.55), "M_WoodCutDark", verts=10),
+             fcyl("Ring", 0.25, 0.03, (0, 0, 0.56), "M_WoodCut", verts=10)]
+    for i in range(5):
+        a = i * math.tau / 5 + 0.4
+        parts.append(box("Root", (0.4, 0.18, 0.2), (math.cos(a) * 0.45, math.sin(a) * 0.45, 0.07), "M_Bark", rot=(0, -0.3, a)))
+    parts.append(ico("Moss", 0.3, (0.15, 0.1, 0.55), "M_Grass", 1, (1.2, 1, 0.25), 0.1, 91))
+    for (x, y, h) in [(0.42, 0.1, 0.25), (0.4, -0.15, 0.18)]:
+        parts.append(fcyl("Stem", 0.025, h, (x, y, h / 2), "M_Canvas", verts=6))
+        parts.append(cone("Cap", 0.08, 0.02, 0.06, (x, y, h + 0.02), "M_PaintRed", 8))
+    finish("Stump_Old", parts)
+
+
+@model
+def Woodpile_Stack():
+    """Split logs stacked between two stakes."""
+    parts = []
+    for layer in range(4):
+        n = 6 - layer
+        for k in range(n):
+            y = (k - (n - 1) / 2) * 0.3
+            parts += log_x("Log", 0.15, 1.6, (0, y, 0.15 + layer * 0.26), "M_Bark", 7)
+    for y in (-1.0, 1.0):
+        parts.append(box("Stake", (0.1, 0.1, 1.3), (0, y, 0.65), "M_WoodDark"))
+    finish("Woodpile_Stack", parts)
+
+
+@model
+def Campsite():
+    """A tent, a crackling campfire ringed with stones, a log seat and a cooking pot."""
+    parts = []
+    tent = prism("Tent", [(-1.0, 0.0), (1.0, 0.0), (0.0, 1.4)], 2.2, "M_PaintGreen", 'X')
+    tent.location = (-1.6, 0.0, 0.0)
+    parts.append(flat(tent))
+    parts.append(box("TentDoor", (0.05, 0.7, 0.9), (-0.48, 0.0, 0.45), "M_Canvas"))
+    for k in range(9):
+        a = k * math.tau / 9
+        parts.append(ico("Stone", 0.14, (0.9 + math.cos(a) * 0.45, math.sin(a) * 0.45, 0.07), "M_StoneDark", 1, (1, 1, 0.7)))
+    for k in range(3):
+        a = k * math.tau / 3
+        parts.append(ftube("FireLog", (0.9 + math.cos(a) * 0.3, math.sin(a) * 0.3, 0.05), (0.9, 0, 0.35), 0.06, 0.04, "M_Bark", 5))
+    parts.append(cone("Flame", 0.22, 0.0, 0.6, (0.9, 0, 0.4), "M_Glow", 6))
+    parts.append(cone("Flame2", 0.12, 0.0, 0.4, (0.95, 0.08, 0.55), "M_Paint", 6))
+    parts += log_x("Seat", 0.18, 1.4, (0.9, -1.2, 0.18), "M_Bark", 8)
+    parts.append(fcyl("Pot", 0.16, 0.22, (1.5, 0.6, 0.11), "M_MetalDark", verts=10))
+    parts.append(col("Tent", (2.2, 2.0, 1.4), (-1.6, 0, 0.7)))
+    finish("Campsite", parts)
+
+
+@model
+def Watchtower():
+    """A ranger's lookout: four legs with cross braces, a railed platform, a roof and a ladder."""
+    parts = []
+    H = 5.5
+    for x in (-1.0, 1.0):
+        for y in (-1.0, 1.0):
+            parts.append(ftube("Leg", (x * 1.15, y * 1.15, 0), (x, y, H), 0.12, 0.1, "M_WoodDark", 6))
+    for z in (1.5, 3.5):
+        for (a, b) in [((-1.1, -1.1), (1.1, -1.1)), ((-1.1, 1.1), (1.1, 1.1)), ((-1.1, -1.1), (-1.1, 1.1)), ((1.1, -1.1), (1.1, 1.1))]:
+            parts.append(ftube("Brace", (a[0], a[1], z), (b[0], b[1], z + 1.0), 0.05, 0.05, "M_Wood", 5))
+    parts.append(span("Platform", -1.4, 1.4, -1.4, 1.4, H, H + 0.15, "M_Plank"))
+    for s in (-1, 1):
+        parts.append(span("Rail", -1.4, 1.4, s * 1.35 - 0.05, s * 1.35 + 0.05, H + 0.9, H + 1.0, "M_Wood"))
+        parts.append(span("Rail", s * 1.35 - 0.05, s * 1.35 + 0.05, -1.4, 1.4, H + 0.9, H + 1.0, "M_Wood"))
+        for t in (-1, 1):
+            parts.append(box("RoofPost", (0.1, 0.1, 2.0), (s * 1.3, t * 1.3, H + 1.1), "M_WoodDark"))
+    for s in (-1, 1):
+        parts.append(box("Roof", (3.2, 1.8, 0.1), (0, s * 0.75, H + 2.45), "M_Roof", rot=(-s * 0.55, 0, 0)))
+    for k in range(10):
+        parts.append(box("Rung", (0.5, 0.05, 0.05), (0, 1.45, 0.4 + k * 0.52), "M_Wood"))
+    for x in (-0.25, 0.25):
+        parts.append(ftube("LadderSide", (x, 1.5, 0), (x, 1.42, H + 0.1), 0.04, 0.04, "M_Wood", 4))
+    parts.append(col("Base", (2.6, 2.6, 1.0), (0, 0, 0.5)))
+    finish("Watchtower", parts)
+
+
+@model
+def Bench():
+    parts = [box("Seat", (1.6, 0.42, 0.06), (0, 0, 0.45), "M_Plank", 0.01),
+             box("Back", (1.6, 0.06, 0.32), (0, -0.2, 0.75), "M_Plank", 0.01)]
+    for x in (-0.65, 0.65):
+        parts.append(box("Leg", (0.08, 0.4, 0.45), (x, 0, 0.22), "M_WoodDark"))
+        parts.append(box("BackPost", (0.08, 0.06, 0.5), (x, -0.2, 0.65), "M_WoodDark"))
+    finish("Bench", parts)
+
+
+@model
+def Reeds():
+    parts = []
+    rnd = random.Random(92)
+    for i in range(12):
+        x, y = rnd.uniform(-0.35, 0.35), rnd.uniform(-0.35, 0.35)
+        h = rnd.uniform(0.8, 1.5)
+        parts.append(cone("Reed", 0.03, 0.0, h, (x, y, h / 2), "M_Reed", 3, (rnd.uniform(-0.15, 0.15), rnd.uniform(-0.15, 0.15), 0)))
+        if i % 3 == 0:
+            parts.append(fcyl("Cattail", 0.035, 0.18, (x, y, h * 0.85), "M_WoodDark", verts=6))
+    finish("Reeds", parts)
+
+
+@model
+def Puddle():
+    parts = [ico("Water", 1.0, (0, 0, 0.01), "M_Water", 2, (1.5, 1.0, 0.02)),
+             ico("Mud", 1.1, (0, 0, -0.005), "M_Dirt", 2, (1.6, 1.1, 0.02), 0.08, 93)]
+    finish("Puddle", parts)
+
+
+@model
+def Cactus():
+    """A saguaro cactus with two arms."""
+    parts = [fcyl("Trunk", 0.22, 2.6, (0, 0, 1.3), "M_Cactus", verts=10), ico("Top", 0.22, (0, 0, 2.6), "M_Cactus", 1)]
+    for s, h, up in ((1, 1.1, 0.9), (-1, 1.5, 0.7)):
+        parts.append(ftube("ArmOut", (0, 0, h), (s * 0.55, 0, h + 0.1), 0.14, 0.14, "M_Cactus", 8))
+        parts.append(fcyl("ArmUp", 0.14, up, (s * 0.55, 0, h + up / 2), "M_Cactus", verts=8))
+        parts.append(ico("ArmTop", 0.14, (s * 0.55, 0, h + up), "M_Cactus", 1))
+    parts.append(ico("Flower", 0.08, (0, 0, 2.82), "M_FlowerYellow", 1))
+    finish("Cactus", parts)
+
+
+@model
+def Rock_Sand():
+    """Layered red sandstone."""
+    parts = []
+    for i, (r, z, sx) in enumerate([(1.0, 0.25, 1.4), (0.8, 0.65, 1.2), (0.6, 1.0, 1.0)]):
+        parts.append(ico("Layer", r, (0.1 * i, 0.05 * i, z), "M_Sandstone" if i % 2 == 0 else "M_Dirt", 1, (sx, 1.0, 0.35), 0.12, 94 + i))
+    finish("Rock_Sand", parts)
+
+
+@model
+def Moonflower():
+    parts = []
+    rnd = random.Random(96)
+    for k in range(3):
+        x, y = rnd.uniform(-0.2, 0.2), rnd.uniform(-0.2, 0.2)
+        h = rnd.uniform(0.3, 0.5)
+        parts.append(ftube("Stem", (x, y, 0), (x, y, h), 0.012, 0.01, "M_Grass", 4))
+        for i in range(6):
+            a = i * math.tau / 6
+            parts.append(box("Petal", (0.07, 0.03, 0.012), (x + math.cos(a) * 0.045, y + math.sin(a) * 0.045, h), "M_LeafMoon", rot=(0, 0, a)))
+        parts.append(ico("Glow", 0.03, (x, y, h + 0.015), "M_MoonGlow", 1))
+    finish("Moonflower", parts)
+
+
+@model
+def Standing_Stone():
+    """An old standing stone with a faintly glowing rune."""
+    parts = [box("Stone", (0.9, 0.55, 3.0), (0, 0, 1.4), "M_StoneDark", 0.08, rot=(0.05, 0.04, 0)),
+             box("Rune", (0.3, 0.04, 0.5), (0, 0.29, 1.8), "M_MoonGlow"),
+             ico("Moss", 0.4, (0.1, 0.0, 2.9), "M_Grass", 1, (1.2, 0.8, 0.3), 0.1, 97)]
+    finish("Standing_Stone", parts)
+
+
 def main():
     names = [n for n in MODELS if not ONLY or n in ONLY]
     for n in names:

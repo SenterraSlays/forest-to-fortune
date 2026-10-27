@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d42d507ce0959f48a7c3374de32e139, type: 3}
+  m_Name: Moonlit Highlands
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.ForestAreaDef
+  id: highlands
+  displayName: Moonlit Highlands
+  description: Silver moonwood under a sky that never quite turns to day.
+  unlockedByDefault: 0
+  trees:
+  - {fileID: 11400000, guid: 9fd408d1b5e507e45801f007048ee1c7, type: 2}
+  - {fileID: 11400000, guid: 661dd9cacd53caa449a8462ea9a49aed, type: 2}
+  - {fileID: 11400000, guid: e02207fe36b12624a91a3ca97a3baea3, type: 2}
+  weights:
+  - 0.5
+  - 0.38
+  - 0.12
+  sortOrder: 8

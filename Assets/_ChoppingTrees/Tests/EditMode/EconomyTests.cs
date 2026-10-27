@@ -501,13 +501,13 @@ namespace ChoppingTrees.Tests
                     // The Legacy tree is its own screen.
                     Assert.IsTrue(seenLegacy.Add(u.treePosition), $"{u.id} shares a Legacy tree position with another perk");
                     Assert.That(u.treePosition.x, Is.InRange(-7.5f, 7.5f), u.id);
-                    Assert.That(u.treePosition.y, Is.InRange(1f, 8f), u.id);
+                    Assert.That(u.treePosition.y, Is.InRange(1f, 9.5f), u.id);
                     Assert.AreNotEqual(UpgradeCategory.Legacy, u.category, $"{u.id} needs a Legacy tree branch");
                     continue;
                 }
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
-                Assert.That(u.treePosition.x, Is.InRange(-11.5f, 9.6f), u.id);
-                Assert.That(u.treePosition.y, Is.InRange(0f, 9.5f), u.id);
+                Assert.That(u.treePosition.x, Is.InRange(-11.5f, 14f), u.id);
+                Assert.That(u.treePosition.y, Is.InRange(0f, 13.5f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.
             var roots = System.Array.FindAll(m_Db.upgrades, u => !u.legacy && (u.requires == null || u.requires.Length == 0));

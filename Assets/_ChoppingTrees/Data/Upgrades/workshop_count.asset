@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
   id: workshop_count
   displayName: Carpentry Workshop
-  description: Turns 3 planks into a set of furniture. Furniture sells for more than the planks it uses.
+  description: Turns 2 wood panels into a set of furniture. Furniture sells for more than the panels it uses.
   category: 1
   effect: 3
   targetId: workshop
@@ -28,9 +28,9 @@ MonoBehaviour:
   effectPerLevel: 1
   levelNames: []
   requires:
-  - upgradeId: sawmill_count
+  - upgradeId: press_count
     level: 1
   sortOrder: 15
   legacy: 0
-  treePosition: {x: 3.3, y: 3.95}
+  treePosition: {x: 4.4, y: 3.95}
   icon: chair

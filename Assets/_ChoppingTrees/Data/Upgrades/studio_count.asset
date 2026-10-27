@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: studio_count
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: studio_count
+  displayName: Interior Studio
+  description: Designs 3 sets of furniture into a furnished room set. Cabin Builders need room sets.
+  category: 1
+  effect: 3
+  targetId: studio
+  maxLevel: 3
+  baseCost: 0
+  costGrowth: 5
+  explicitCosts:
+  - 250000
+  - 1250000
+  - 6000000
+  effectPerLevel: 1
+  levelNames: []
+  requires:
+  - upgradeId: workshop_count
+    level: 1
+  sortOrder: 30
+  legacy: 0
+  treePosition: {x: 5.5, y: 3.95}
+  icon: sofa

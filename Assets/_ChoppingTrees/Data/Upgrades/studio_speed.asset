@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: studio_speed
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: studio_speed
+  displayName: Design Team
+  description: A bigger design team for every studio.
+  category: 1
+  effect: 4
+  targetId: studio
+  maxLevel: 10
+  baseCost: 375000
+  costGrowth: 2
+  explicitCosts: []
+  effectPerLevel: 0.3
+  levelNames: []
+  requires:
+  - upgradeId: studio_count
+    level: 1
+  sortOrder: 31
+  legacy: 0
+  treePosition: {x: 5.5, y: 5.25}
+  icon: star

@@ -9,21 +9,24 @@ namespace ChoppingTrees.EditorTools
     /// </summary>
     public static class WorldLayout
     {
-        public const float MinX = -90f, MaxX = 90f, MinZ = -80f, MaxZ = 435f;
-        public const float WallX = 56f, WallSouth = -44f, WallNorth = 402f;
-        public const float Gate1Z = 50f, Gate2Z = 120f, Gate3Z = 190f, Gate4Z = 260f, Gate5Z = 330f;
+        public const float MinX = -90f, MaxX = 90f, MinZ = -110f, MaxZ = 645f;
+        public const float WallX = 56f, WallSouth = -72f, WallNorth = 612f;
+        public const float Gate1Z = 50f, Gate2Z = 120f, Gate3Z = 190f, Gate4Z = 260f, Gate5Z = 330f, Gate6Z = 400f, Gate7Z = 470f, Gate8Z = 540f;
         /// <summary>Gate positions in order; area i + 1 starts at Gates[i].</summary>
-        public static readonly float[] Gates = { Gate1Z, Gate2Z, Gate3Z, Gate4Z, Gate5Z };
+        public static readonly float[] Gates = { Gate1Z, Gate2Z, Gate3Z, Gate4Z, Gate5Z, Gate6Z, Gate7Z, Gate8Z };
 
         public static readonly Vector3 Spawn = new Vector3(0f, 0f, -4f);
-        public static readonly Rect Yard = Rect.MinMaxRect(-46f, -44f, 46f, -7f);
+        /// <summary>The yard, with the south yard (presses, studios, lodge builders) below the old one.</summary>
+        public static readonly Rect Yard = Rect.MinMaxRect(-46f, -70f, 46f, -7f);
 
         /// <summary>Dirt paths as polylines (x, z).</summary>
         public static readonly Vector2[][] Paths =
         {
-            new[] { new Vector2(0f, -36f), new Vector2(0f, -4f), new Vector2(0.5f, 20f), new Vector2(-1f, 50f), new Vector2(1f, 85f), new Vector2(0f, 120f), new Vector2(-1f, 155f), new Vector2(0f, 190f),
-                    new Vector2(1.5f, 225f), new Vector2(-1f, 260f), new Vector2(1f, 295f), new Vector2(0f, 330f), new Vector2(-1.5f, 365f), new Vector2(0f, 396f) },
+            new[] { new Vector2(0f, -55f), new Vector2(0f, -36f), new Vector2(0f, -4f), new Vector2(0.5f, 20f), new Vector2(-1f, 50f), new Vector2(1f, 85f), new Vector2(0f, 120f), new Vector2(-1f, 155f), new Vector2(0f, 190f),
+                    new Vector2(1.5f, 225f), new Vector2(-1f, 260f), new Vector2(1f, 295f), new Vector2(0f, 330f), new Vector2(-1.5f, 365f), new Vector2(0f, 400f),
+                    new Vector2(1.5f, 435f), new Vector2(-1f, 470f), new Vector2(1f, 505f), new Vector2(0f, 540f), new Vector2(-1.5f, 575f), new Vector2(0f, 606f) },
             new[] { new Vector2(-9f, -13f), new Vector2(-4f, -8f), new Vector2(0f, -6f), new Vector2(4f, -8f), new Vector2(9f, -13f) },
+            new[] { new Vector2(-36f, -56.5f), new Vector2(-12f, -56.5f), new Vector2(0f, -55f), new Vector2(12f, -56.5f), new Vector2(36f, -56.5f) },
             new[] { new Vector2(-35f, -22.5f), new Vector2(-24f, -26f), new Vector2(-10f, -26f), new Vector2(0f, -26f), new Vector2(10f, -26f), new Vector2(24f, -26f), new Vector2(35f, -25f) },
         };
 
@@ -32,6 +35,9 @@ namespace ChoppingTrees.EditorTools
             float t = Mathf.Clamp01((v - a) / (b - a));
             return t * t * (3f - 2f * t);
         }
+
+        /// <summary>1 inside the band between two gates, easing to 0 near the gates.</summary>
+        static float Within(float g0, float g1, float z) => Smooth(g0 + 4f, g0 + 16f, z) * (1f - Smooth(g1 - 16f, g1 - 4f, z));
 
         public static float DistToYard(float x, float z)
         {
@@ -63,9 +69,9 @@ namespace ChoppingTrees.EditorTools
             float gates = 1f;
             foreach (float g in Gates) gates *= Mathf.Clamp01((Mathf.Abs(z - g) - 3f) / 6f);
             flat *= gates * 0.8f + 0.2f;
-            // Frostpine Peaks roll higher than the forests below it.
-            n *= flat * (1f + 0.8f * Smooth(Gate3Z + 4f, Gate3Z + 16f, z) * (1f - Smooth(Gate4Z - 16f, Gate4Z - 4f, z)));
-            float edge = Smooth(48f, 76f, Mathf.Abs(x)) * 16f + Smooth(-38f, -64f, z) * 14f + Smooth(WallNorth - 6f, WallNorth + 22f, z) * 18f;
+            // Frostpine Peaks and Sunstone Canyon roll higher than the forests around them.
+            n *= flat * (1f + 0.8f * Within(Gate3Z, Gate4Z, z) + 1.1f * Within(Gate7Z, Gate8Z, z));
+            float edge = Smooth(48f, 76f, Mathf.Abs(x)) * 16f + Smooth(WallSouth + 6f, WallSouth - 20f, z) * 14f + Smooth(WallNorth - 6f, WallNorth + 22f, z) * 18f;
             edge *= 0.7f + 0.6f * Mathf.PerlinNoise(x * 0.05f + 30f, z * 0.05f + 60f);
             return n + edge;
         }

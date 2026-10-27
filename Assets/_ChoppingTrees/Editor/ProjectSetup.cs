@@ -59,7 +59,7 @@ namespace ChoppingTrees.EditorTools
         {
             var android = NamedBuildTarget.Android;
             PlayerSettings.SetApplicationIdentifier(android, "com.hazelwood.foresttofortune");
-            PlayerSettings.Android.bundleVersionCode = 2;
+            PlayerSettings.Android.bundleVersionCode = 3;
             PlayerSettings.SetScriptingBackend(android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
@@ -147,7 +147,7 @@ namespace ChoppingTrees.EditorTools
         {
             PlayerSettings.companyName = "Hazelwood";
             PlayerSettings.productName = "Forest to Fortune";
-            PlayerSettings.bundleVersion = "2.0.0";
+            PlayerSettings.bundleVersion = "2.2.0";
             Icon();
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;

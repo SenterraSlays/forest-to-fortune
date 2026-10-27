@@ -36,9 +36,9 @@ namespace ChoppingTrees
     public static class Achievements
     {
         /// <summary>Tabs of the achievements screen, in order.</summary>
-        public static readonly string[] Groups = { "Chopping", "Wealth", "Rebirth", "Gear", "Industry", "Explorer", "Milestones" };
+        public static readonly string[] Groups = { "Chopping", "Wealth", "Rebirth", "Gear", "Industry", "Explorer", "Forests", "Milestones" };
 
-        public static readonly string[] GroupIcons = { "axe", "coin", "rebirth", "backpack", "gear", "pine", "star" };
+        public static readonly string[] GroupIcons = { "axe", "coin", "rebirth", "backpack", "gear", "mountain", "pine", "star" };
 
         public static readonly AchievementDef[] All = Build();
 
@@ -127,14 +127,13 @@ namespace ChoppingTrees
             Bonus(Add("axe_3", "Broad Shoulders", "Forge the Tempered Broadaxe.", 3, axe), UpgradeEffect.AxeSpeed, 0.05f);
             Bonus(Add("axe_5", "Frostbitten", "Forge the Frostbite Axe.", 5, axe), UpgradeEffect.AxeDamage, 0.1f);
             Points(Add("axe_7", "Starsteel", "Forge the Starsteel Axe.", 7, axe), 3);
+            Bonus(Add("axe_8", "Bog Iron", "Forge the Marshwarden Axe.", 8, axe), UpgradeEffect.AxeDamage, 0.1f);
+            Points(Add("axe_10", "Moonsplitter", "Forge the Moonsplitter.", 10, axe), 5);
             icon = "backpack";
             Bonus(Add("pack_3", "Pack Rat", "Get the Frame Pack.", 3, pack), UpgradeEffect.MoveSpeed, 0.05f);
             Bonus(Add("pack_6", "Beast of Burden", "Get the Hauler's Harness.", 6, pack), UpgradeEffect.BackpackBonus, 0.15f);
             Points(Add("pack_9", "Bottomless Bag", "Get the Starlight Satchel.", 9, pack), 2);
-            icon = "wrench";
-            Bonus(Add("upg_25", "Tinkerer", "Own 25 upgrade levels at once.", 25, m => m.UpgradeLevels(false)), UpgradeEffect.UpgradeDiscount, 0.02f);
-            Bonus(Add("upg_100", "Engineer", "Own 100 upgrade levels at once.", 100, m => m.UpgradeLevels(false)), UpgradeEffect.MachineDiscount, 0.03f);
-            Points(Add("upg_250", "Grand Designer", "Own 250 upgrade levels at once.", 250, m => m.UpgradeLevels(false)), 3);
+            Points(Add("pack_12", "Bag of Holding", "Get the Moonlit Satchel.", 12, pack), 3);
 
             group = "Industry"; icon = "saw";
             Money(Add("chopper_1", "Automation", "Build an Auto-Chopper.", 1, Machines("chopper")), 300);
@@ -147,8 +146,16 @@ namespace ChoppingTrees
             icon = "house";
             Bonus(Add("builder_1", "Architect", "Build a Cabin Builder.", 1, Machines("builder")), UpgradeEffect.ResourcePrice, 0.1f, "cabins");
             Points(Add("builder_3", "Housing Boom", "Own 3 Cabin Builders.", 3, Machines("builder")), 3);
+            icon = "panel";
+            Bonus(Add("press_1", "Pressed for Time", "Build a Panel Press.", 1, Machines("press")), UpgradeEffect.ResourcePrice, 0.1f, "panels");
+            icon = "sofa";
+            Bonus(Add("studio_1", "Interior Designer", "Build an Interior Studio.", 1, Machines("studio")), UpgradeEffect.ResourcePrice, 0.1f, "roomsets");
+            icon = "lodge";
+            Points(Add("lodge_1", "Lodge Keeper", "Build a Lodge Builder.", 1, Machines("lodge")), 3);
+            Bonus(Add("lodge_3", "Resort Empire", "Own 3 Lodge Builders.", 3, Machines("lodge")), UpgradeEffect.ProductionBonus, 0.1f);
             icon = "gear";
-            Bonus(Add("machines_17", "Industrial Revolution", "Own 17 machines at once.", 17, m => m.MachinesOwned), UpgradeEffect.ProductionBonus, 0.1f);
+            // The id is from 2.1, when the yard held 17 machines.
+            Bonus(Add("machines_17", "Industrial Revolution", "Own 26 machines at once: every slot in the yard.", 26, m => m.MachinesOwned), UpgradeEffect.ProductionBonus, 0.1f);
 
             group = "Explorer"; icon = "mountain";
             Bonus(Add("area_1", "Into the Grove", "Open the Old Grove.", 1, areas), UpgradeEffect.MoveSpeed, 0.05f);
@@ -156,20 +163,32 @@ namespace ChoppingTrees
             Bonus(Add("area_3", "Peak Performance", "Open Frostpine Peaks.", 3, areas), UpgradeEffect.AxeDamage, 0.1f);
             Bonus(Add("area_4", "In Full Bloom", "Open Blossom Vale.", 4, areas), UpgradeEffect.SellBonus, 0.1f);
             Points(Add("area_5", "Crystal Clear", "Open the Crystal Wilds.", 5, areas), 5);
-            icon = "pine";
+            Bonus(Add("area_6", "Into the Mist", "Open Willow Marsh.", 6, areas), UpgradeEffect.WoodYield, 0.1f);
+            Points(Add("area_7", "Canyon Crossing", "Open Sunstone Canyon.", 7, areas), 3);
+            Points(Add("area_8", "Over the Moon", "Open the Moonlit Highlands.", 8, areas), 5);
+
+            group = "Forests"; icon = "pine";
             Bonus(Add("gold_1", "Golden Opportunity", "Fell a Goldbark.", 1, Felled("goldbark")), UpgradeEffect.TreeCashBonus, 0.1f);
             Bonus(Add("frost_10", "Frostbite", "Fell 10 Frostpines.", 10, Felled("frostpine")), UpgradeEffect.WoodYield, 0.05f);
             Bonus(Add("cherry_25", "Hanami", "Fell 25 Cherry trees.", 25, Felled("cherry")), UpgradeEffect.SellBonus, 0.05f);
             Bonus(Add("ember_25", "Fire Starter", "Fell 25 Emberwoods.", 25, Felled("emberwood")), UpgradeEffect.ProductionBonus, 0.1f);
             Bonus(Add("crystal_1", "Starstruck", "Fell a Crystalwood.", 1, Felled("crystalwood")), UpgradeEffect.TreeCashBonus, 0.25f);
+            Bonus(Add("willow_25", "Weeping Willows", "Fell 25 Willows.", 25, Felled("willow")), UpgradeEffect.SellBonus, 0.05f);
+            Bonus(Add("palm_25", "Palm Reader", "Fell 25 Palms.", 25, Felled("palm")), UpgradeEffect.ProductionBonus, 0.1f);
+            Bonus(Add("moon_1", "Moonstruck", "Fell a Moonwood.", 1, Felled("moonwood")), UpgradeEffect.TreeCashBonus, 0.25f);
 
             group = "Milestones"; icon = "clock";
             Money(Add("play_1h", "Settling In", "Play for 1 hour.", 1, m => m.State.PlaySeconds / 3600.0, AchievementUnit.Hours), 1000);
             Bonus(Add("play_10h", "Regular", "Play for 10 hours.", 10, m => m.State.PlaySeconds / 3600.0, AchievementUnit.Hours), UpgradeEffect.ProductionBonus, 0.05f);
             Points(Add("play_50h", "Lifer", "Play for 50 hours.", 50, m => m.State.PlaySeconds / 3600.0, AchievementUnit.Hours), 3);
+            icon = "wrench";
+            Bonus(Add("upg_25", "Tinkerer", "Own 25 upgrade levels at once.", 25, m => m.UpgradeLevels(false)), UpgradeEffect.UpgradeDiscount, 0.02f);
+            Bonus(Add("upg_100", "Engineer", "Own 100 upgrade levels at once.", 100, m => m.UpgradeLevels(false)), UpgradeEffect.MachineDiscount, 0.03f);
+            Points(Add("upg_250", "Grand Designer", "Own 250 upgrade levels at once.", 250, m => m.UpgradeLevels(false)), 3);
             icon = "star";
             Points(Add("ach_25", "Overachiever", "Unlock 25 other achievements.", 25, m => m.State.Achievements.Count), 5);
             Bonus(Add("ach_50", "Hall of Fame", "Unlock 50 other achievements.", 50, m => m.State.Achievements.Count), UpgradeEffect.SellBonus, 0.1f);
+            Points(Add("ach_70", "Living History", "Unlock 70 other achievements.", 70, m => m.State.Achievements.Count), 10);
             return list.ToArray();
         }
 

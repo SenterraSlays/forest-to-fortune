@@ -28,9 +28,9 @@ MonoBehaviour:
   effectPerLevel: 1
   levelNames: []
   requires:
-  - upgradeId: sawmill_deed
+  - upgradeId: press_deed
     level: 1
   sortOrder: 12
   legacy: 1
-  treePosition: {x: -6.05, y: 3.95}
+  treePosition: {x: -6.05, y: 5.25}
   icon: chair

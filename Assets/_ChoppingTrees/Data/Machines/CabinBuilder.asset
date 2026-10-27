@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.MachineDef
   id: builder
   displayName: Cabin Builder
-  description: 'Builds furnished flat-pack log cabins: the most valuable thing you can sell.'
+  description: Builds furnished room sets into flat-pack log cabins.
   kind: 1
   baseRate: 0.6
-  input: {fileID: 11400000, guid: e00fb27436e68964dabc00a898b748be, type: 2}
-  inputPerOutput: 5
+  input: {fileID: 11400000, guid: a6f303dfef2f1b94c81b4943517ee19f, type: 2}
+  inputPerOutput: 3
   output: {fileID: 11400000, guid: f653a108e96f8ac47bcc0a07b1ef2ebf, type: 2}
   tierModels:
   - CabinBuilder
-  order: 3
+  order: 5

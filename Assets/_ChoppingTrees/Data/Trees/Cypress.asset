@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ce12b823a921eb468d3a10d0d2ca8fe, type: 3}
+  m_Name: Cypress
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.TreeType
+  id: cypress
+  displayName: Cypress
+  modelName: Tree_Cypress
+  stumpModel: Stump_Bark
+  maxHealth: 600000
+  woodReward: 260000
+  cashBonus: 0
+  requiredAxeTier: 8
+  respawnSeconds: 75
+  trunkRadius: 0.7
+  trunkHeight: 12
+  notchHeight: 0.7
+  scaleRange: {x: 0.9, y: 1.15}
+  logPieces: 5
+  soundPitch: 0.75
+  chipColor: {r: 0.82, g: 0.6, b: 0.45, a: 1}
+  leafColor: {r: 0.3, g: 0.46, b: 0.3, a: 1}

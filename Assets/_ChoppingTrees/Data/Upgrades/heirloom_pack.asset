@@ -18,7 +18,7 @@ MonoBehaviour:
   category: 5
   effect: 30
   targetId: 
-  maxLevel: 6
+  maxLevel: 9
   baseCost: 0
   costGrowth: 1
   explicitCosts:
@@ -28,6 +28,9 @@ MonoBehaviour:
   - 16
   - 24
   - 35
+  - 48
+  - 64
+  - 85
   effectPerLevel: 1
   levelNames: []
   requires:

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: press_count
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: press_count
+  displayName: Panel Press
+  description: Presses 2 planks into a wood panel. Workshops need panels to make furniture.
+  category: 1
+  effect: 3
+  targetId: press
+  maxLevel: 3
+  baseCost: 0
+  costGrowth: 5
+  explicitCosts:
+  - 20000
+  - 100000
+  - 500000
+  effectPerLevel: 1
+  levelNames: []
+  requires:
+  - upgradeId: sawmill_count
+    level: 1
+  sortOrder: 27
+  legacy: 0
+  treePosition: {x: 3.3, y: 3.95}
+  icon: panel

@@ -41,10 +41,18 @@ namespace ChoppingTrees.EditorTools
             planks.id = "planks"; planks.displayName = "Planks"; planks.basePrice = 3.5; planks.color = new Color(0.95f, 0.80f, 0.55f); planks.sortOrder = 1; planks.hiddenUntilProduced = true;
             wood.icon = "log"; planks.icon = "plank";
             // The production chain goes on: planks -> furniture (Carpentry Workshop) -> cabin kits (Cabin Builder).
+            // 2.2: wood panels between planks and furniture, room sets between furniture and cabin
+            // kits, and lodges after cabin kits. Each step is worth a little more than what it uses.
+            var panels = Asset<ResourceDef>($"{Data}/Resources/Panels.asset");
+            panels.id = "panels"; panels.displayName = "Panels"; panels.basePrice = 9; panels.color = new Color(0.88f, 0.70f, 0.47f); panels.sortOrder = 2; panels.hiddenUntilProduced = true; panels.icon = "panel";
+            var roomsets = Asset<ResourceDef>($"{Data}/Resources/RoomSets.asset");
+            roomsets.id = "roomsets"; roomsets.displayName = "Room Sets"; roomsets.basePrice = 95; roomsets.color = new Color(0.78f, 0.58f, 0.80f); roomsets.sortOrder = 4; roomsets.hiddenUntilProduced = true; roomsets.icon = "sofa";
+            var lodges = Asset<ResourceDef>($"{Data}/Resources/Lodges.asset");
+            lodges.id = "lodges"; lodges.displayName = "Lodges"; lodges.basePrice = 1500; lodges.color = new Color(0.55f, 0.76f, 0.92f); lodges.sortOrder = 6; lodges.hiddenUntilProduced = true; lodges.icon = "lodge";
             var furniture = Asset<ResourceDef>($"{Data}/Resources/Furniture.asset");
-            furniture.id = "furniture"; furniture.displayName = "Furniture"; furniture.basePrice = 16; furniture.color = new Color(0.86f, 0.58f, 0.36f); furniture.sortOrder = 2; furniture.hiddenUntilProduced = true; furniture.icon = "chair";
+            furniture.id = "furniture"; furniture.displayName = "Furniture"; furniture.basePrice = 24; furniture.color = new Color(0.86f, 0.58f, 0.36f); furniture.sortOrder = 3; furniture.hiddenUntilProduced = true; furniture.icon = "chair";
             var cabins = Asset<ResourceDef>($"{Data}/Resources/CabinKits.asset");
-            cabins.id = "cabins"; cabins.displayName = "Cabin Kits"; cabins.basePrice = 130; cabins.color = new Color(0.93f, 0.47f, 0.33f); cabins.sortOrder = 3; cabins.hiddenUntilProduced = true; cabins.icon = "house";
+            cabins.id = "cabins"; cabins.displayName = "Cabin Kits"; cabins.basePrice = 380; cabins.color = new Color(0.93f, 0.47f, 0.33f); cabins.sortOrder = 5; cabins.hiddenUntilProduced = true; cabins.icon = "house";
 
             // ---- trees: id, name, model, stump, hp, wood, cash, tier, respawn, radius, height, notch, logs, pitch, chip, leaf
             var pine = Tree("pine", "Pine", "Tree_Pine", "Stump_Bark", 3, 4, 0, 0, 25, 0.28f, 7.0f, 0.55f, 2, 1.1f, new Color(0.9f, 0.75f, 0.5f), new Color(0.16f, 0.38f, 0.25f));
@@ -59,6 +67,11 @@ namespace ChoppingTrees.EditorTools
             var cherry = Tree("cherry", "Cherry", "Tree_Cherry", "Stump_Cherry", 26000, 15000, 0, 6, 60, 0.42f, 7.5f, 0.6f, 3, 0.95f, new Color(0.93f, 0.72f, 0.62f), new Color(1f, 0.72f, 0.84f));
             var ember = Tree("emberwood", "Emberwood", "Tree_Emberwood", "Stump_Ember", 42000, 24000, 0, 6, 70, 0.55f, 9.0f, 0.65f, 4, 0.8f, new Color(0.96f, 0.56f, 0.3f), new Color(1f, 0.46f, 0.18f));
             var crystal = Tree("crystalwood", "Crystalwood", "Tree_Crystalwood", "Stump_Crystal", 140000, 60000, 450000, 7, 120, 0.55f, 9.5f, 0.7f, 4, 1.1f, new Color(0.72f, 0.86f, 1f), new Color(0.56f, 0.86f, 1f));
+            var willow = Tree("willow", "Willow", "Tree_Willow", "Stump_Willow", 400000, 180000, 0, 8, 70, 0.6f, 8.0f, 0.65f, 4, 0.85f, new Color(0.86f, 0.78f, 0.6f), new Color(0.56f, 0.72f, 0.36f));
+            var cypress = Tree("cypress", "Cypress", "Tree_Cypress", "Stump_Bark", 600000, 260000, 0, 8, 75, 0.7f, 12f, 0.7f, 5, 0.75f, new Color(0.82f, 0.6f, 0.45f), new Color(0.3f, 0.46f, 0.3f));
+            var palm = Tree("palm", "Palm", "Tree_Palm", "Stump_Palm", 1600000, 700000, 0, 9, 75, 0.38f, 10f, 0.55f, 4, 1.0f, new Color(0.9f, 0.8f, 0.6f), new Color(0.42f, 0.7f, 0.3f));
+            var sunbark = Tree("sunbark", "Sunbark", "Tree_Sunbark", "Stump_Sun", 2400000, 1000000, 0, 9, 80, 0.6f, 9f, 0.65f, 4, 0.85f, new Color(1f, 0.76f, 0.42f), new Color(1f, 0.62f, 0.22f));
+            var moon = Tree("moonwood", "Moonwood", "Tree_Moonwood", "Stump_Moon", 7000000, 2800000, 25000000, 10, 140, 0.6f, 10f, 0.7f, 4, 1.15f, new Color(0.76f, 0.8f, 1f), new Color(0.72f, 0.76f, 1f));
             pine.scaleRange = new Vector2(0.85f, 1.2f);
             redwood.scaleRange = new Vector2(0.9f, 1.1f);
             frost.scaleRange = new Vector2(0.85f, 1.2f);
@@ -73,13 +86,25 @@ namespace ChoppingTrees.EditorTools
             sawmill.description = "Turns wood into planks, which sell for more.";
             sawmill.tierModels = new[] { "Sawmill" }; sawmill.order = 1;
             var workshop = Asset<MachineDef>($"{Data}/Machines/Workshop.asset");
-            workshop.id = "workshop"; workshop.displayName = "Carpentry Workshop"; workshop.kind = MachineKind.Processor; workshop.baseRate = 1.5; workshop.input = planks; workshop.inputPerOutput = 3; workshop.output = furniture;
-            workshop.description = "Turns planks into chairs and tables, which sell for more than the planks they use.";
-            workshop.tierModels = new[] { "Workshop" }; workshop.order = 2;
+            workshop.id = "workshop"; workshop.displayName = "Carpentry Workshop"; workshop.kind = MachineKind.Processor; workshop.baseRate = 1.5; workshop.input = panels; workshop.inputPerOutput = 2; workshop.output = furniture;
+            workshop.description = "Turns wood panels into chairs and tables, which sell for more than the panels they use.";
+            workshop.tierModels = new[] { "Workshop" }; workshop.order = 3;
             var builder = Asset<MachineDef>($"{Data}/Machines/CabinBuilder.asset");
-            builder.id = "builder"; builder.displayName = "Cabin Builder"; builder.kind = MachineKind.Processor; builder.baseRate = 0.6; builder.input = furniture; builder.inputPerOutput = 5; builder.output = cabins;
-            builder.description = "Builds furnished flat-pack log cabins: the most valuable thing you can sell.";
-            builder.tierModels = new[] { "CabinBuilder" }; builder.order = 3;
+            builder.id = "builder"; builder.displayName = "Cabin Builder"; builder.kind = MachineKind.Processor; builder.baseRate = 0.6; builder.input = roomsets; builder.inputPerOutput = 3; builder.output = cabins;
+            builder.description = "Builds furnished room sets into flat-pack log cabins.";
+            builder.tierModels = new[] { "CabinBuilder" }; builder.order = 5;
+            var press = Asset<MachineDef>($"{Data}/Machines/PanelPress.asset");
+            press.id = "press"; press.displayName = "Panel Press"; press.kind = MachineKind.Processor; press.baseRate = 2.0; press.input = planks; press.inputPerOutput = 2; press.output = panels;
+            press.description = "Glues and presses planks into smooth wood panels for the workshops.";
+            press.tierModels = new[] { "PanelPress" }; press.order = 2;
+            var studio = Asset<MachineDef>($"{Data}/Machines/InteriorStudio.asset");
+            studio.id = "studio"; studio.displayName = "Interior Studio"; studio.kind = MachineKind.Processor; studio.baseRate = 0.9; studio.input = furniture; studio.inputPerOutput = 3; studio.output = roomsets;
+            studio.description = "Designs furniture into furnished room sets, ready to move into a cabin.";
+            studio.tierModels = new[] { "InteriorStudio" }; studio.order = 4;
+            var lodge = Asset<MachineDef>($"{Data}/Machines/LodgeBuilder.asset");
+            lodge.id = "lodge"; lodge.displayName = "Lodge Builder"; lodge.kind = MachineKind.Processor; lodge.baseRate = 0.35; lodge.input = cabins; lodge.inputPerOutput = 3; lodge.output = lodges;
+            lodge.description = "Joins cabin kits into grand mountain lodges: the most valuable thing you can sell.";
+            lodge.tierModels = new[] { "LodgeBuilder" }; lodge.order = 6;
 
             // ---- areas
             var clearing = Area("clearing", "Pinewood Clearing", "Where it all begins.", true, 0, new[] { pine, birch, oak }, new[] { 0.5f, 0.32f, 0.18f });
@@ -88,20 +113,23 @@ namespace ChoppingTrees.EditorTools
             var peaks = Area("peaks", "Frostpine Peaks", "Snowy slopes of frost-hardened pines.", false, 3, new[] { frost, iron, redwood }, new[] { 0.62f, 0.23f, 0.15f });
             var vale = Area("vale", "Blossom Vale", "A valley of cherry blossom and smouldering emberwood.", false, 4, new[] { cherry, ember, frost }, new[] { 0.52f, 0.3f, 0.18f });
             var wilds = Area("wilds", "Crystal Wilds", "Glowing crystalwood, the rarest timber of all.", false, 5, new[] { ember, cherry, crystal }, new[] { 0.55f, 0.33f, 0.12f });
+            var marsh = Area("marsh", "Willow Marsh", "Misty wetlands of weeping willows and towering cypress.", false, 6, new[] { willow, cypress, crystal }, new[] { 0.55f, 0.35f, 0.1f });
+            var canyon = Area("canyon", "Sunstone Canyon", "Red rock, desert palms and blazing sunbark.", false, 7, new[] { palm, sunbark, cypress }, new[] { 0.45f, 0.4f, 0.15f });
+            var highlands = Area("highlands", "Moonlit Highlands", "Silver moonwood under a sky that never quite turns to day.", false, 8, new[] { sunbark, palm, moon }, new[] { 0.5f, 0.38f, 0.12f });
 
             // ---- upgrades
             var ups = new List<UpgradeDef>
             {
-                Up("axe_tier", "Better Axe", "Forge a stronger axe. Each one hits harder and can cut tougher trees.", UpgradeCategory.Axe, UpgradeEffect.AxeTier, null, 7, 0, 1,
-                    new double[] { 50, 600, 7500, 120000, 2500000, 60000000, 1500000000 }, 1, 0,
-                    new[] { "Steel Axe", "Lumberjack's Axe", "Tempered Broadaxe", "Ironbreaker", "Frostbite Axe", "Emberforge Axe", "Starsteel Axe" }),
+                Up("axe_tier", "Better Axe", "Forge a stronger axe. Each one hits harder and can cut tougher trees.", UpgradeCategory.Axe, UpgradeEffect.AxeTier, null, 10, 0, 1,
+                    new double[] { 50, 600, 7500, 120000, 2500000, 60000000, 1500000000, 4e10, 1e12, 3e13 }, 1, 0,
+                    new[] { "Steel Axe", "Lumberjack's Axe", "Tempered Broadaxe", "Ironbreaker", "Frostbite Axe", "Emberforge Axe", "Starsteel Axe", "Marshwarden Axe", "Sunforged Axe", "Moonsplitter" }),
                 Up("axe_sharpen", "Whetstone", "Keep the edge keen: more damage with every swing.", UpgradeCategory.Axe, UpgradeEffect.AxeDamage, null, 15, 25, 1.55, null, 0.2f, 1,
                     null, Req("axe_tier", 1)),
                 Up("axe_speed", "Grip Training", "Faster, steadier swings.", UpgradeCategory.Axe, UpgradeEffect.AxeSpeed, null, 10, 60, 1.7, null, 0.08f, 2,
                     null, Req("axe_sharpen", 1)),
-                Up("backpack", "Backpack", "Carry more wood on each trip to the market. Machine output goes to the yard, never your pack.", UpgradeCategory.Axe, UpgradeEffect.BackpackCapacity, null, 9, 0, 6,
-                    new double[] { 50, 350, 2200, 15000, 100000, 700000, 5000000, 40000000, 300000000 }, 1, 3,
-                    new[] { "Canvas Satchel", "Leather Rucksack", "Frame Pack", "Logger's Pack", "Expedition Pack", "Hauler's Harness", "Glacier Pack", "Ember Hauler", "Starlight Satchel" }, Req("axe_tier", 1)),
+                Up("backpack", "Backpack", "Carry more wood on each trip to the market. Machine output goes to the yard, never your pack.", UpgradeCategory.Axe, UpgradeEffect.BackpackCapacity, null, 12, 0, 6,
+                    new double[] { 50, 350, 2200, 15000, 100000, 700000, 5000000, 40000000, 300000000, 2.5e9, 2e10, 1.6e11 }, 1, 3,
+                    new[] { "Canvas Satchel", "Leather Rucksack", "Frame Pack", "Logger's Pack", "Expedition Pack", "Hauler's Harness", "Glacier Pack", "Ember Hauler", "Starlight Satchel", "Marsh Pack", "Canyon Hauler", "Moonlit Satchel" }, Req("axe_tier", 1)),
 
                 Up("chopper_count", "Auto-Chopper", "A petrol-powered saw that cuts logs on its own. More machines, more wood.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "chopper", 8, 0, 2.4,
                     new double[] { 200, 1200, 3200, 7500, 16000, 36000, 80000, 180000 }, 1, 0),
@@ -192,14 +220,34 @@ namespace ChoppingTrees.EditorTools
                     null, Req("kiln_drying", 1)),
 
                 // ---- Furniture and cabins: the next steps of the production chain.
-                Up("workshop_count", "Carpentry Workshop", "Turns 3 planks into a set of furniture. Furniture sells for more than the planks it uses.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "workshop", 3, 0, 5,
-                    new double[] { 120000, 600000, 3000000 }, 1, 15, null, Req("sawmill_count", 1)),
+                Up("workshop_count", "Carpentry Workshop", "Turns 2 wood panels into a set of furniture. Furniture sells for more than the panels it uses.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "workshop", 3, 0, 5,
+                    new double[] { 120000, 600000, 3000000 }, 1, 15, null, Req("press_count", 1)),
                 Up("workshop_speed", "Workshop Tools", "Better chisels, planes and lathes for every workshop.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "workshop", 10, 180000, 2.0, null, 0.3f, 16,
                     null, Req("workshop_count", 1)),
                 Up("joinery", "Fine Joinery", "Tighter joints, less waste: more furniture from the same planks.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "workshop", 5, 400000, 2.1, null, 0.1f, 17,
                     null, Req("workshop_speed", 2)),
-                Up("builder_count", "Cabin Builder", "Builds 5 sets of furniture into a log cabin kit, the most valuable thing you can sell.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "builder", 3, 0, 5,
-                    new double[] { 1500000, 8000000, 40000000 }, 1, 18, null, Req("workshop_count", 1)),
+                Up("builder_count", "Cabin Builder", "Builds 3 room sets into a log cabin kit.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "builder", 3, 0, 5,
+                    new double[] { 1500000, 8000000, 40000000 }, 1, 18, null, Req("studio_count", 1)),
+                Up("press_count", "Panel Press", "Presses 2 planks into a wood panel. Workshops need panels to make furniture.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "press", 3, 0, 5,
+                    new double[] { 40000, 200000, 1000000 }, 1, 27, null, Req("sawmill_count", 1)),
+                Up("press_speed", "Hydraulic Press", "Stronger hydraulics for every panel press.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "press", 10, 60000, 2.0, null, 0.3f, 28,
+                    null, Req("press_count", 1)),
+                Up("glulam", "Glulam", "Laminate the offcuts too: more panels from the same planks.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "press", 5, 150000, 2.1, null, 0.1f, 29,
+                    null, Req("press_speed", 2)),
+                Up("studio_count", "Interior Studio", "Designs 3 sets of furniture into a furnished room set. Cabin Builders need room sets.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "studio", 3, 0, 5,
+                    new double[] { 500000, 2500000, 12000000 }, 1, 30, null, Req("workshop_count", 1)),
+                Up("studio_speed", "Design Team", "A bigger design team for every studio.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "studio", 10, 750000, 2.0, null, 0.3f, 31,
+                    null, Req("studio_count", 1)),
+                Up("lodge_count", "Lodge Builder", "Joins 3 cabin kits into a grand mountain lodge, the most valuable thing you can sell.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "lodge", 3, 0, 5,
+                    new double[] { 20000000, 100000000, 500000000 }, 1, 32, null, Req("builder_count", 1)),
+                Up("lodge_speed", "Tower Cranes", "Tall cranes raise lodges faster.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "lodge", 10, 30000000, 2.0, null, 0.3f, 33,
+                    null, Req("lodge_count", 1)),
+                Up("panel_price", "Panel Contracts", "Builders sign contracts for your panels: they sell for more.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "panels", 10, 80000, 1.9, null, 0.25f, 19,
+                    null, Req("plank_price", 3), Req("press_count", 1)),
+                Up("roomset_price", "Interior Magazines", "Your room sets are in every magazine: they sell for more.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "roomsets", 10, 800000, 1.9, null, 0.25f, 20,
+                    null, Req("panel_price", 1), Req("studio_count", 1)),
+                Up("lodge_price", "Ski Resorts", "Resorts pay a fortune for your lodges.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "lodges", 10, 40000000, 1.9, null, 0.25f, 21,
+                    null, Req("roomset_price", 1), Req("lodge_count", 1)),
                 Up("builder_speed", "Power Cranes", "Bigger cranes put cabins up faster.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "builder", 10, 2500000, 2.0, null, 0.3f, 19,
                     null, Req("builder_count", 1)),
                 Up("master_builders", "Master Builders", "A seasoned crew gets more cabins out of the same furniture.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "builder", 5, 6000000, 2.1, null, 0.1f, 20,
@@ -228,22 +276,40 @@ namespace ChoppingTrees.EditorTools
                 // Costs are in skill points (rounded up). Four branches; the first ten perks are the
                 // ones from before the tree, so they stay free of prerequisites.
                 // Heritage: head starts and the rebirth itself.
-                Legacy(Up("heirloom_axe", "Heirloom Axe", "Start every run with a better axe already forged.", UpgradeCategory.Heritage, UpgradeEffect.StartingAxe, null, 6, 0, 1,
-                    new double[] { 2, 4, 8, 16, 30, 50 }, 1, 0)),
+                Legacy(Up("heirloom_axe", "Heirloom Axe", "Start every run with a better axe already forged.", UpgradeCategory.Heritage, UpgradeEffect.StartingAxe, null, 9, 0, 1,
+                    new double[] { 2, 4, 8, 16, 30, 50, 75, 110, 150 }, 1, 0)),
                 Legacy(Up("head_start", "Head Start", "Start every run with money in your pocket.", UpgradeCategory.Heritage, UpgradeEffect.StartingMoney, null, 6, 0, 1,
                     new double[] { 1, 2, 4, 8, 15, 25 }, 500, 1)),
                 Legacy(Up("starter_kit", "Starter Kit", "Start every run with Auto-Choppers already running.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "chopper", 6, 0, 1,
                     new double[] { 2, 3, 5, 8, 12, 18 }, 1, 2)),
-                Legacy(Up("forest_charter", "Forest Charter", "Start every run with the forest gates already open.", UpgradeCategory.Heritage, UpgradeEffect.StartingAreas, null, 5, 0, 1,
-                    new double[] { 4, 10, 20, 35, 55 }, 1, 3)),
-                Legacy(Up("heirloom_pack", "Heirloom Pack", "Start every run with a bigger backpack already on your back.", UpgradeCategory.Heritage, UpgradeEffect.StartingBackpack, null, 6, 0, 1,
-                    new double[] { 3, 6, 10, 16, 24, 35 }, 1, 10, null, Req("heirloom_axe", 1))),
+                Legacy(Up("forest_charter", "Forest Charter", "Start every run with the forest gates already open.", UpgradeCategory.Heritage, UpgradeEffect.StartingAreas, null, 8, 0, 1,
+                    new double[] { 4, 10, 20, 35, 55, 80, 110, 150 }, 1, 3)),
+                Legacy(Up("heirloom_pack", "Heirloom Pack", "Start every run with a bigger backpack already on your back.", UpgradeCategory.Heritage, UpgradeEffect.StartingBackpack, null, 9, 0, 1,
+                    new double[] { 3, 6, 10, 16, 24, 35, 48, 64, 85 }, 1, 10, null, Req("heirloom_axe", 1))),
                 Legacy(Up("sawmill_deed", "Sawmill Deed", "Start every run with Sawmills already turning.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "sawmill", 3, 0, 1,
                     new double[] { 6, 12, 20 }, 1, 11, null, Req("starter_kit", 2))),
                 Legacy(Up("workshop_deed", "Workshop Deed", "Start every run with Carpentry Workshops already built.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "workshop", 3, 0, 1,
-                    new double[] { 15, 25, 40 }, 1, 12, null, Req("sawmill_deed", 1))),
+                    new double[] { 15, 25, 40 }, 1, 12, null, Req("press_deed", 1))),
                 Legacy(Up("builder_charter", "Builder's Charter", "Start every run with Cabin Builders already on site.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "builder", 3, 0, 1,
-                    new double[] { 30, 50, 80 }, 1, 13, null, Req("workshop_deed", 1))),
+                    new double[] { 30, 50, 80 }, 1, 13, null, Req("studio_deed", 1))),
+                Legacy(Up("press_deed", "Press Deed", "Start every run with Panel Presses already running.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "press", 3, 0, 1,
+                    new double[] { 10, 18, 28 }, 1, 17, null, Req("sawmill_deed", 1))),
+                Legacy(Up("studio_deed", "Studio Deed", "Start every run with Interior Studios already open.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "studio", 3, 0, 1,
+                    new double[] { 22, 35, 55 }, 1, 18, null, Req("workshop_deed", 1))),
+                Legacy(Up("lodge_deed", "Lodge Charter", "Start every run with Lodge Builders already on site.", UpgradeCategory.Heritage, UpgradeEffect.StartingMachines, "lodge", 3, 0, 1,
+                    new double[] { 60, 90, 130 }, 1, 19, null, Req("builder_charter", 1))),
+                Legacy(Up("steam_presses", "Steam Presses", "Steam-driven presses: Panel Presses run much faster.", UpgradeCategory.Industry, UpgradeEffect.MachineSpeed, "press", 10, 5, 1.35, null, 0.5f, 39,
+                    null, Req("perfect_joinery", 1))),
+                Legacy(Up("design_dynasty", "Design Dynasty", "A family of designers: Interior Studios run much faster.", UpgradeCategory.Industry, UpgradeEffect.MachineSpeed, "studio", 10, 8, 1.35, null, 0.5f, 40,
+                    null, Req("master_architects", 2))),
+                Legacy(Up("lodge_masons", "Lodge Masons", "Masons who have built a hundred lodges: Lodge Builders run much faster.", UpgradeCategory.Industry, UpgradeEffect.MachineSpeed, "lodge", 10, 14, 1.35, null, 0.5f, 41,
+                    null, Req("design_dynasty", 2))),
+                Legacy(Up("panel_guild", "Panel Guild", "The panel guild bears your crest: panels sell for far more.", UpgradeCategory.Fortune, UpgradeEffect.ResourcePrice, "panels", 10, 5, 1.35, null, 0.5f, 48,
+                    null, Req("plank_empire", 2))),
+                Legacy(Up("showroom_chain", "Showroom Chain", "Showrooms in every city: room sets sell for far more.", UpgradeCategory.Fortune, UpgradeEffect.ResourcePrice, "roomsets", 10, 9, 1.35, null, 0.5f, 49,
+                    null, Req("panel_guild", 2))),
+                Legacy(Up("lodge_magnate", "Lodge Magnate", "The name behind every great lodge: lodges sell for far more.", UpgradeCategory.Fortune, UpgradeEffect.ResourcePrice, "lodges", 10, 16, 1.35, null, 0.5f, 50,
+                    null, Req("cabin_tycoon", 2))),
                 Legacy(Up("scholar", "Scholar", "Learn from every life: each rebirth gives an extra skill point.", UpgradeCategory.Heritage, UpgradeEffect.ExtraSkillPoints, null, 5, 0, 1,
                     new double[] { 10, 25, 50, 90, 150 }, 1, 14, null, Req("head_start", 3))),
                 Legacy(Up("ancestral_wisdom", "Ancestral Wisdom", "Every rebirth you have ever done counts for more.", UpgradeCategory.Heritage, UpgradeEffect.RebirthBonus, null, 5, 8, 1.6, null, 0.02f, 15,
@@ -321,6 +387,24 @@ namespace ChoppingTrees.EditorTools
                     null, Req("area_peaks", 1), Req("axe_tier", 5)),
                 Up("area_wilds", "Crystal Wilds", "Open the gate to the Crystal Wilds: glowing crystalwood, the rarest timber of all.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "wilds", 1, 0, 1, new double[] { 4000000000 }, 1, 13,
                     null, Req("area_vale", 1), Req("axe_tier", 6)),
+                Up("area_marsh", "Willow Marsh", "Open the gate to Willow Marsh: weeping willows and towering cypress.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "marsh", 1, 0, 1, new double[] { 1e11 }, 1, 20,
+                    null, Req("area_wilds", 1), Req("axe_tier", 7)),
+                Up("area_canyon", "Sunstone Canyon", "Open the gate to Sunstone Canyon: desert palms and blazing sunbark.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "canyon", 1, 0, 1, new double[] { 3e12 }, 1, 21,
+                    null, Req("area_marsh", 1), Req("axe_tier", 8)),
+                Up("area_highlands", "Moonlit Highlands", "Open the gate to the Moonlit Highlands: silver moonwood, worth a fortune.", UpgradeCategory.Forest, UpgradeEffect.ForestArea, "highlands", 1, 0, 1, new double[] { 8e13 }, 1, 22,
+                    null, Req("area_canyon", 1), Req("axe_tier", 9)),
+                Up("bog_iron", "Bog Iron", "Iron dug from the marsh makes a fearsome edge: more damage.", UpgradeCategory.Forest, UpgradeEffect.AxeDamage, null, 10, 1.5e11, 1.8, null, 0.6f, 23,
+                    null, Req("area_marsh", 1)),
+                Up("firefly_lanterns", "Firefly Lanterns", "Fireflies light the yard all night: every machine works harder.", UpgradeCategory.Forest, UpgradeEffect.ProductionBonus, null, 10, 2.5e11, 1.9, null, 0.15f, 24,
+                    null, Req("bog_iron", 1)),
+                Up("sun_kilns", "Sun Kilns", "Sun-dried timber fetches a premium: every sale pays more.", UpgradeCategory.Forest, UpgradeEffect.SellBonus, null, 10, 4e12, 1.9, null, 0.08f, 25,
+                    null, Req("area_canyon", 1)),
+                Up("canyon_winds", "Canyon Winds", "The wind at your back: move faster everywhere.", UpgradeCategory.Forest, UpgradeEffect.MoveSpeed, null, 3, 6e12, 2.5, null, 0.05f, 26,
+                    null, Req("sun_kilns", 1)),
+                Up("moonlit_harvest", "Moonlit Harvest", "Cut by moonlight: far more wood from every tree.", UpgradeCategory.Forest, UpgradeEffect.WoodYield, null, 5, 1e14, 2.1, null, 0.3f, 27,
+                    null, Req("area_highlands", 1)),
+                Up("lunar_fortune", "Lunar Fortune", "Moonwood glitters with silver: rich trees drop much more cash.", UpgradeCategory.Forest, UpgradeEffect.TreeCashBonus, null, 5, 1.5e14, 2.0, null, 0.75f, 28,
+                    null, Req("moonlit_harvest", 1)),
                 Up("frost_tempering", "Frost Tempering", "Quench your blade in glacier water: more damage with every swing.", UpgradeCategory.Forest, UpgradeEffect.AxeDamage, null, 10, 12000000, 1.8, null, 0.4f, 14,
                     null, Req("area_peaks", 1)),
                 Up("snow_chains", "Snow Chains", "Grip on ice: move faster everywhere.", UpgradeCategory.Forest, UpgradeEffect.MoveSpeed, null, 3, 20000000, 2.5, null, 0.05f, 15,
@@ -436,39 +520,39 @@ namespace ChoppingTrees.EditorTools
                 ["precision_saws"] = (2.2f, 5.25f, "saw"),
                 ["kiln_drying"] = (2.2f, 6.55f, "plank"),
                 ["overdrive_saws"] = (2.2f, 7.85f, "saw"),
-                ["workshop_count"] = (3.3f, 3.95f, "chair"),
-                ["workshop_speed"] = (3.3f, 5.25f, "wrench"),
-                ["joinery"] = (3.3f, 6.55f, "gem"),
-                ["builder_count"] = (4.4f, 5.25f, "house"),
-                ["builder_speed"] = (4.4f, 6.55f, "gear"),
-                ["master_builders"] = (4.4f, 7.85f, "crown"),
+                ["workshop_count"] = (4.40f, 3.95f, "chair"),
+                ["workshop_speed"] = (4.40f, 5.25f, "wrench"),
+                ["joinery"] = (4.40f, 6.55f, "gem"),
+                ["builder_count"] = (6.60f, 3.95f, "house"),
+                ["builder_speed"] = (6.60f, 5.25f, "gear"),
+                ["master_builders"] = (6.60f, 6.55f, "crown"),
                 ["hydraulic_rams"] = (0.0f, 7.85f, "gear"),
                 ["graveyard_shift"] = (0.0f, 9.15f, "moon"),
                 ["conveyor_belts"] = (1.1f, 9.15f, "chart"),
                 ["band_saws"] = (2.2f, 9.15f, "saw"),
-                ["power_lathes"] = (3.3f, 7.85f, "gear"),
-                ["prefab_panels"] = (4.4f, 9.15f, "house"),
+                ["power_lathes"] = (4.40f, 7.85f, "gear"),
+                ["prefab_panels"] = (6.60f, 7.85f, "house"),
 
                 // Economy: prices, pickup, offline time, sales and luck.
-                ["wood_price"] = (6.9f, 1.35f, "coin"),
-                ["haggling"] = (8.0f, 1.35f, "tag"),
-                ["export_deals"] = (9.1f, 1.35f, "cart"),
-                ["wood_brokers"] = (5.8f, 2.65f, "coin"),
-                ["plank_price"] = (5.8f, 3.95f, "star"),
-                ["premium_planks"] = (5.8f, 5.25f, "plank"),
-                ["magnet"] = (6.9f, 2.65f, "magnet"),
-                ["strong_magnet"] = (6.9f, 3.95f, "magnet"),
-                ["night_shift"] = (8.0f, 2.65f, "moon"),
-                ["long_nights"] = (8.0f, 3.95f, "moon"),
-                ["lucky_finds"] = (9.1f, 2.65f, "clover"),
-                ["fortunes_favor"] = (9.1f, 3.95f, "clover"),
-                ["bulk_buyer"] = (9.1f, 5.25f, "tag"),
-                ["furniture_price"] = (5.8f, 6.55f, "chair"),
-                ["cabin_price"] = (5.8f, 7.85f, "house"),
-                ["designer_furniture"] = (6.9f, 6.55f, "chair"),
-                ["luxury_cabins"] = (6.9f, 7.85f, "crown"),
-                ["global_trade"] = (9.1f, 6.55f, "cart"),
-                ["treasure_hunter"] = (9.1f, 7.85f, "nugget"),
+                ["wood_price"] = (11.30f, 1.35f, "coin"),
+                ["haggling"] = (12.40f, 1.35f, "tag"),
+                ["export_deals"] = (13.50f, 1.35f, "cart"),
+                ["wood_brokers"] = (10.20f, 2.65f, "coin"),
+                ["plank_price"] = (10.20f, 3.95f, "star"),
+                ["premium_planks"] = (10.20f, 5.25f, "plank"),
+                ["magnet"] = (11.30f, 2.65f, "magnet"),
+                ["strong_magnet"] = (11.30f, 3.95f, "magnet"),
+                ["night_shift"] = (12.40f, 2.65f, "moon"),
+                ["long_nights"] = (12.40f, 3.95f, "moon"),
+                ["lucky_finds"] = (13.50f, 2.65f, "clover"),
+                ["fortunes_favor"] = (13.50f, 3.95f, "clover"),
+                ["bulk_buyer"] = (13.50f, 5.25f, "tag"),
+                ["furniture_price"] = (10.20f, 6.55f, "chair"),
+                ["cabin_price"] = (10.20f, 7.85f, "house"),
+                ["designer_furniture"] = (11.30f, 6.55f, "chair"),
+                ["luxury_cabins"] = (11.30f, 7.85f, "crown"),
+                ["global_trade"] = (13.50f, 6.55f, "cart"),
+                ["treasure_hunter"] = (13.50f, 7.85f, "nugget"),
 
                 // ---- Legacy tree (its own screen): 14 columns, x = -7.15..7.15, from the rebirth emblem.
                 // Heritage
@@ -476,8 +560,8 @@ namespace ChoppingTrees.EditorTools
                 ["heirloom_pack"] = (-7.15f, 2.65f, "backpack"),
                 ["starter_kit"] = (-6.05f, 1.35f, "saw"),
                 ["sawmill_deed"] = (-6.05f, 2.65f, "plank"),
-                ["workshop_deed"] = (-6.05f, 3.95f, "chair"),
-                ["builder_charter"] = (-6.05f, 5.25f, "house"),
+                ["workshop_deed"] = (-6.05f, 5.25f, "chair"),
+                ["builder_charter"] = (-6.05f, 7.85f, "house"),
                 ["head_start"] = (-4.95f, 1.35f, "coin"),
                 ["scholar"] = (-4.95f, 2.65f, "star"),
                 ["ancestral_wisdom"] = (-4.95f, 3.95f, "crown"),
@@ -515,6 +599,34 @@ namespace ChoppingTrees.EditorTools
                 ["golden_touch"] = (6.05f, 3.95f, "nugget"),
                 ["old_connections"] = (7.15f, 2.65f, "chart"),
                 ["druids_blessing"] = (7.15f, 3.95f, "sprout"),
+                ["press_count"] = (3.3f, 3.95f, "panel"),
+                ["press_speed"] = (3.3f, 5.25f, "bolt"),
+                ["glulam"] = (3.3f, 6.55f, "gem"),
+                ["studio_count"] = (5.5f, 3.95f, "sofa"),
+                ["studio_speed"] = (5.5f, 5.25f, "star"),
+                ["lodge_count"] = (7.7f, 3.95f, "lodge"),
+                ["lodge_speed"] = (7.7f, 5.25f, "mountain"),
+                ["panel_price"] = (9.1f, 5.25f, "panel"),
+                ["roomset_price"] = (9.1f, 6.55f, "sofa"),
+                ["lodge_price"] = (9.1f, 7.85f, "lodge"),
+                ["area_marsh"] = (-8.8f, 9.15f, "leaf"),
+                ["area_canyon"] = (-8.8f, 10.45f, "mountain"),
+                ["area_highlands"] = (-8.8f, 11.75f, "moon"),
+                ["bog_iron"] = (-9.9f, 10.45f, "axe"),
+                ["firefly_lanterns"] = (-11.0f, 10.45f, "bolt"),
+                ["sun_kilns"] = (-9.9f, 11.75f, "coin"),
+                ["canyon_winds"] = (-11.0f, 11.75f, "run"),
+                ["moonlit_harvest"] = (-9.9f, 13.05f, "log"),
+                ["lunar_fortune"] = (-11.0f, 13.05f, "star"),
+                ["press_deed"] = (-6.05f, 3.95f, "panel"),
+                ["studio_deed"] = (-6.05f, 6.55f, "sofa"),
+                ["lodge_deed"] = (-6.05f, 9.15f, "lodge"),
+                ["steam_presses"] = (1.65f, 5.25f, "panel"),
+                ["design_dynasty"] = (2.75f, 6.55f, "sofa"),
+                ["lodge_masons"] = (2.75f, 7.85f, "lodge"),
+                ["panel_guild"] = (6.05f, 5.25f, "panel"),
+                ["showroom_chain"] = (6.05f, 6.55f, "sofa"),
+                ["lodge_magnate"] = (4.95f, 7.85f, "lodge"),
             };
             foreach (var u in ups)
                 if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }
@@ -530,11 +642,11 @@ namespace ChoppingTrees.EditorTools
 
             var cfg = Asset<GameConfig>($"{Data}/GameConfig.asset");
             // Wood carried by hand per backpack tier (machine output goes to the yard instead).
-            cfg.backpackCapacity = new double[] { 50, 150, 400, 1000, 2500, 6000, 15000, 40000, 100000, 250000 };
-            // Axe tiers 5-7 cut the far forests' trees.
-            cfg.axeTierDamage = new[] { 1f, 2.5f, 6f, 16f, 45f, 130f, 380f, 1100f };
-            cfg.axeTierSpeed = new[] { 1f, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f, 1.3f, 1.35f };
-            cfg.axeModels = new[] { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4", "Axe_5", "Axe_6", "Axe_7" };
+            cfg.backpackCapacity = new double[] { 50, 150, 400, 1000, 2500, 6000, 15000, 40000, 100000, 250000, 600000, 1500000, 4000000 };
+            // Axe tiers 5-10 cut the far forests' trees.
+            cfg.axeTierDamage = new[] { 1f, 2.5f, 6f, 16f, 45f, 130f, 380f, 1100f, 3200f, 9000f, 26000f };
+            cfg.axeTierSpeed = new[] { 1f, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f, 1.3f, 1.35f, 1.4f, 1.45f, 1.5f };
+            cfg.axeModels = new[] { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4", "Axe_5", "Axe_6", "Axe_7", "Axe_8", "Axe_9", "Axe_10" };
             cfg.baseBackpackName = "Burlap Sack";
             // Rebirths: first one $5,000, each next one x1.03; every rebirth adds +15% to all earnings
             // and gives 3 skill points.
@@ -544,10 +656,10 @@ namespace ChoppingTrees.EditorTools
             cfg.rebirthSkillPoints = 3;
             var db = Asset<GameDatabase>(DatabasePath);
             db.config = cfg;
-            db.resources = new[] { wood, planks, furniture, cabins };
-            db.trees = new[] { pine, birch, oak, maple, redwood, iron, gold, frost, cherry, ember, crystal };
-            db.machines = new[] { chopper, sawmill, workshop, builder };
-            db.areas = new[] { clearing, grove, ridge, peaks, vale, wilds };
+            db.resources = new[] { wood, planks, panels, furniture, roomsets, cabins, lodges };
+            db.trees = new[] { pine, birch, oak, maple, redwood, iron, gold, frost, cherry, ember, crystal, willow, cypress, palm, sunbark, moon };
+            db.machines = new[] { chopper, sawmill, press, workshop, studio, builder, lodge };
+            db.areas = new[] { clearing, grove, ridge, peaks, vale, wilds, marsh, canyon, highlands };
             db.upgrades = ups.ToArray();
             db.bodyFont = ProjectSetup.Font("Inter-Regular");
             db.boldFont = ProjectSetup.Font("Inter-SemiBold");

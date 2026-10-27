@@ -5,7 +5,7 @@
 A first-person incremental game made in Unity 6 (6000.6.6f1, URP). You start with a rusty
 hatchet in a pine clearing: chop trees, collect the logs, sell them at the Lumber Market and
 spend the money at the Workbench. Better axes cut tougher trees, Auto-Choppers and Sawmills
-work for you (even while the game is closed), and five gated forests open up as you grow.
+work for you (even while the game is closed), and eight gated forests open up as you grow.
 
 ## Playing
 
@@ -61,8 +61,9 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    the buttons in the legend to zoom or go back to the whole-tree view.
    - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed) → Lucky Strike (chance of double damage); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness) → Clean Cuts (more wood per tree) → Trail Boots (move speed).
    - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers; Sawmill → Carpentry Workshop (up to 3, 3 planks → 1 furniture) → Workshop Tools → Fine Joinery, and Carpentry Workshop → Cabin Builder (up to 3, 5 furniture → 1 cabin kit) → Power Cranes → Master Builders. Furniture Showroom and Cabin Realtors (Economy) raise their prices.
+   - **The production chain (2.2):** wood → planks (Sawmill) → wood panels (**Panel Press**, 2 planks each) → furniture (Carpentry Workshop, 2 panels each) → room sets (**Interior Studio**, 3 furniture each) → cabin kits (Cabin Builder, 3 room sets each) → lodges (**Lodge Builder**, 3 cabin kits each). Each step sells for more than what it uses. The new machines stand in the south yard; each has a speed upgrade and a price upgrade (Hydraulic Press, Glulam, Panel Contracts; Design Team, Interior Magazines; Tower Cranes, Ski Resorts). Saves that already had workshops or cabin builders get a free Panel Press or Interior Studio so nothing stands idle.
    - **Economy:** Market Contacts (wood price) → Log Magnet (pickup range), Night Shift (longer offline time) and Haggling (every sale pays more) → Lucky Finds (felled trees sometimes drop cash).
-   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash). Ironwood Ridge → Frostpine Peaks ($8M; Ironbreaker) → Blossom Vale ($150M; Frostbite Axe) → Crystal Wilds ($4B; Emberforge Axe), each with two perks of its own: Frost Tempering, Snow Chains; Blossom Festival, Ember Kilns; Crystal Resonance, Starlight Harvest. (Prices here are before the skill tree's half-price scale.)
+   - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash). Ironwood Ridge → Frostpine Peaks ($8M; Ironbreaker) → Blossom Vale ($150M; Frostbite Axe) → Crystal Wilds ($4B; Emberforge Axe), each with two perks of its own: Frost Tempering, Snow Chains; Blossom Festival, Ember Kilns; Crystal Resonance, Starlight Harvest. (Prices here are before the skill tree's half-price scale.) Then Crystal Wilds → Willow Marsh ($100B; Starsteel) → Sunstone Canyon ($3T; Marshwarden Axe) → Moonlit Highlands ($80T; Sunforged Axe), with Bog Iron, Firefly Lanterns, Sun Kilns, Canyon Winds, Moonlit Harvest and Lunar Fortune. Trading posts in Blossom Vale and Sunstone Canyon buy whatever you carry.
    - **Later perks in every branch:** Honed Edge, Steady Rhythm, Cleave (chance to fell a tree in one
      hit), Lucky Blade, Power Swing (bigger double-damage hits), Pack Mule, Timber Sense, Long Strides
      (Axe); Twin Engines, Turbo Choppers, Fuel Efficiency, Assembly Line, Overtime Crew, Kiln Drying,
@@ -72,8 +73,8 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    - **Top of the tree (2.1):** Master Smith, Timberfall, Devastating Blows, Second Wind, Sherpa Frame
      (Axe); Hydraulic Rams, Graveyard Shift, Conveyor Belts, Band Saws, Power Lathes, Prefab Panels
      (Automation); Designer Furniture, Luxury Cabins, Global Trade, Treasure Hunter (Economy). Better Axe
-     goes on to the Frostbite, Emberforge and Starsteel axes, and the Backpack to the Glacier Pack,
-     Ember Hauler and Starlight Satchel.
+     goes on to the Frostbite, Emberforge, Starsteel, Marshwarden, Sunforged and Moonsplitter axes, and the Backpack to the Glacier Pack,
+     Ember Hauler, Starlight Satchel, Marsh Pack, Canyon Hauler and Moonlit Satchel.
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
@@ -84,20 +85,20 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    A rebirth resets money, every upgrade (axes, backpack, machines, forests) and all wood; it keeps
    your rebirths, achievements, lifetime stats and settings. The HUD shows the current multiplier next
    to your money. Each rebirth also gives **3 skill points**. Spend them in the **Legacy Tree**
-   (the button in the Rebirth screen's header): a second skill tree of 40 perks that are never reset,
+   (the button in the Rebirth screen's header): a second skill tree of 49 perks that are never reset,
    in four branches:
 
    | Branch | Perks |
    | --- | --- |
-   | Heritage | Heirloom Axe, Head Start, Starter Kit, Forest Charter, Heirloom Pack (start with a bigger backpack), Sawmill Deed, Workshop Deed, Builder's Charter (start with those machines), Scholar (+1 skill point per rebirth per level), Ancestral Wisdom (+2% earnings per rebirth per level), Phoenix Feather (rebirths up to 50% cheaper) |
+   | Heritage | Heirloom Axe, Head Start, Starter Kit, Forest Charter, Heirloom Pack (start with a bigger backpack), Sawmill Deed, Workshop Deed, Press Deed, Studio Deed, Builder's Charter, Lodge Charter (start with those machines), Scholar (+1 skill point per rebirth per level), Ancestral Wisdom (+2% earnings per rebirth per level), Phoenix Feather (rebirths up to 50% cheaper) |
    | Might | Titan Grip, Quick Hands, Deep Pockets, Lodestone, Keen Eye, Crushing Blows, Legend's Swing, Giant's Strength, Woodsman's Instinct, Fleet Foot |
-   | Industry | Master Engineer, Ancestral Engines, Family Sawmill, Guild Carpenters, Master Architects (much faster machines), Perfect Joinery, Blueprints, Night Watch, Market Courier and Express Courier (the yard stock sells itself every 30 s, then 10 s) |
-   | Fortune | Silver Tongue, Timber Baron, Plank Empire, Furniture Dynasty, Cabin Tycoon (higher prices), Fortune's Child, Golden Touch, Old Connections, Druid's Blessing |
+   | Industry | Master Engineer, Ancestral Engines, Family Sawmill, Guild Carpenters, Master Architects, Steam Presses, Design Dynasty, Lodge Masons (much faster machines), Perfect Joinery, Blueprints, Night Watch, Market Courier and Express Courier (the yard stock sells itself every 30 s, then 10 s) |
+   | Fortune | Silver Tongue, Timber Baron, Plank Empire, Furniture Dynasty, Cabin Tycoon, Panel Guild, Showroom Chain, Lodge Magnate (higher prices), Fortune's Child, Golden Touch, Old Connections, Druid's Blessing |
 
    Head starts apply as soon as you buy them and again at the start of every run. Saves from before
    2.1 get the extra skill points their earlier rebirths now earn (3 each) the first time they load.
-7. **Achievements.** 59 achievements in seven groups (Chopping, Wealth, Rebirth, Gear, Industry,
-   Explorer, Milestones), in the pause menu. Each gives a reward once: money, skill points, or a
+7. **Achievements.** 73 achievements in eight groups (Chopping, Wealth, Rebirth, Gear, Industry,
+   Explorer, Forests, Milestones), in the pause menu. Each gives a reward once: money, skill points, or a
    permanent bonus for that save (+5% axe damage, +10% on all sales...). They belong to the save slot
    (every slot earns its own) and stay through rebirths. A banner drops in at the top when one unlocks;
    an older save collects everything its progress already earned when you first play it, shown as one
@@ -115,7 +116,12 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
 | Frostpine | Peaks / Vale | Frostbite Axe | 8,000 | 4,800 |
 | Cherry | Vale / Wilds | Emberforge Axe | 26,000 | 15,000 |
 | Emberwood | Vale / Wilds | Emberforge Axe | 42,000 | 24,000 |
-| Crystalwood | Crystal Wilds | Starsteel Axe | 140,000 | 60,000 + $450,000 |
+| Crystalwood | Crystal Wilds / Marsh | Starsteel Axe | 140,000 | 60,000 + $450,000 |
+| Willow | Willow Marsh | Marshwarden Axe | 400,000 | 180,000 |
+| Cypress | Marsh / Canyon | Marshwarden Axe | 600,000 | 260,000 |
+| Palm | Canyon / Highlands | Sunforged Axe | 1,600,000 | 700,000 |
+| Sunbark | Canyon / Highlands | Sunforged Axe | 2,400,000 | 1,000,000 |
+| Moonwood | Moonlit Highlands | Moonsplitter | 7,000,000 | 2,800,000 + $25,000,000 |
 
 ### Graphics and performance
 

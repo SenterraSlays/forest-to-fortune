@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.MachineDef
   id: workshop
   displayName: Carpentry Workshop
-  description: Turns planks into chairs and tables, which sell for more than the planks they use.
+  description: Turns wood panels into chairs and tables, which sell for more than the panels they use.
   kind: 1
   baseRate: 1.5
-  input: {fileID: 11400000, guid: 545e8c321f5d9e6469fea82fbb720860, type: 2}
-  inputPerOutput: 3
+  input: {fileID: 11400000, guid: 3782abbc3ea1c1c43b67dc3316e4343b, type: 2}
+  inputPerOutput: 2
   output: {fileID: 11400000, guid: e00fb27436e68964dabc00a898b748be, type: 2}
   tierModels:
   - Workshop
-  order: 2
+  order: 3

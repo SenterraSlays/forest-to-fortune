@@ -49,6 +49,32 @@ namespace ChoppingTrees
                 State.SkillPoints += owed;
                 State.SkillPointsEarned += owed;
             }
+            EnsureChainSupplied();
+        }
+
+        /// <summary>
+        /// Every processor needs the machine before it in the chain. Saves from before a step was
+        /// added (2.2 put the Panel Press before workshops and the Interior Studio before cabin
+        /// builders), and Legacy deeds for later machines, would leave one idle with nothing to
+        /// process: each missing supplier is given for free (one machine).
+        /// </summary>
+        public void EnsureChainSupplied()
+        {
+            var machines = new List<MachineDef>();
+            foreach (var m in Db.machines) if (m != null) machines.Add(m);
+            machines.Sort((a, b) => b.order.CompareTo(a.order)); // last step first, so gifts cascade down the chain
+            foreach (var m in machines)
+            {
+                if (m.kind != MachineKind.Processor || m.input == null || Upgrades.MachineCount(m.id) <= 0) continue;
+                foreach (var supplier in machines)
+                {
+                    if (supplier.output != m.input) continue;
+                    var u = Db.CountUpgradeFor(supplier.id);
+                    if (u == null || State.Level(u.id) >= 1) continue;
+                    State.SetLevel(u.id, 1);
+                    Upgrades.MarkDirty();
+                }
+            }
         }
 
         /// <summary>Real-time update: production, play time and automatic selling (any AutoSell
@@ -195,6 +221,7 @@ namespace ChoppingTrees
             locked.Sort((a, b) => a.sortOrder.CompareTo(b.sortOrder));
             for (int i = 0; i < Math.Min(areas, locked.Count); i++) AtLeast(Db.AreaUpgradeFor(locked[i].id), 1);
             Upgrades.MarkDirty();
+            EnsureChainSupplied();
             if (money) State.Money = NumberUtil.Add(State.Money, Upgrades.StartingMoney);
         }
 

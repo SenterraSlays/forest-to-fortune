@@ -30,7 +30,7 @@ namespace ChoppingTrees
         /// <summary>True for the Legacy tree: shows the Legacy perks and prices them in skill points.</summary>
         protected virtual bool Legacy => false;
         /// <summary>Tree units the content covers (positions are x = -11..9, y = 0..9).</summary>
-        protected virtual Rect Bounds => Rect.MinMaxRect(-11.7f, -1.25f, 10.0f, 10.4f);
+        protected virtual Rect Bounds => Rect.MinMaxRect(-11.7f, -1.25f, 14.4f, 13.7f);
         protected virtual Vector2 RootPos => new Vector2(0.7f, 0.05f);
         /// <summary>Where the default view looks: the trunk and the first rows of every branch.</summary>
         protected virtual Vector2 HomePos => new Vector2(0.2f, 3.3f);

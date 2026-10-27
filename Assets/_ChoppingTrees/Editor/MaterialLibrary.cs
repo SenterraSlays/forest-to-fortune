@@ -88,6 +88,27 @@ namespace ChoppingTrees.EditorTools
             ["M_CrystalViolet"] = new Spec(0.74f, 0.56f, 1.0f, 0.85f, 0f, new Color(0.9f, 0.45f, 1.5f)),
             ["M_Ice"] = new Spec(0.72f, 0.88f, 1.0f, 0.8f, 0.3f),
             ["M_Starsteel"] = new Spec(0.88f, 0.90f, 0.98f, 0.9f, 0.9f),
+            // 2.2: willow marsh, sunstone canyon, moonlit highlands, the new goods and scenery.
+            ["M_BarkWillow"] = new Spec(0.42f, 0.36f, 0.26f),
+            ["M_LeafWillow"] = new Spec(0.58f, 0.72f, 0.36f),
+            ["M_BarkCypress"] = new Spec(0.45f, 0.34f, 0.26f),
+            ["M_BarkPalm"] = new Spec(0.62f, 0.50f, 0.34f),
+            ["M_LeafPalm"] = new Spec(0.36f, 0.62f, 0.26f),
+            ["M_BarkSun"] = new Spec(0.70f, 0.42f, 0.22f),
+            ["M_LeafSun"] = new Spec(1.0f, 0.62f, 0.20f, 0.15f, 0f, new Color(0.15f, 0.06f, 0f)),
+            ["M_BarkMoon"] = new Spec(0.78f, 0.80f, 0.88f, 0.4f),
+            ["M_LeafMoon"] = new Spec(0.62f, 0.68f, 1.0f, 0.25f, 0f, new Color(0.08f, 0.1f, 0.25f)),
+            ["M_MoonGlow"] = new Spec(0.85f, 0.90f, 1.0f, 0.6f, 0f, new Color(0.9f, 1.0f, 1.6f)),
+            ["M_Sandstone"] = new Spec(0.74f, 0.44f, 0.30f),
+            ["M_Cactus"] = new Spec(0.30f, 0.55f, 0.32f, 0.2f),
+            ["M_Water"] = new Spec(0.22f, 0.34f, 0.38f, 0.95f),
+            ["M_Reed"] = new Spec(0.55f, 0.60f, 0.32f),
+            ["M_Fern"] = new Spec(0.24f, 0.50f, 0.22f),
+            ["M_Fabric"] = new Spec(0.62f, 0.30f, 0.32f),
+            ["M_FabricBlue"] = new Spec(0.30f, 0.42f, 0.62f),
+            ["M_Bogiron"] = new Spec(0.30f, 0.36f, 0.30f, 0.45f, 0.6f),
+            ["M_Sunsteel"] = new Spec(1.0f, 0.72f, 0.30f, 0.8f, 0.9f, new Color(0.2f, 0.1f, 0f)),
+            ["M_Moonsteel"] = new Spec(0.82f, 0.86f, 1.0f, 0.95f, 1f),
         };
 
         public static bool Exists(string name) => s_Specs.ContainsKey(name);

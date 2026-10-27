@@ -27,6 +27,9 @@ MonoBehaviour:
   - 130
   - 380
   - 1100
+  - 3200
+  - 9000
+  - 26000
   axeTierSpeed:
   - 1
   - 1.05
@@ -36,6 +39,9 @@ MonoBehaviour:
   - 1.25
   - 1.3
   - 1.35
+  - 1.4
+  - 1.45
+  - 1.5
   axeModels:
   - Axe_0
   - Axe_1
@@ -45,6 +51,9 @@ MonoBehaviour:
   - Axe_5
   - Axe_6
   - Axe_7
+  - Axe_8
+  - Axe_9
+  - Axe_10
   baseAxeName: Rusty Hatchet
   swingSeconds: 0.55
   minSwingSeconds: 0.22
@@ -64,6 +73,9 @@ MonoBehaviour:
   - 40000
   - 100000
   - 250000
+  - 600000
+  - 1500000
+  - 4000000
   baseBackpackName: Burlap Sack
   rebirthBaseCost: 5000
   rebirthCostGrowth: 1.03

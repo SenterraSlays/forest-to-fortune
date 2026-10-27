@@ -28,9 +28,9 @@ MonoBehaviour:
   effectPerLevel: 1
   levelNames: []
   requires:
-  - upgradeId: workshop_deed
+  - upgradeId: studio_deed
     level: 1
   sortOrder: 13
   legacy: 1
-  treePosition: {x: -6.05, y: 5.25}
+  treePosition: {x: -6.05, y: 7.85}
   icon: house

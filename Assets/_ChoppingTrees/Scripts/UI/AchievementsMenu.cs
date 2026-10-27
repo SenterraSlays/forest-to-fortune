@@ -38,7 +38,7 @@ namespace ChoppingTrees
             var backdrop = UIFactory.Panel(Root, "Backdrop", UIStyle.Backdrop, false);
             backdrop.rectTransform.Stretch();
             backdrop.raycastTarget = true;
-            var window = UIFactory.Window(Root, "Achievements", "trophy", new Vector2(1500, 880), out var body, "For this save only: every slot earns its own");
+            var window = UIFactory.Window(Root, "Achievements", "trophy", new Vector2(1500, 960), out var body, "For this save only: every slot earns its own");
             UIFactory.TopTrim(window.rectTransform, UIStyle.Money);
             var header = window.transform.Find("Header");
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.ResourceDef
   id: furniture
   displayName: Furniture
-  basePrice: 16
+  basePrice: 24
   color: {r: 0.86, g: 0.58, b: 0.36, a: 1}
   icon: chair
   hiddenUntilProduced: 1
-  sortOrder: 2
+  sortOrder: 3

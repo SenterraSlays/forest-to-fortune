@@ -178,7 +178,9 @@ namespace ChoppingTrees
                 var props = GameObject.Find("Props");
                 if (props == null) return;
                 foreach (Transform t in props.transform)
-                    if (t.name.StartsWith("Grass") || t.name.StartsWith("Flower") || t.name.StartsWith("Mushrooms") || t.name.StartsWith("Branch"))
+                    if (t.name.StartsWith("Grass") || t.name.StartsWith("Flower") || t.name.StartsWith("Mushrooms") || t.name.StartsWith("Branch")
+                        || t.name.StartsWith("Fern") || t.name.StartsWith("Petals") || t.name.StartsWith("Glowcap") || t.name.StartsWith("Reeds")
+                        || t.name.StartsWith("Moonflower"))
                         m_Scenery.Add(t.gameObject);
             }
             float keep = level switch { DetailLevel.Low => 0.35f, DetailLevel.Medium => 0.6f, DetailLevel.High => 0.85f, _ => 1f };

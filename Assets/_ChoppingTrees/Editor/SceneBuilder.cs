@@ -81,7 +81,7 @@ namespace ChoppingTrees.EditorTools
 
             StockPile(yard, "WoodPile", "LogPiece", GameModel.Wood, new Vector3(-14.8f, 0, -9.6f), 35f, 21, 5f, 1.35f, 0.36f, 0.95f);
             StockPile(yard, "PlankPile", "PlankPiece", "planks", new Vector3(-15.6f, 0, -15.8f), 35f, 12, 3f, 1.45f, 0.13f, 0f);
-            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f), (-3f, 186f), (3f, 256f), (-3f, 326f), (-34f, -19f), (34f, -21.5f), (-30f, -33f), (29f, -32f) })
+            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f), (-3f, 186f), (3f, 256f), (-3f, 326f), (3f, 396f), (-3f, 466f), (3f, 536f), (-34f, -19f), (34f, -21.5f), (-30f, -33f), (29f, -32f), (-12f, -53f), (12f, -53f), (-4f, -66f) })
             {
                 var lamp = Place("Lantern_Post", yard, x, z, 0f);
                 var light = new GameObject("Light").AddComponent<Light>();
@@ -102,11 +102,48 @@ namespace ChoppingTrees.EditorTools
             Place("Signpost", yard, 3.2f, 187f, 10f);
             Place("Signpost", yard, -3.2f, 257f, -10f);
             Place("Signpost", yard, 3.2f, 327f, 10f);
+            Place("Signpost", yard, -3.2f, 397f, -10f);
+            Place("Signpost", yard, 3.2f, 467f, 10f);
+            Place("Signpost", yard, -3.2f, 537f, -10f);
+
+            // Unlit lantern posts every 45 m along the long road north, so it reads as a road.
+            for (float z = 12f; z < WorldLayout.WallNorth - 10f; z += 45f)
+            {
+                float side = Mathf.Repeat(z, 90f) < 45f ? 1f : -1f;
+                var post = Place("Lantern_Post", yard, side * 3.4f, z, 0f);
+                SetStatic(post);
+                Block(side * 3.4f, z, 0.8f);
+            }
+
+            // Trading posts in the far forests: sell what you carry without the long walk home.
+            foreach (var (x, z, name) in new[] { (15f, 266f, "TRADING POST"), (-15f, 476f, "TRADING POST") })
+            {
+                var post = Place("Market", yard, x, z, x > 0 ? -90f : 90f, 0.8f);
+                post.name = "TradingPost";
+                post.AddComponent<SellPoint>();
+                Set(post.GetComponent<SellPoint>(), "m_EffectPoint", Find(post.transform, "EffectPoint"));
+                SignText(Find(post.transform, "SignAnchor"), post.transform, name, 2.4f, 0.5f);
+                Block(x, z, 5f);
+            }
 
             // Furniture and cabin kit stock, and the buildings around the bigger yard: a red barn, a
             // water tower, lumber racks, wagons, a well and two more cabins.
             GoodsPile(yard, "FurniturePile", "FurniturePiece", "furniture", -33.5f, -16f, 90f, new Vector2(1.45f, 1.2f), 1.18f, 2f, 1.5f);
             GoodsPile(yard, "CabinKitPile", "CabinKit", "cabins", 33.5f, -16.5f, -90f, new Vector2(1.85f, 1.4f), 0.88f, 1f, 1.5f);
+            // The south yard: panel presses on the west, interior studios on the east, lodge builders
+            // along the back, with their goods in between.
+            GoodsPile(yard, "PanelPile", "PanelPiece", "panels", -6.5f, -49.5f, 0f, new Vector2(1.5f, 1.15f), 0.42f, 3f, 1.5f);
+            GoodsPile(yard, "RoomSetPile", "RoomSet", "roomsets", 6.5f, -49.5f, 0f, new Vector2(1.6f, 1.3f), 1.05f, 2f, 1.5f);
+            GoodsPile(yard, "LodgePile", "LodgeKit", "lodges", 40f, -63f, -90f, new Vector2(2.2f, 1.8f), 1.25f, 1f, 1.5f);
+            foreach (var (x, z, yaw) in new[] { (-41f, -50f, 20f), (-40f, -66f, 0f), (42f, -49f, 30f), (-30f, -58.5f, 10f), (30f, -58f, 45f) })
+                Place("Crate", yard, x, z, yaw);
+            foreach (var (x, z, yaw) in new[] { (-42f, -58f, 90f), (14f, -67f, 0f) })
+            {
+                Place("LumberRack", yard, x, z, yaw);
+                Block(x, z, 2.5f);
+            }
+            Place("Wagon", yard, -14f, -68f, 160f);
+            Block(-14f, -68f, 2.2f);
             Place("Warehouse", yard, 30f, -39.5f, 0f);
             Block(30f, -39.5f, 7f);
             Place("WaterTower", yard, -33f, -40f, 15f);
@@ -149,7 +186,10 @@ namespace ChoppingTrees.EditorTools
             trees += Forest(forest, Area("ridge"), -55f, 55f, 124f, 187f, 6.2f, 75, "goldbark", 4);
             trees += Forest(forest, Area("peaks"), -55f, 55f, 194f, 257f, 6.0f, 80);
             trees += Forest(forest, Area("vale"), -55f, 55f, 264f, 327f, 5.8f, 80);
-            trees += Forest(forest, Area("wilds"), -55f, 55f, 334f, 399f, 6.2f, 75, "crystalwood", 5);
+            trees += Forest(forest, Area("wilds"), -55f, 55f, 334f, 397f, 6.2f, 75, "crystalwood", 5);
+            trees += Forest(forest, Area("marsh"), -55f, 55f, 404f, 467f, 6.4f, 75);
+            trees += Forest(forest, Area("canyon"), -55f, 55f, 474f, 537f, 6.6f, 70);
+            trees += Forest(forest, Area("highlands"), -55f, 55f, 544f, 609f, 6.4f, 75, "moonwood", 5);
             Backdrop(env, db);
             int props = Props(env);
 
@@ -307,6 +347,9 @@ namespace ChoppingTrees.EditorTools
             d["Sawmill"] = Machine("Sawmill", "sawmill", 0);
             d["Workshop"] = Machine("Workshop", "workshop", 0);
             d["CabinBuilder"] = Machine("CabinBuilder", "builder", 0);
+            d["PanelPress"] = Machine("PanelPress", "press", 0);
+            d["InteriorStudio"] = Machine("InteriorStudio", "studio", 0);
+            d["LodgeBuilder"] = Machine("LodgeBuilder", "lodge", 0);
             return d;
         }
 
@@ -349,7 +392,24 @@ namespace ChoppingTrees.EditorTools
                 var anim = root.AddComponent<MachineAnimator>();
                 anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), new Color(0.93f, 0.8f, 0.58f), "sawmill_loop", "machine_cut", 2.2f);
             }
-            else if (id == "builder")
+            else if (id == "press")
+            {
+                Add("Platen", MachineAnimator.Motion.Bob, Vector3.up, 0.32f);
+                for (int i = 0; i < 4; i++) Add("Roller_" + i, MachineAnimator.Motion.Spin, Vector3.right, 300f);
+                Add("Panel", MachineAnimator.Motion.Slide, Vector3.forward, 1.1f);
+                var anim = root.AddComponent<MachineAnimator>();
+                anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), new Color(0.92f, 0.78f, 0.55f), "sawmill_loop", "machine_cut", 2.6f);
+            }
+            else if (id == "studio")
+            {
+                Add("Fan", MachineAnimator.Motion.Spin, Vector3.forward, 360f);
+                for (int i = 0; i < 4; i++) Add("Roller_" + i, MachineAnimator.Motion.Spin, Vector3.right, 240f);
+                Add("Crate", MachineAnimator.Motion.Slide, Vector3.forward, 1.4f);
+                Add("Arm", MachineAnimator.Motion.Swing, Vector3.right, 35f, 0.4f);
+                var anim = root.AddComponent<MachineAnimator>();
+                anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), new Color(0.85f, 0.7f, 0.85f), "chopper_loop", "build", 3.2f);
+            }
+            else if (id == "builder" || id == "lodge")
             {
                 Add("Trolley", MachineAnimator.Motion.Bob, Vector3.right, 1.6f);
                 Add("Hook", MachineAnimator.Motion.Bob, Vector3.up, 0.35f, 0.25f);
@@ -394,16 +454,33 @@ namespace ChoppingTrees.EditorTools
                 Block(40.5f, z, 4.6f);
             }
 
+            // The south yard: presses west, studios east, lodge builders along the back; all face north.
+            var pressSlots = new List<Transform>();
+            foreach (var x in new[] { -15f, -24f, -33f })
+                pressSlots.Add(Slot(go.transform, "PressSlot", x, -50f, 0f));
+            var studioSlots = new List<Transform>();
+            foreach (var x in new[] { 15f, 24f, 33f })
+                studioSlots.Add(Slot(go.transform, "StudioSlot", x, -50f, 0f));
+            var lodgeSlots = new List<Transform>();
+            foreach (var x in new[] { 0f, -22f, 22f })
+            {
+                lodgeSlots.Add(Slot(go.transform, "LodgeSlot", x, -63.5f, 0f));
+                Block(x, -63.5f, 5.5f);
+            }
+
             var so = new SerializedObject(yard);
             var groups = so.FindProperty("m_Groups");
-            groups.arraySize = 4;
+            groups.arraySize = 7;
             Group(groups.GetArrayElementAtIndex(0), "chopper", chopperSlots, new[] { prefabs["AutoChopper"], prefabs["AutoChopper_Mk2"], prefabs["AutoChopper_Mk3"] });
             Group(groups.GetArrayElementAtIndex(1), "sawmill", sawSlots, new[] { prefabs["Sawmill"] });
             Group(groups.GetArrayElementAtIndex(2), "workshop", shopSlots, new[] { prefabs["Workshop"] });
             Group(groups.GetArrayElementAtIndex(3), "builder", builderSlots, new[] { prefabs["CabinBuilder"] });
+            Group(groups.GetArrayElementAtIndex(4), "press", pressSlots, new[] { prefabs["PanelPress"] });
+            Group(groups.GetArrayElementAtIndex(5), "studio", studioSlots, new[] { prefabs["InteriorStudio"] });
+            Group(groups.GetArrayElementAtIndex(6), "lodge", lodgeSlots, new[] { prefabs["LodgeBuilder"] });
             so.FindProperty("m_SlotMarkerPrefab").objectReferenceValue = prefabs["SlotMarker"];
             so.ApplyModifiedPropertiesWithoutUndo();
-            return chopperSlots.Count + sawSlots.Count + shopSlots.Count + builderSlots.Count;
+            return chopperSlots.Count + sawSlots.Count + shopSlots.Count + builderSlots.Count + pressSlots.Count + studioSlots.Count + lodgeSlots.Count;
         }
 
         static Transform Slot(Transform parent, string name, float x, float z, float yaw)
@@ -621,34 +698,36 @@ namespace ChoppingTrees.EditorTools
             root.SetParent(parent);
             string[] models = { "Tree_Pine", "Tree_Pine", "Tree_Redwood", "Tree_Oak", "Tree_Birch", "Tree_Pine" };
             // Each far forest is lined with its own trees beyond the walls.
-            string[] themed = { null, "Tree_Maple", "Tree_Ironwood", "Tree_Frostpine", "Tree_Cherry", "Tree_Emberwood" };
+            string[] themed = { null, "Tree_Maple", "Tree_Ironwood", "Tree_Frostpine", "Tree_Cherry", "Tree_Emberwood", "Tree_Willow", "Tree_Palm", "Tree_Moonwood" };
+            string[] bases = { null, null, null, "Tree_Frostpine", "Tree_Frostpine", "Tree_Frostpine", "Tree_Cypress", "Tree_Sunbark", "Tree_Frostpine" };
             int n = 0;
-            for (int attempt = 0; attempt < 6000 && n < 440; attempt++)
+            for (int attempt = 0; attempt < 9000 && n < 640; attempt++)
             {
                 float x = R(WorldLayout.MinX + 5f, WorldLayout.MaxX - 5f), z = R(WorldLayout.MinZ + 5f, WorldLayout.MaxZ - 5f);
                 bool outside = Mathf.Abs(x) > WorldLayout.WallX + 2f || z < WorldLayout.WallSouth - 2f || z > WorldLayout.WallNorth + 2f;
                 if (!outside || Mathf.Abs(x) > 86f) continue;
                 string m = models[s_Rng.Next(models.Length)];
                 int band = WorldLayout.Band(z);
-                if (band >= 3) m = "Tree_Frostpine";
-                if (themed[Mathf.Min(band, themed.Length - 1)] != null && s_Rng.NextDouble() < (band >= 3 ? 0.6 : 0.4)) m = themed[Mathf.Min(band, themed.Length - 1)];
+                band = Mathf.Min(band, themed.Length - 1);
+                if (bases[band] != null) m = bases[band];
+                if (themed[band] != null && s_Rng.NextDouble() < (band >= 3 ? 0.6 : 0.4)) m = themed[Mathf.Min(band, themed.Length - 1)];
                 var t = Place(m, root, x, z, R(0f, 360f), R(1.0f, 1.6f), 0.3f);
                 SetStatic(t);
                 n++;
             }
             // Mountains and hills ring the whole valley, centred on its middle.
             float midZ = (WorldLayout.MinZ + WorldLayout.MaxZ) * 0.5f;
-            for (int i = 0; i < 22; i++)
+            for (int i = 0; i < 30; i++)
             {
-                float a = i / 22f * Mathf.PI * 2f;
-                float x = Mathf.Sin(a) * 190f, z = midZ + Mathf.Cos(a) * 370f;
+                float a = i / 30f * Mathf.PI * 2f;
+                float x = Mathf.Sin(a) * 190f, z = midZ + Mathf.Cos(a) * 470f;
                 var m = Model("Mountain_A", root, new Vector3(x, -6f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), new Vector3(R(1.6f, 2.6f), R(1.0f, 1.8f), R(1.6f, 2.6f)));
                 SetStatic(m);
             }
-            for (int i = 0; i < 28; i++)
+            for (int i = 0; i < 38; i++)
             {
-                float a = i / 28f * Mathf.PI * 2f;
-                float x = Mathf.Sin(a) * 120f, z = midZ + Mathf.Cos(a) * 290f;
+                float a = i / 38f * Mathf.PI * 2f;
+                float x = Mathf.Sin(a) * 120f, z = midZ + Mathf.Cos(a) * 395f;
                 var h = Model("Hill_A", root, new Vector3(x, -1f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), Vector3.one * R(1.4f, 2.4f));
                 SetStatic(h);
             }
@@ -673,16 +752,33 @@ namespace ChoppingTrees.EditorTools
                 ("Branch_Fallen", 35, 0.8f, 1.3f, false, 0.6f),
                 ("Log_Fallen", 12, 0.9f, 1.2f, true, 2.5f),
                 // The far forests: grass and rocks continue, and each has its own scenery.
-                ("Grass_A", 500, 0.8f, 1.5f, false, 0.2f),
-                ("Rock_A", 40, 0.7f, 1.4f, false, 0.6f),
-                ("Rock_B", 20, 0.8f, 1.3f, true, 1.2f),
-                ("Branch_Fallen", 25, 0.8f, 1.3f, false, 0.6f),
+                ("Grass_A", 1100, 0.8f, 1.5f, false, 0.2f),
+                ("Rock_A", 90, 0.7f, 1.4f, false, 0.6f),
+                ("Rock_B", 45, 0.8f, 1.3f, true, 1.2f),
+                ("Branch_Fallen", 60, 0.8f, 1.3f, false, 0.6f),
                 ("Rock_Snow", 45, 0.8f, 1.4f, true, 1.2f),
                 ("Snow_Drift", 70, 0.8f, 1.5f, false, 0.8f),
                 ("Bush_Blossom", 70, 0.8f, 1.3f, false, 1.0f),
                 ("Petals", 140, 0.8f, 1.4f, false, 0.3f),
                 ("Crystal_Cluster", 60, 0.7f, 1.4f, true, 1.0f),
                 ("Glowcap", 90, 0.8f, 1.4f, false, 0.3f),
+                ("Reeds", 180, 0.8f, 1.4f, false, 0.3f),
+                ("Puddle", 55, 0.8f, 1.6f, false, 1.2f),
+                ("Bush_A", 45, 0.8f, 1.4f, false, 1.0f),
+                ("Cactus", 70, 0.8f, 1.4f, true, 1.0f),
+                ("Rock_Sand", 70, 0.8f, 1.5f, true, 1.4f),
+                ("Moonflower", 170, 0.8f, 1.4f, false, 0.3f),
+                ("Standing_Stone", 30, 0.8f, 1.3f, true, 1.5f),
+                // Everywhere: life in the woods.
+                ("Fern", 900, 0.8f, 1.5f, false, 0.4f),
+                ("Stump_Old", 90, 0.8f, 1.3f, true, 1.0f),
+                ("Woodpile_Stack", 30, 0.9f, 1.1f, true, 2.0f),
+                ("Campsite", 14, 1f, 1f, true, 4.0f),
+                ("Watchtower", 9, 1f, 1f, true, 4.0f),
+                ("Bench", 24, 1f, 1f, true, 1.2f),
+                ("Flower_A", 160, 0.9f, 1.3f, false, 0.3f),
+                ("Flower_B", 120, 0.9f, 1.3f, false, 0.3f),
+                ("Mushrooms", 70, 0.8f, 1.5f, false, 0.3f),
             };
             // Where each row goes (z range): the first rows cover the old forests, the rest the far ones.
             (float z0, float z1)[] ranges =
@@ -695,7 +791,14 @@ namespace ChoppingTrees.EditorTools
                 (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f),
                 (WorldLayout.Gate3Z, WorldLayout.Gate4Z), (WorldLayout.Gate3Z, WorldLayout.Gate4Z),
                 (WorldLayout.Gate4Z, WorldLayout.Gate5Z), (WorldLayout.Gate4Z, WorldLayout.Gate5Z),
-                (WorldLayout.Gate5Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate5Z, WorldLayout.WallNorth - 1f),
+                (WorldLayout.Gate5Z, WorldLayout.Gate6Z), (WorldLayout.Gate5Z, WorldLayout.Gate6Z),
+                (WorldLayout.Gate6Z, WorldLayout.Gate7Z), (WorldLayout.Gate6Z, WorldLayout.Gate7Z), (WorldLayout.Gate6Z, WorldLayout.Gate7Z),
+                (WorldLayout.Gate7Z, WorldLayout.Gate8Z), (WorldLayout.Gate7Z, WorldLayout.Gate8Z),
+                (WorldLayout.Gate8Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate8Z, WorldLayout.WallNorth - 1f),
+                (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f), (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f),
+                (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f), (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f),
+                (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f), (WorldLayout.WallSouth + 1f, WorldLayout.WallNorth - 1f),
+                (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f), (WorldLayout.Gate3Z, WorldLayout.WallNorth - 1f),
             };
             for (int r = 0; r < table.Length; r++)
             {
@@ -752,13 +855,14 @@ namespace ChoppingTrees.EditorTools
 
         /// <summary>Where the ground splits into its south and north pieces (each has its own colour map,
         /// so neither needs a texture over 4096 px).</summary>
-        const float GroundSplitZ = 175f;
+        const float GroundSplitZ = 175f, GroundSplitZ2 = 420f;
 
         static void Ground(Transform parent)
         {
             var detail = GroundDetailMaps();
             GroundChunk(parent, "Ground", WorldLayout.MinZ, GroundSplitZ, detail);
-            GroundChunk(parent, "Ground_North", GroundSplitZ, WorldLayout.MaxZ, detail);
+            GroundChunk(parent, "Ground_North", GroundSplitZ, GroundSplitZ2, detail);
+            GroundChunk(parent, "Ground_Far", GroundSplitZ2, WorldLayout.MaxZ, detail);
         }
 
         static void GroundChunk(Transform parent, string name, float z0, float z1, (Texture2D albedo, Texture2D normal) detail)
@@ -827,6 +931,8 @@ namespace ChoppingTrees.EditorTools
             Color autumn = new Color(0.62f, 0.42f, 0.20f), moss = new Color(0.25f, 0.42f, 0.36f), rock = new Color(0.45f, 0.45f, 0.42f);
             Color snow = new Color(0.86f, 0.9f, 0.94f), lush = new Color(0.40f, 0.62f, 0.27f), petal = new Color(0.96f, 0.72f, 0.82f);
             Color crystalMoss = new Color(0.30f, 0.42f, 0.50f), glow = new Color(0.55f, 0.75f, 0.95f);
+            Color marsh = new Color(0.27f, 0.36f, 0.22f), mud = new Color(0.30f, 0.27f, 0.20f), sand = new Color(0.80f, 0.60f, 0.40f);
+            Color redRock = new Color(0.66f, 0.38f, 0.26f), heather = new Color(0.40f, 0.38f, 0.55f), silver = new Color(0.70f, 0.74f, 0.86f);
             var rnd = new System.Random(7);
             for (int j = 0; j < H; j++)
             for (int i = 0; i < W; i++)
@@ -850,6 +956,21 @@ namespace ChoppingTrees.EditorTools
                 {
                     c = Color.Lerp(c, lush, 0.45f);
                     c = Color.Lerp(c, petal, Mathf.Clamp01((n3 - 0.68f) * 3f) * 0.65f * (0.5f + n1));
+                }
+                if (band == 6)
+                {
+                    c = Color.Lerp(c, marsh, 0.55f);
+                    c = Color.Lerp(c, mud, Mathf.Clamp01((n2 - 0.55f) * 3f) * 0.6f);
+                }
+                if (band == 7)
+                {
+                    c = Color.Lerp(c, sand, 0.75f + n1 * 0.15f);
+                    c = Color.Lerp(c, redRock, Mathf.Clamp01((n2 - 0.5f) * 2.5f) * 0.6f);
+                }
+                if (band == 8)
+                {
+                    c = Color.Lerp(c, heather, 0.5f + n1 * 0.2f);
+                    c = Color.Lerp(c, silver, Mathf.Clamp01((n3 - 0.8f) * 5f) * 0.5f);
                 }
                 if (band == 5)
                 {

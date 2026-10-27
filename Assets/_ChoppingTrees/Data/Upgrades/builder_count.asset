@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
   id: builder_count
   displayName: Cabin Builder
-  description: Builds 5 sets of furniture into a log cabin kit, the most valuable thing you can sell.
+  description: Builds 3 room sets into a log cabin kit.
   category: 1
   effect: 3
   targetId: builder
@@ -28,9 +28,9 @@ MonoBehaviour:
   effectPerLevel: 1
   levelNames: []
   requires:
-  - upgradeId: workshop_count
+  - upgradeId: studio_count
     level: 1
   sortOrder: 18
   legacy: 0
-  treePosition: {x: 4.4, y: 5.25}
+  treePosition: {x: 6.6, y: 3.95}
   icon: house
