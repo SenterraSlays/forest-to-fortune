@@ -22,8 +22,9 @@ namespace ChoppingTrees
                 // First launch on a phone or tablet: balanced quality at a steady 60 FPS.
                 QualityPresets.Apply(d, QualityPreset.Medium);
                 d.vSync = false;
-                d.frameRateCap = 60;
+                d.frameRateCap = Mathf.Min(MaxRefreshRate, 120); // 120 Hz screens get 120 FPS
                 d.fieldOfView = 70f;
+                d.upscaler = UpscalerSetting.Off;
             }
             if (d.version < 2)
             {
@@ -68,7 +69,11 @@ namespace ChoppingTrees
             d.touchOpacity = Mathf.Clamp(d.touchOpacity, 0.3f, 1f);
             if (Application.isMobilePlatform)
             {
+                // DLSS and FSR 2 are PC-only; phones scale with the render scale slider.
+                d.upscaler = UpscalerSetting.Off;
+                if (d.antiAliasing == AntiAliasingSetting.TAA) d.antiAliasing = AntiAliasingSetting.FXAA;
                 // Phones ignore V-Sync settings and default to 30 FPS: the frame rate is always set.
+                // Asking for 90 or 120 also switches high-refresh screens to that rate.
                 QualitySettings.vSyncCount = 0;
                 Application.targetFrameRate = d.frameRateCap > 0 ? d.frameRateCap : 60;
                 Screen.sleepTimeout = SleepTimeout.NeverSleep;
@@ -80,6 +85,27 @@ namespace ChoppingTrees
             }
             ApplyDisplay(d);
             Changed?.Invoke();
+        }
+
+        /// <summary>Highest refresh rate the screen supports (60 when it doesn't say).</summary>
+        public static int MaxRefreshRate
+        {
+            get
+            {
+                double best = Screen.currentResolution.refreshRateRatio.value;
+                foreach (var r in Screen.resolutions) best = Math.Max(best, r.refreshRateRatio.value);
+                int hz = Mathf.RoundToInt((float)best);
+                return hz >= 30 ? hz : 60;
+            }
+        }
+
+        /// <summary>Frame rates offered on phones: 30 and 60, plus whatever higher rates the screen runs at.</summary>
+        public static int[] MobileFrameRates()
+        {
+            int max = MaxRefreshRate;
+            var list = new List<int> { 30, 60 };
+            foreach (int hz in new[] { 90, 120, 144 }) if (max >= hz - 1) list.Add(hz);
+            return list.ToArray();
         }
 
         /// <summary>Size the game will use: the chosen resolution, or the monitor's native size when

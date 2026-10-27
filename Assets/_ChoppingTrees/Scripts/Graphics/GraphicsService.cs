@@ -35,6 +35,7 @@ namespace ChoppingTrees
         float m_BaseExposure;
         readonly System.Collections.Generic.List<GameObject> m_Scenery = new System.Collections.Generic.List<GameObject>();
         DetailLevel m_SceneryLevel = (DetailLevel)(-1);
+        bool m_SceneryShadowsOff;
 
         void Awake()
         {
@@ -113,24 +114,37 @@ namespace ChoppingTrees
             {
                 // Higher settings mean sharper shadows: bigger shadow maps and more cascades, packed
                 // towards the player so nearby shadows get most of the resolution.
-                (float dist, int res, int cascades) = s.shadows switch
-                {
-                    ShadowQuality.Off => (0f, 512, 1),
-                    ShadowQuality.Low => (35f, 1024, 1),
-                    ShadowQuality.Medium => (60f, 2048, 2),
-                    ShadowQuality.High => (80f, 4096, 4),
-                    _ => (110f, 8192, 4),
-                };
+                (float dist, int res, int cascades) = Application.isMobilePlatform
+                    // Phones: smaller maps and fewer cascades (shadow rendering is the biggest GPU cost there).
+                    ? s.shadows switch
+                    {
+                        ShadowQuality.Off => (0f, 512, 1),
+                        ShadowQuality.Low => (25f, 1024, 1),
+                        ShadowQuality.Medium => (40f, 1024, 2),
+                        ShadowQuality.High => (55f, 2048, 2),
+                        _ => (75f, 2048, 4),
+                    }
+                    : s.shadows switch
+                    {
+                        ShadowQuality.Off => (0f, 512, 1),
+                        ShadowQuality.Low => (35f, 1024, 1),
+                        ShadowQuality.Medium => (60f, 2048, 2),
+                        ShadowQuality.High => (80f, 4096, 4),
+                        _ => (110f, 8192, 4),
+                    };
                 m_Asset.shadowDistance = dist;
                 m_Asset.mainLightShadowmapResolution = res;
                 m_Asset.shadowCascadeCount = cascades;
                 m_Asset.cascade2Split = 0.25f;
                 m_Asset.cascade4Split = s.shadows == ShadowQuality.Ultra ? new Vector3(0.06f, 0.17f, 0.42f) : new Vector3(0.08f, 0.2f, 0.45f);
+                // Phones on Low skip HDR: less memory bandwidth per frame (bloom still works).
+                if (Application.isMobilePlatform) m_Asset.supportsHDR = s.qualityPreset != QualityPreset.Low;
             }
             var sun = RenderSettings.sun;
             if (sun != null)
             {
-                sun.shadows = s.shadows == ShadowQuality.Off ? LightShadows.None : s.shadows == ShadowQuality.Low ? LightShadows.Hard : LightShadows.Soft;
+                bool soft = Application.isMobilePlatform ? s.shadows >= ShadowQuality.High : s.shadows >= ShadowQuality.Medium;
+                sun.shadows = s.shadows == ShadowQuality.Off ? LightShadows.None : soft ? LightShadows.Soft : LightShadows.Hard;
                 // Better soft-shadow filtering on the higher settings: clean edges without blur or stair-steps.
                 if (sun.TryGetComponent<UniversalAdditionalLightData>(out var data) || (data = sun.gameObject.AddComponent<UniversalAdditionalLightData>()) != null)
                     data.softShadowQuality = s.shadows >= ShadowQuality.High ? SoftShadowQuality.High : s.shadows == ShadowQuality.Medium ? SoftShadowQuality.Medium : SoftShadowQuality.Low;
@@ -168,6 +182,15 @@ namespace ChoppingTrees
                         m_Scenery.Add(t.gameObject);
             }
             float keep = level switch { DetailLevel.Low => 0.35f, DetailLevel.Medium => 0.6f, DetailLevel.High => 0.85f, _ => 1f };
+            // On phones grass, flowers and twigs don't cast shadows: thousands of tiny casters cost
+            // a lot of shadow-map time for shadows nobody notices.
+            if (Application.isMobilePlatform && !m_SceneryShadowsOff)
+            {
+                m_SceneryShadowsOff = true;
+                foreach (var go in m_Scenery)
+                    foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+                        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
             foreach (var go in m_Scenery)
             {
                 var p = go.transform.position;

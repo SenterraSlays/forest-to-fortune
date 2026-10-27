@@ -132,9 +132,12 @@ namespace ChoppingTrees
             var h = UIFactory.HStack(cols, 18f, null, TextAnchor.UpperLeft);
             h.childForceExpandWidth = true;
             cols.Layout(-1, -1, -1, 1);
-            var left = Section(cols, "Resolution and upscaling", "chart");
-            CyclerRow(left, "Upscaler", "DLSS / FSR / STP sharpen a lower resolution", () => GraphicsCapabilities.Label(S.upscaler), StepUpscaler);
-            CyclerRow(left, "Upscaler quality", "Lower modes render fewer pixels", QualityText, d => { S.upscaleQuality = (UpscaleQuality)Cycle((int)S.upscaleQuality, d, 4); GameSettings.Apply(); });
+            var left = Section(cols, Mobile ? "Resolution" : "Resolution and upscaling", "chart");
+            if (!Mobile)
+            {
+                CyclerRow(left, "Upscaler", "DLSS / FSR / STP sharpen a lower resolution", () => GraphicsCapabilities.Label(S.upscaler), StepUpscaler);
+                CyclerRow(left, "Upscaler quality", "Lower modes render fewer pixels", QualityText, d => { S.upscaleQuality = (UpscaleQuality)Cycle((int)S.upscaleQuality, d, 4); GameSettings.Apply(); });
+            }
             CyclerRow(left, "Render scale", "Below 100% is faster but softer", () => Mathf.RoundToInt(S.renderScale * 100) + "%", d =>
             {
                 float[] steps = { 0.5f, 0.6f, 0.67f, 0.75f, 0.85f, 1f };
@@ -142,7 +145,8 @@ namespace ChoppingTrees
                 S.renderScale = steps[Cycle(i < 0 ? steps.Length - 1 : i, d, steps.Length)];
                 QualityChanged();
             });
-            CyclerRow(left, "Anti-aliasing", "Smooths jagged edges", AaText, d => { S.antiAliasing = (AntiAliasingSetting)Cycle((int)S.antiAliasing, d, 4); QualityChanged(); });
+            // TAA isn't offered on phones (it blurs on small screens and costs a full-screen pass).
+            CyclerRow(left, "Anti-aliasing", "Smooths jagged edges", AaText, d => { S.antiAliasing = (AntiAliasingSetting)Cycle((int)S.antiAliasing, d, Mobile ? 3 : 4); QualityChanged(); });
             m_UpscalerNote = UIFactory.Text(left, "", 15, UIStyle.Muted);
 
             var right = Section(cols, "Detail", "pine");
@@ -171,7 +175,7 @@ namespace ChoppingTrees
             CyclerRow(display, Mobile ? "Frame rate" : "Frame rate cap", Mobile ? "Higher is smoother; lower saves battery" : "Only used with V-Sync off",
                 () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
             {
-                int[] caps = Mobile ? new[] { 30, 60, 90, 120 } : new[] { 0, 30, 60, 120, 144, 165, 240 };
+                int[] caps = Mobile ? GameSettings.MobileFrameRates() : new[] { 0, 30, 60, 120, 144, 165, 240 };
                 int i = Array.IndexOf(caps, S.frameRateCap);
                 S.frameRateCap = caps[Cycle(i < 0 ? 0 : i, d, caps.Length)];
                 GameSettings.Apply();
@@ -311,7 +315,7 @@ namespace ChoppingTrees
             var ui = Section(page, "Interface", "leaf");
             SliderRow(ui, "Interface scale", "Size of menus and the HUD", 0.75f, 1.25f, () => S.uiScale, v => S.uiScale = Mathf.Round(v * 20f) / 20f,
                 v => Mathf.RoundToInt(Mathf.Round(v * 20f) * 5f) + "%");
-            CyclerRow(ui, "FPS counter (F3)", "Frame rate, frame times and upscaler", () => S.fpsCounter switch { FpsCounterMode.Fps => "FPS", FpsCounterMode.Detailed => "Detailed", _ => "Off" },
+            CyclerRow(ui, Mobile ? "FPS counter" : "FPS counter (F3)", Mobile ? "Frame rate and frame times" : "Frame rate, frame times and upscaler", () => S.fpsCounter switch { FpsCounterMode.Fps => "FPS", FpsCounterMode.Detailed => "Detailed", _ => "Off" },
                 d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
             ToggleRow(ui, "Tutorial hints", "Step-by-step goals for new players", () => S.showTutorial, v => S.showTutorial = v);
             ToggleRow(ui, "Damage numbers", "Show the damage of each hit", () => S.damageNumbers, v => S.damageNumbers = v);
@@ -596,7 +600,8 @@ namespace ChoppingTrees
                 if (!GraphicsCapabilities.IsSupported(u)) missing.Add(GraphicsCapabilities.Label(u));
             string active = $"Running: <color=#F5B545>{GraphicsService.Describe()}</color>.";
             string note = string.IsNullOrEmpty(GraphicsService.Notice) ? "" : "\n<color=#E8705F>" + GraphicsService.Notice + "</color>";
-            m_UpscalerNote.text = (missing.Count == 0 ? active + " All upscalers work on this PC." : active + " Not available here: " + string.Join(", ", missing) + ".") + note;
+            m_UpscalerNote.text = Mobile ? active + note
+                : (missing.Count == 0 ? active + " All upscalers work on this PC." : active + " Not available here: " + string.Join(", ", missing) + ".") + note;
         }
 
         // ------------------------------------------------------------------ rows

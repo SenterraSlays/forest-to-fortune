@@ -72,7 +72,15 @@ namespace ChoppingTrees.EditorTools
             return msg;
         }
 
+        /// <summary>Back to Windows after an Android build. The package assemblies are rebuilt
+        /// from scratch: otherwise they can keep Android's defines (no upscaler framework), and the
+        /// Windows build then fails with "script class layout is incompatible".</summary>
         [MenuItem("Tools/Forest to Fortune/Switch Editor to Windows", priority = 23)]
-        public static bool SwitchToWindows() => EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
+        public static bool SwitchToWindows()
+        {
+            bool ok = EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
+            UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation(UnityEditor.Compilation.RequestScriptCompilationOptions.CleanBuildCache);
+            return ok;
+        }
     }
 }

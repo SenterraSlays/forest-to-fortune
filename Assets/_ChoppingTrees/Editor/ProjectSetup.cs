@@ -74,7 +74,57 @@ namespace ChoppingTrees.EditorTools
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { UnityEngine.Rendering.GraphicsDeviceType.Vulkan, UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3 });
             EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
+            // Vulkan pre-rotation renders straight into the display's portrait buffer; with a render
+            // scale below 100% that showed only a square part of the landscape picture on some
+            // phones. The system compositor rotates instead (no measurable cost on modern phones).
+            PlayerSettings.vulkanEnablePreTransform = false;
+            MobilePipeline();
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// The "Mobile" quality level (Android's default) uses the mobile URP asset and renderer:
+        /// no SSAO, no depth or opaque texture copies, per-vertex lantern lights without shadows,
+        /// SRP batcher on. The game's graphics settings then tune shadows and resolution on top.
+        /// </summary>
+        public static void MobilePipeline()
+        {
+            var mobile = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>("Assets/Settings/Mobile_RPAsset.asset");
+            if (mobile == null)
+            {
+                Debug.LogWarning("[Setup] Assets/Settings/Mobile_RPAsset.asset is missing; Android uses the PC pipeline.");
+                return;
+            }
+            var so = new SerializedObject(mobile);
+            void Set(string name, System.Action<SerializedProperty> apply)
+            {
+                var p = so.FindProperty(name);
+                if (p != null) apply(p);
+                else Debug.LogWarning("[Setup] Mobile_RPAsset has no " + name);
+            }
+            Set("m_SupportsHDR", p => p.boolValue = true);
+            Set("m_MSAA", p => p.intValue = 1);
+            Set("m_RenderScale", p => p.floatValue = 1f);
+            Set("m_RequireDepthTexture", p => p.boolValue = false);
+            Set("m_RequireOpaqueTexture", p => p.boolValue = false);
+            Set("m_AdditionalLightsRenderingMode", p => p.intValue = (int)LightRenderingMode.PerVertex);
+            Set("m_AdditionalLightShadowsSupported", p => p.boolValue = false);
+            Set("m_MainLightShadowsSupported", p => p.boolValue = true);
+            Set("m_SoftShadowsSupported", p => p.boolValue = true);
+            Set("m_UseSRPBatcher", p => p.boolValue = true);
+            Set("m_SupportsDynamicBatching", p => p.boolValue = false);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(mobile);
+
+            var quality = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0]);
+            var levels = quality.FindProperty("m_QualitySettings");
+            for (int i = 0; i < levels.arraySize; i++)
+            {
+                var level = levels.GetArrayElementAtIndex(i);
+                if (level.FindPropertyRelative("name").stringValue != "Mobile") continue;
+                level.FindPropertyRelative("customRenderPipeline").objectReferenceValue = mobile;
+            }
+            quality.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>The game icon (rendered by Blender/icon_render.py, framed by icon_compose.py).</summary>
