@@ -16,5 +16,6 @@ MonoBehaviour:
   displayName: Wood
   basePrice: 1
   color: {r: 0.78, g: 0.56, b: 0.33, a: 1}
+  icon: log
   hiddenUntilProduced: 0
   sortOrder: 0

@@ -121,10 +121,10 @@ namespace ChoppingTrees
                 if (r == null) continue;
                 var chip = UIFactory.Surface(col, r.id, UIStyle.Hud);
                 UIFactory.HStack(chip, 10f, new RectOffset(16, 12, 7, 7));
-                UIFactory.Icon(chip.transform, r.id == "planks" ? "plank" : "log", r.color, 26f);
+                UIFactory.Icon(chip.transform, r.icon, r.color, 26f);
                 var label = UIFactory.Text(chip.transform, r.displayName, 19, UIStyle.Muted);
                 label.textWrappingMode = TextWrappingModes.NoWrap;
-                label.Layout(70);
+                label.Layout(100);
                 var value = UIFactory.Text(chip.transform, "0", 26, UIStyle.Text, true);
                 value.textWrappingMode = TextWrappingModes.NoWrap;
                 value.Layout(1, -1, 1);

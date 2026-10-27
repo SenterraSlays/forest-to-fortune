@@ -31,5 +31,5 @@ MonoBehaviour:
     level: 1
   sortOrder: 3
   legacy: 0
-  treePosition: {x: 5.8, y: 2.65}
+  treePosition: {x: 8, y: 2.65}
   icon: moon

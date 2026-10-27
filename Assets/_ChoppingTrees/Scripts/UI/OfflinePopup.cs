@@ -57,7 +57,7 @@ namespace ChoppingTrees
                 if (res == null || kv.Value <= 0.5) continue;
                 var row = UIFactory.Surface(m_List, res.id, UIStyle.Card);
                 UIFactory.HStack(row, 12f, new RectOffset(16, 18, 10, 10));
-                UIFactory.Icon(row.transform, res.id == "planks" ? "plank" : "log", res.color, 30f);
+                UIFactory.Icon(row.transform, res.icon, res.color, 30f);
                 UIFactory.Text(row.transform, res.displayName, 22, UIStyle.Text).Layout(-1, -1, 1);
                 var v = UIFactory.Text(row.transform, "+" + NumberUtil.Format(kv.Value), 28, UIStyle.Accent, true, TextAlignmentOptions.Right);
                 v.textWrappingMode = TextWrappingModes.NoWrap;

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8895cea00a1d044bb239767228a0096, type: 3}
+  m_Name: Workshop
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.MachineDef
+  id: workshop
+  displayName: Carpentry Workshop
+  description: Turns planks into chairs and tables, which sell for more than the planks they use.
+  kind: 1
+  baseRate: 1.5
+  input: {fileID: 11400000, guid: 545e8c321f5d9e6469fea82fbb720860, type: 2}
+  inputPerOutput: 3
+  output: {fileID: 11400000, guid: e00fb27436e68964dabc00a898b748be, type: 2}
+  tierModels:
+  - Workshop
+  order: 2

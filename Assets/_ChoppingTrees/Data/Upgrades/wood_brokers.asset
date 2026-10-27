@@ -29,5 +29,5 @@ MonoBehaviour:
     level: 10
   sortOrder: 6
   legacy: 0
-  treePosition: {x: 3.6, y: 2.65}
+  treePosition: {x: 5.8, y: 2.65}
   icon: coin

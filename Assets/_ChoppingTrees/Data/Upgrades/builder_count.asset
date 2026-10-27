@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: builder_count
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: builder_count
+  displayName: Cabin Builder
+  description: Builds 5 sets of furniture into a log cabin kit, the most valuable thing you can sell.
+  category: 1
+  effect: 3
+  targetId: builder
+  maxLevel: 3
+  baseCost: 0
+  costGrowth: 5
+  explicitCosts:
+  - 750000
+  - 4000000
+  - 20000000
+  effectPerLevel: 1
+  levelNames: []
+  requires:
+  - upgradeId: workshop_count
+    level: 1
+  sortOrder: 18
+  legacy: 0
+  treePosition: {x: 4.4, y: 5.25}
+  icon: house

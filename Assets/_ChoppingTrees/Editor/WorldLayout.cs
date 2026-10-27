@@ -13,14 +13,14 @@ namespace ChoppingTrees.EditorTools
         public const float Gate1Z = 50f, Gate2Z = 120f;
 
         public static readonly Vector3 Spawn = new Vector3(0f, 0f, -4f);
-        public static readonly Rect Yard = Rect.MinMaxRect(-30f, -44f, 30f, -7f);
+        public static readonly Rect Yard = Rect.MinMaxRect(-46f, -44f, 46f, -7f);
 
         /// <summary>Dirt paths as polylines (x, z).</summary>
         public static readonly Vector2[][] Paths =
         {
             new[] { new Vector2(0f, -36f), new Vector2(0f, -4f), new Vector2(0.5f, 20f), new Vector2(-1f, 50f), new Vector2(1f, 85f), new Vector2(0f, 120f), new Vector2(-1f, 155f), new Vector2(0f, 186f) },
             new[] { new Vector2(-9f, -13f), new Vector2(-4f, -8f), new Vector2(0f, -6f), new Vector2(4f, -8f), new Vector2(9f, -13f) },
-            new[] { new Vector2(-24f, -26f), new Vector2(-10f, -26f), new Vector2(0f, -26f), new Vector2(10f, -26f), new Vector2(24f, -26f) },
+            new[] { new Vector2(-35f, -22.5f), new Vector2(-24f, -26f), new Vector2(-10f, -26f), new Vector2(0f, -26f), new Vector2(10f, -26f), new Vector2(24f, -26f), new Vector2(35f, -25f) },
         };
 
         static float Smooth(float a, float b, float v)

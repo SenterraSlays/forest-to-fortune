@@ -495,7 +495,7 @@ namespace ChoppingTrees.Tests
                 Assert.IsFalse(string.IsNullOrEmpty(u.icon) || u.icon == "dot", $"{u.id} has no icon");
                 if (u.legacy) continue; // Legacy perks are cards in the Rebirth screen, not tree nodes
                 Assert.IsTrue(seen.Add(u.treePosition), $"{u.id} shares a tree position with another node");
-                Assert.That(u.treePosition.x, Is.InRange(-8f, 7.5f), u.id);
+                Assert.That(u.treePosition.x, Is.InRange(-8f, 9.6f), u.id);
                 Assert.That(u.treePosition.y, Is.InRange(0f, 8.5f), u.id);
             }
             // Roots (no prerequisites) are the trunk's three branches.

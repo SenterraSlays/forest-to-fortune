@@ -60,7 +60,7 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    drag it with any mouse button (or the right stick), scroll to zoom towards the cursor (or LT / RT), and use
    the buttons in the legend to zoom or go back to the whole-tree view.
    - **Axe:** Better Axe (Rusty Hatchet → Steel → Lumberjack's → Tempered Broadaxe → Ironbreaker) → Whetstone (damage) → Grip Training (speed) → Lucky Strike (chance of double damage); Better Axe → Backpack (Burlap Sack → Canvas Satchel → Leather Rucksack → Frame Pack → Logger's Pack → Expedition Pack → Hauler's Harness) → Clean Cuts (more wood per tree) → Trail Boots (move speed).
-   - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers.
+   - **Automation:** Auto-Chopper (up to 8) → Chopper Motors → Harvester Line (rebuilds every chopper as a Heavy, then Titan Harvester); Auto-Chopper → Foreman's Whistle → Spare Parts (cheaper machines, up to -30%); Auto-Chopper → Sawmill (up to 3, 2 wood → 1 plank) → Sawmill Blades → Precision Saws (more planks from the same wood) / Furniture Buyers; Sawmill → Carpentry Workshop (up to 3, 3 planks → 1 furniture) → Workshop Tools → Fine Joinery, and Carpentry Workshop → Cabin Builder (up to 3, 5 furniture → 1 cabin kit) → Power Cranes → Master Builders. Furniture Showroom and Cabin Realtors (Economy) raise their prices.
    - **Economy:** Market Contacts (wood price) → Log Magnet (pickup range), Night Shift (longer offline time) and Haggling (every sale pays more) → Lucky Finds (felled trees sometimes drop cash).
    - **Forests:** Old Grove ($25,000; needs the Lumberjack's Axe) → Fertile Soil (faster regrowth); Old Grove → Ironwood Ridge ($350,000; also needs the Tempered Broadaxe) → Gold Prospector (more Goldbark cash).
    - **Later perks in every branch:** Honed Edge, Steady Rhythm, Cleave (chance to fell a tree in one
@@ -72,7 +72,7 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
 5. **Automate.** Bought machines appear in the yard south of the start and animate (spinning
    blades, swinging saw arm, feeding logs, rollers). Each one shows what it produces when you
    are nearby. A wooden stake marks where the next machine will go.
-6. **Rebirth.** From the skill tree header (or the pause menu), pay to start over with a
+6. **Rebirth.** From the skill tree header at the Workbench, pay to start over with a
    permanent bonus: every rebirth adds +10% to all money you earn (sales, Goldbark cash and
    lucky finds). The first costs $5,000 and each one after that costs 1.08 times the previous one.
    Buy x1, x5, x10 or as many as you can afford at once (the price is the sum of the single prices).
@@ -287,6 +287,8 @@ long sessions (8+ machines with every upgrade maxed).
 - No existing project was provided, so this is a new project in `Games/ChoppingTrees`, set up the same way as the other projects in that folder.
 - Machines put wood straight into your stock. Hauling wood around would turn this into the factory game the brief rules out. Selling stays a trip to the market.
 - Sawmills automatically turn stock wood into planks, which are worth 75% more than the wood they use.
+- The chain continues: Carpentry Workshops (west side of the yard) turn 3 planks into furniture ($16 vs $10.50 of planks), and Cabin Builders (east side) turn 5 furniture into a flat-pack cabin kit ($130 vs $80 of furniture). Each step only uses what's in the yard, so a later machine waits when the one before it can't keep up.
+- The yard is wider now, with a red barn, a water tower, lumber racks, wagons, a well and more cabins around it.
 - Offline production is 100% efficient but capped (2 h base) so idle time stays rewarding without making active play pointless.
 - Sounds are synthesised in code (no third-party audio). Fonts are Inter (SIL OFL, licence in `Art/Fonts/OFL.txt`).
 - Only packages that ship with the template (URP, Input System, uGUI/TextMesh Pro, Test Framework), Unity's built-in NVIDIA and AMD modules (for DLSS and FSR), and Unity's automation package are used. No paid assets.

@@ -81,7 +81,7 @@ namespace ChoppingTrees.EditorTools
 
             StockPile(yard, "WoodPile", "LogPiece", GameModel.Wood, new Vector3(-14.8f, 0, -9.6f), 35f, 21, 5f, 1.35f, 0.36f, 0.95f);
             StockPile(yard, "PlankPile", "PlankPiece", "planks", new Vector3(-15.6f, 0, -15.8f), 35f, 12, 3f, 1.45f, 0.13f, 0f);
-            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f) })
+            foreach (var (x, z) in new[] { (-5.5f, -9f), (5.5f, -9f), (0f, -19f), (-3f, 46f), (-3f, 116f), (-34f, -19f), (34f, -21.5f), (-30f, -33f), (29f, -32f) })
             {
                 var lamp = Place("Lantern_Post", yard, x, z, 0f);
                 var light = new GameObject("Light").AddComponent<Light>();
@@ -100,6 +100,33 @@ namespace ChoppingTrees.EditorTools
             Place("Signpost", yard, 3.2f, 47f, 10f);
             Place("Signpost", yard, -3.2f, 117f, -10f);
 
+            // Furniture and cabin kit stock, and the buildings around the bigger yard: a red barn, a
+            // water tower, lumber racks, wagons, a well and two more cabins.
+            GoodsPile(yard, "FurniturePile", "FurniturePiece", "furniture", -33.5f, -16f, 90f, new Vector2(1.45f, 1.2f), 1.18f, 2f, 1.5f);
+            GoodsPile(yard, "CabinKitPile", "CabinKit", "cabins", 33.5f, -16.5f, -90f, new Vector2(1.85f, 1.4f), 0.88f, 1f, 1.5f);
+            Place("Warehouse", yard, 30f, -39.5f, 0f);
+            Block(30f, -39.5f, 7f);
+            Place("WaterTower", yard, -33f, -40f, 15f);
+            Block(-33f, -40f, 3f);
+            foreach (var (x, z, yaw) in new[] { (-33.5f, -26.5f, 90f), (15f, -39.5f, 0f) })
+            {
+                Place("LumberRack", yard, x, z, yaw);
+                Block(x, z, 2.5f);
+            }
+            foreach (var (x, z, yaw) in new[] { (-26f, -12f, 25f), (35f, -8.5f, -150f) })
+            {
+                Place("Wagon", yard, x, z, yaw);
+                Block(x, z, 2.2f);
+            }
+            Place("Well", yard, 21f, -10.5f, 0f);
+            Block(21f, -10.5f, 1.6f);
+            Place("Cabin", yard, -45f, -40.5f, 15f);
+            Block(-45f, -40.5f, 4.5f);
+            Place("Cabin", yard, -45f, -5.5f, 165f);
+            Block(-45f, -5.5f, 4.5f);
+            foreach (var (x, z, yaw) in new[] { (-36.5f, -36f, 30f), (-36f, -9f, 0f), (37f, -40.5f, 15f), (25.5f, -14f, 45f) })
+                Place("Crate", yard, x, z, yaw);
+
             var yardComp = MachineYardBuild(yard, prefabs);
 
             // ---- gates and fences
@@ -112,8 +139,10 @@ namespace ChoppingTrees.EditorTools
             var forest = new GameObject("Forest").transform;
             int trees = 0;
             trees += Forest(forest, db.areas.First(a => a.id == "clearing"), -55f, 55f, -4f, 47f, 4.2f, 120);
-            trees += Forest(forest, db.areas.First(a => a.id == "clearing"), -55f, -33f, -42f, -6f, 4.5f, 18);
-            trees += Forest(forest, db.areas.First(a => a.id == "clearing"), 33f, 55f, -42f, -6f, 4.5f, 18);
+            // The yard's west and east sides are the carpentry quarter and the builders' yard now;
+            // only a thin line of trees stays along the walls behind them.
+            trees += Forest(forest, db.areas.First(a => a.id == "clearing"), -55f, -48f, -42f, -6f, 4.5f, 6);
+            trees += Forest(forest, db.areas.First(a => a.id == "clearing"), 48f, 55f, -42f, -6f, 4.5f, 6);
             trees += Forest(forest, grove, -55f, 55f, 54f, 117f, 5.6f, 95);
             trees += Forest(forest, ridge, -55f, 55f, 124f, 189f, 6.2f, 75, "goldbark", 4);
             Backdrop(env, db);
@@ -271,6 +300,8 @@ namespace ChoppingTrees.EditorTools
             d["AutoChopper_Mk2"] = Machine("AutoChopper_Mk2", "chopper", 2);
             d["AutoChopper_Mk3"] = Machine("AutoChopper_Mk3", "chopper", 3);
             d["Sawmill"] = Machine("Sawmill", "sawmill", 0);
+            d["Workshop"] = Machine("Workshop", "workshop", 0);
+            d["CabinBuilder"] = Machine("CabinBuilder", "builder", 0);
             return d;
         }
 
@@ -304,6 +335,22 @@ namespace ChoppingTrees.EditorTools
                 var anim = root.AddComponent<MachineAnimator>();
                 anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), chip, "chopper_loop", "machine_cut", 3f);
             }
+            else if (id == "workshop")
+            {
+                Add("Spindle", MachineAnimator.Motion.Spin, Vector3.right, 720f);
+                Add("Wheel", MachineAnimator.Motion.Spin, Vector3.right, 540f);
+                Add("Board", MachineAnimator.Motion.Slide, Vector3.forward, -0.6f);
+                Add("Hammer", MachineAnimator.Motion.Swing, Vector3.right, -50f, 0.3f);
+                var anim = root.AddComponent<MachineAnimator>();
+                anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), new Color(0.93f, 0.8f, 0.58f), "sawmill_loop", "machine_cut", 2.2f);
+            }
+            else if (id == "builder")
+            {
+                Add("Trolley", MachineAnimator.Motion.Bob, Vector3.right, 1.6f);
+                Add("Hook", MachineAnimator.Motion.Bob, Vector3.up, 0.35f, 0.25f);
+                var anim = root.AddComponent<MachineAnimator>();
+                anim.Configure(id, parts.ToArray(), Find(root.transform, "WorkPoint"), new Color(0.8f, 0.6f, 0.4f), "chopper_loop", "build", 4f);
+            }
             else
             {
                 Add("Blade", MachineAnimator.Motion.Spin, Vector3.right, 1000f);
@@ -331,15 +378,27 @@ namespace ChoppingTrees.EditorTools
             var sawSlots = new List<Transform>();
             foreach (var x in new[] { 0f, -7.5f, 7.5f })
                 sawSlots.Add(Slot(go.transform, "SawmillSlot", x, -32f, 90f));
+            // Carpentry quarter on the west side and the builders' yard on the east, both facing the middle.
+            var shopSlots = new List<Transform>();
+            foreach (var z in new[] { -13f, -22.5f, -32f })
+                shopSlots.Add(Slot(go.transform, "WorkshopSlot", -40f, z, 90f));
+            var builderSlots = new List<Transform>();
+            foreach (var z in new[] { -14f, -25f, -36f })
+            {
+                builderSlots.Add(Slot(go.transform, "BuilderSlot", 40.5f, z, -90f));
+                Block(40.5f, z, 4.6f);
+            }
 
             var so = new SerializedObject(yard);
             var groups = so.FindProperty("m_Groups");
-            groups.arraySize = 2;
+            groups.arraySize = 4;
             Group(groups.GetArrayElementAtIndex(0), "chopper", chopperSlots, new[] { prefabs["AutoChopper"], prefabs["AutoChopper_Mk2"], prefabs["AutoChopper_Mk3"] });
             Group(groups.GetArrayElementAtIndex(1), "sawmill", sawSlots, new[] { prefabs["Sawmill"] });
+            Group(groups.GetArrayElementAtIndex(2), "workshop", shopSlots, new[] { prefabs["Workshop"] });
+            Group(groups.GetArrayElementAtIndex(3), "builder", builderSlots, new[] { prefabs["CabinBuilder"] });
             so.FindProperty("m_SlotMarkerPrefab").objectReferenceValue = prefabs["SlotMarker"];
             so.ApplyModifiedPropertiesWithoutUndo();
-            return chopperSlots.Count + sawSlots.Count;
+            return chopperSlots.Count + sawSlots.Count + shopSlots.Count + builderSlots.Count;
         }
 
         static Transform Slot(Transform parent, string name, float x, float z, float yaw)
@@ -389,6 +448,26 @@ namespace ChoppingTrees.EditorTools
             var display = root.gameObject.AddComponent<StockPileDisplay>();
             display.Configure(resource, pieces.ToArray(), firstAt, growth);
             Block(pos.x, pos.z, 2f);
+        }
+
+        /// <summary>Pallets of finished goods (3 x 2 per layer, two layers) that fill up with the stock.</summary>
+        static void GoodsPile(Transform parent, string name, string model, string resource, float x, float z, float yaw, Vector2 spacing, float layerHeight, float firstAt, float growth)
+        {
+            var root = new GameObject(name).transform;
+            root.SetParent(parent);
+            root.SetPositionAndRotation(WorldLayout.OnGround(x, z), Quaternion.Euler(0f, yaw, 0f));
+            var pieces = new List<Transform>();
+            for (int layer = 0; layer < 2; layer++)
+                for (int row = 0; row < 2; row++)
+                    for (int col = 0; col < 3; col++)
+                    {
+                        var p = Model(model, root, Vector3.zero, Quaternion.identity, Vector3.one).transform;
+                        p.localPosition = new Vector3((col - 1) * spacing.x, layer * layerHeight, (row - 0.5f) * spacing.y);
+                        p.localRotation = Quaternion.Euler(0f, (col * 7 + row * 13 + layer * 5) % 9 - 4f, 0f);
+                        pieces.Add(p);
+                    }
+            root.gameObject.AddComponent<StockPileDisplay>().Configure(resource, pieces.ToArray(), firstAt, growth);
+            Block(x, z, 3f);
         }
 
         // ------------------------------------------------------------------ world

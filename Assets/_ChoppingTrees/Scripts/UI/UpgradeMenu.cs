@@ -23,7 +23,7 @@ namespace ChoppingTrees
 
         // Tree units covered by the content (positions are x = -8..7, y = 0..8) and its size
         // in canvas units per tree unit. The band below the trunk leaves room for the overlays.
-        const float XMin = -8.6f, XMax = 7.8f, YMin = -1.25f, YMax = 9.1f;
+        const float XMin = -8.6f, XMax = 10.0f, YMin = -1.25f, YMax = 9.1f;
         const float UnitX = 136f, UnitY = 132f;
         static readonly Vector2 ContentSize = new Vector2((XMax - XMin) * UnitX, (YMax - YMin) * UnitY);
         static readonly Vector2 RootPos = new Vector2(0.7f, 0.05f);
@@ -403,7 +403,7 @@ namespace ChoppingTrees
 
             var db = Game.Instance.Db;
             foreach (var r in db.resources)
-                if (r != null) m_ResourceStats[r.id] = StatCell(grid, r.id == "planks" ? "plank" : "log", r.color, r.displayName + "/s");
+                if (r != null) m_ResourceStats[r.id] = StatCell(grid, r.icon, r.color, r.displayName + "/s");
             foreach (var m in db.machines)
                 if (m != null) m_MachineStats[m.id] = StatCell(grid, m.kind == MachineKind.Producer ? "saw" : "gear", UIStyle.CategoryColor(UpgradeCategory.Automation), m.displayName);
             m_PriceStat = StatCell(grid, "coin", UIStyle.Money, "Wood price");

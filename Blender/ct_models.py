@@ -1,4 +1,4 @@
-# "A Game About Chopping Trees" model generator for Blender 4.2+/5.x (run headless):
+# "Forest to Fortune" model generator for Blender 4.2+/5.x (run headless):
 #   blender -b --factory-startup -P ct_models.py -- <output folder> [model names...]
 # Builds every 3D model in the game from code: trees, stumps, axes, machines, buildings and props.
 # Writes one FBX per model to the output folder and an editable .blend per model to Blender/Source.
@@ -1244,6 +1244,430 @@ def Mountain_A():
 @model
 def Hill_A():
     finish("Hill_A", [ico("Hill", 14, (0, 0, -3), "M_Grass", 1, (1.4, 1.0, 0.45), 0.08, 304)])
+
+
+# ----------------------------------------------------------------- production chain: furniture and cabins
+
+def rot2(x, y, yaw):
+    c, s = math.cos(yaw), math.sin(yaw)
+    return (x * c - y * s, x * s + y * c)
+
+
+def chair(name, loc, yaw=0.0, wood="M_Wood", seat="M_Plank"):
+    """A ladder-back chair (about 0.5 x 0.5 x 1.0), front +Y before yaw."""
+    p = []
+    ox, oy, oz = loc
+
+    def at(x, y, z):
+        rx, ry = rot2(x, y, yaw)
+        return (ox + rx, oy + ry, oz + z)
+    for (x, y) in ((-0.2, 0.2), (0.2, 0.2)):
+        p.append(box(name + "Leg", (0.05, 0.05, 0.45), at(x, y, 0.225), wood, rot=(0, 0, yaw)))
+    for x in (-0.2, 0.2):
+        p.append(box(name + "Post", (0.05, 0.05, 1.0), at(x, -0.2, 0.5), wood, rot=(0, 0, yaw)))
+    p.append(box(name + "Seat", (0.5, 0.48, 0.05), at(0, 0, 0.47), seat, 0.01, rot=(0, 0, yaw)))
+    for z in (0.68, 0.82, 0.95):
+        p.append(box(name + "Slat", (0.42, 0.03, 0.06), at(0, -0.2, z), seat, rot=(0, 0, yaw)))
+    p.append(box(name + "Rung", (0.42, 0.03, 0.03), at(0, 0.2, 0.15), wood, rot=(0, 0, yaw)))
+    return p
+
+
+def table(name, loc, size=(0.95, 0.65), h=0.74, yaw=0.0, wood="M_Wood", top="M_Plank"):
+    p = []
+    ox, oy, oz = loc
+    w, d = size
+
+    def at(x, y, z):
+        rx, ry = rot2(x, y, yaw)
+        return (ox + rx, oy + ry, oz + z)
+    p.append(box(name + "Top", (w, d, 0.05), at(0, 0, h - 0.025), top, 0.01, rot=(0, 0, yaw)))
+    p.append(box(name + "Apron", (w - 0.12, d - 0.12, 0.08), at(0, 0, h - 0.09), wood, rot=(0, 0, yaw)))
+    for (x, y) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        p.append(box(name + "Leg", (0.06, 0.06, h - 0.05), at(x * (w / 2 - 0.07), y * (d / 2 - 0.07), (h - 0.05) / 2), wood, rot=(0, 0, yaw)))
+    return p
+
+
+def pallet(name, size, loc):
+    w, d = size
+    p = []
+    for i in range(5):
+        y = loc[1] - d / 2 + 0.08 + i * (d - 0.16) / 4
+        p.append(box(name + "Top", (w, 0.14, 0.03), (loc[0], y, loc[2] + 0.115), "M_Plank"))
+    for x in (-1, 0, 1):
+        p.append(box(name + "Block", (0.12, d, 0.1), (loc[0] + x * (w / 2 - 0.08), loc[1], loc[2] + 0.05), "M_WoodDark"))
+    return p
+
+
+@model
+def FurniturePiece():
+    """Stock pile piece: a pallet with a table and two chairs on it."""
+    p = pallet("Pallet", (1.3, 1.0), (0, 0, 0))
+    p += table("Table", (0.0, 0.05, 0.13), (0.95, 0.6), 0.62)
+    p += chair("ChairA", (-0.32, -0.2, 0.13), 0.2)
+    p += chair("ChairB", (0.33, -0.18, 0.13), -0.25, "M_WoodDark")
+    finish("FurniturePiece", p)
+
+
+@model
+def CabinKit():
+    """Stock pile piece: a flat-packed cabin on a pallet: log wall panels, a door, roof panels and
+    red straps."""
+    p = pallet("Pallet", (1.7, 1.2), (0, 0, 0))
+    z = 0.13
+    for i in range(4):  # log wall panels lying flat
+        for k in range(3):
+            p.append(fcyl("Log", 0.06, 1.6, (0, -0.4 + k * 0.12 + (i % 2) * 0.06, z + 0.06 + i * 0.12), "M_Bark", rot=(0, math.radians(90), 0), verts=7))
+        p.append(box("Panel", (1.55, 0.42, 0.1), (0, 0.32, z + 0.06 + i * 0.12), "M_Wood" if i % 2 else "M_Plank", 0.01))
+    top = z + 0.5
+    p.append(box("Door", (0.5, 0.9, 0.05), (-0.45, 0.0, top + 0.03), "M_WoodDark", 0.01))
+    p.append(box("Knob", (0.05, 0.05, 0.04), (-0.27, 0.0, top + 0.07), "M_Gold"))
+    p.append(box("Window", (0.45, 0.4, 0.05), (0.35, 0.18, top + 0.03), "M_Glass"))
+    p.append(box("Frame", (0.53, 0.48, 0.04), (0.35, 0.18, top + 0.015), "M_Wood"))
+    for k in range(2):
+        p.append(box("Roof", (1.5, 0.5, 0.05), (0.05, -0.3 + k * 0.08, top + 0.07 + k * 0.05), "M_Roof", 0.01))
+    for x in (-0.55, 0.55):
+        p.append(box("Strap", (0.06, 1.24, 0.02), (x, 0, top + 0.17), "M_PaintRed"))
+        for s in (-1, 1):
+            p.append(box("Strap", (0.06, 0.02, 0.6), (x, s * 0.61, z + 0.33), "M_PaintRed"))
+    p.append(box("Tag", (0.2, 0.02, 0.14), (0.0, 0.62, z + 0.35), "M_Canvas"))
+    finish("CabinKit", p)
+
+
+@model
+def Workshop():
+    """Carpentry Workshop (machine "workshop"): an open timber shed with a lean-to roof. Planks
+    come in on the left, go through the planer and the lathe, and finished chairs and tables
+    leave on the right. Moving parts: Spindle (lathe, spins about X), Wheel (band saw, about X),
+    Board (slides along Y through the planer), Hammer (swings about X). Front is +Y."""
+    w, d = 5.0, 4.2
+    base = [span("Floor", -w / 2, w / 2, -d / 2, d / 2, 0.0, 0.18, "M_Plank", 0.02)]
+    for i in range(9):
+        x = -w / 2 + 0.3 + i * 0.55
+        base.append(span("Seam", x, x + 0.02, -d / 2, d / 2, 0.18, 0.185, "M_WoodDark"))
+    for x in (-w / 2 + 0.12, w / 2 - 0.12):
+        base.append(box("PostB", (0.2, 0.2, 3.6), (x, -d / 2 + 0.12, 1.98), "M_WoodDark", 0.02))
+        base.append(box("PostF", (0.2, 0.2, 2.8), (x, d / 2 - 0.12, 1.58), "M_WoodDark", 0.02))
+        base.append(box("Brace", (0.08, 0.08, 1.0), (x, d / 2 - 0.5, 2.7), "M_WoodDark", rot=(math.radians(-45), 0, 0)))
+    for y, z in ((-d / 2 + 0.12, 3.78), (d / 2 - 0.12, 2.98)):
+        base.append(span("Beam", -w / 2, w / 2, y - 0.11, y + 0.11, z - 0.1, z + 0.1, "M_WoodDark"))
+    slope = math.atan2(0.8, d)
+    base.append(box("Roof", (w + 0.7, d + 0.9, 0.12), (0, 0.1, 3.5), "M_Roof", rot=(-slope, 0, 0)))
+    for k in range(6):
+        y = -d / 2 + 0.1 + k * 0.82
+        base.append(box("Shingle", (w + 0.72, 0.4, 0.04), (0, y, 3.9 - (y + d / 2) * 0.8 / d + 0.03), "M_WoodDark" if k % 2 else "M_Roof", rot=(-slope, 0, 0)))
+    # Back wall with a tool board.
+    base.append(span("BackWall", -w / 2 + 0.2, w / 2 - 0.2, -d / 2 + 0.05, -d / 2 + 0.17, 0.18, 3.7, "M_Wood"))
+    for i in range(8):
+        x = -w / 2 + 0.45 + i * 0.58
+        base.append(span("Batten", x, x + 0.07, -d / 2 + 0.17, -d / 2 + 0.2, 0.18, 3.65, "M_WoodDark"))
+    base.append(span("ToolBoard", -1.6, 1.6, -d / 2 + 0.2, -d / 2 + 0.24, 1.45, 2.45, "M_Canvas"))
+    for i, (x, h) in enumerate([(-1.3, 0.5), (-0.9, 0.42), (-0.5, 0.6), (0.0, 0.36), (0.45, 0.55), (0.9, 0.46), (1.3, 0.4)]):
+        base.append(box("ToolHandle", (0.05, 0.04, h), (x, -d / 2 + 0.28, 1.95), "M_Wood"))
+        base.append(box("ToolHead", (0.16 if i % 2 else 0.1, 0.04, 0.1), (x, -d / 2 + 0.28, 1.95 + h / 2), "M_Steel" if i % 3 else "M_MetalDark"))
+    # Big saw blade hanging on the wall.
+    base.append(fcyl("WallSaw", 0.35, 0.03, (1.9, -d / 2 + 0.26, 2.3), "M_Steel", rot=(math.radians(90), 0, 0), verts=18))
+    # Workbench along the back with a vice and clamps.
+    base.append(span("BenchTop", -2.1, 0.2, -1.55, -0.85, 0.85, 0.95, "M_Plank", 0.01))
+    for x in (-2.0, 0.1):
+        for y in (-1.5, -0.9):
+            base.append(box("BenchLeg", (0.08, 0.08, 0.67), (x, y, 0.515), "M_WoodDark"))
+    base.append(span("BenchShelf", -2.05, 0.15, -1.5, -0.9, 0.35, 0.39, "M_Wood"))
+    base.append(box("Vice", (0.22, 0.18, 0.16), (-1.9, -0.8, 1.0), "M_PaintBlue", 0.01))
+    base.append(box("Clamp", (0.06, 0.25, 0.2), (-0.6, -1.2, 1.05), "M_PaintRed"))
+    # Planer (left, takes the planks in).
+    base.append(box("Planer", (0.8, 1.3, 0.75), (-1.55, 0.75, 0.56), "M_PaintGreen", 0.03))
+    base.append(box("PlanerTop", (0.86, 1.36, 0.06), (-1.55, 0.75, 0.96), "M_MetalDark"))
+    base.append(box("PlanerHood", (0.7, 0.4, 0.3), (-1.55, 0.75, 1.14), "M_PaintGreen", 0.02))
+    # Lathe (middle front).
+    base.append(box("LatheBed", (1.8, 0.3, 0.16), (0.5, 0.95, 0.95), "M_MetalDark"))
+    for x in (-0.25, 1.25):
+        base.append(box("LatheLeg", (0.3, 0.36, 0.78), (x, 0.95, 0.48), "M_PaintBlue", 0.02))
+    base.append(box("Headstock", (0.36, 0.34, 0.36), (-0.25, 0.95, 1.2), "M_PaintBlue", 0.02))
+    base.append(box("Tailstock", (0.22, 0.26, 0.26), (1.3, 0.95, 1.15), "M_PaintBlue", 0.02))
+    base.append(box("ToolRest", (0.6, 0.06, 0.1), (0.55, 1.18, 1.08), "M_Steel"))
+    # Plank stack (input) and finished furniture (output).
+    for layer in range(5):
+        base.append(box("InPlank", (0.32, 1.4, 0.07), (-2.15, 1.25 - (layer % 2) * 0.02, 0.22 + layer * 0.075), "M_Plank" if layer % 2 else "M_WoodCut", 0.008))
+    base += chair("OutChair", (1.75, 1.45, 0.18), -0.5)
+    base += chair("OutChair2", (2.15, 0.6, 0.18), -1.3, "M_WoodDark")
+    base += table("OutTable", (1.65, -0.6, 0.18), (0.9, 0.6), 0.72, 0.3)
+    base += chair("OutChair3", (1.65, -0.6, 0.92), 0.3)
+    # Sawdust heap.
+    base.append(ico("Sawdust", 0.35, (-0.6, 1.6, 0.1), "M_WoodCut", 1, (1.3, 1.0, 0.35), 0.1, 411))
+    # Band saw (back right) with its wheel.
+    base.append(box("BandSaw", (0.5, 0.5, 1.6), (1.0, -1.4, 1.0), "M_Paint", 0.03))
+    base.append(box("BandTable", (0.7, 0.7, 0.05), (1.0, -1.2, 1.12), "M_MetalDark"))
+    base.append(col("Bench", (2.4, 0.8, 1.0), (-0.95, -1.2, 0.5)))
+    base.append(col("Planer", (0.9, 1.4, 1.3), (-1.55, 0.75, 0.65)))
+    base.append(col("Lathe", (2.0, 0.5, 1.3), (0.5, 0.95, 0.65)))
+    base.append(col("Back", (w, 0.3, 3.7), (0, -d / 2 + 0.12, 1.85)))
+    for x in (-w / 2 + 0.12, w / 2 - 0.12):
+        base.append(col("PostF", (0.24, 0.24, 2.8), (x, d / 2 - 0.12, 1.4)))
+    base.append(col("Output", (1.2, 2.6, 1.0), (1.85, 0.4, 0.5)))
+    join([o for o in base if not o.name.startswith("COL_")], "Base", (0, 0, 0))
+
+    spindle = [fcyl("Turning", 0.09, 1.2, (0.5, 0.95, 1.2), "M_WoodCut", rot=(0, math.radians(90), 0), verts=10)]
+    for k in range(4):
+        spindle.append(fcyl("Bead", 0.12, 0.08, (0.05 + k * 0.3, 0.95, 1.2), "M_Wood", rot=(0, math.radians(90), 0), verts=10))
+    part("Spindle", spindle, (0.5, 0.95, 1.2))
+    wheel = [disc_x("WheelRim", 0.3, 0.06, (1.0, -1.15, 1.55), "M_MetalDark", 16)]
+    for k in range(3):
+        wheel.append(box("Spoke", (0.04, 0.56, 0.05), (1.0, -1.15, 1.55), "M_Paint", rot=(k * math.pi / 3, 0, 0)))
+    part("Wheel", wheel, (1.0, -1.15, 1.55))
+    part("Board", [box("Board", (0.3, 1.2, 0.06), (-1.55, 0.75, 1.02), "M_Plank", 0.008)], (-1.55, 0.75, 1.02))
+    hammer = [box("Handle", (0.04, 0.04, 0.4), (-1.0, -1.2, 1.17), "M_Wood"), box("Head", (0.18, 0.06, 0.06), (-1.0, -1.2, 1.37), "M_MetalDark")]
+    part("Hammer", hammer, (-1.0, -1.2, 0.97))
+    empty("WorkPoint", (0.5, 1.15, 1.25))
+    export("Workshop")
+
+
+@model
+def CabinBuilder():
+    """Cabin Builder (machine "builder"): a gantry crane over a cabin going up on a plank pad.
+    Furniture comes in on the left, finished flat-pack cabin kits are stacked on the right.
+    Moving parts: Trolley (slides along X on the gantry beam) > Hook (bobs up and down with a
+    wall panel). Front is +Y."""
+    w, d = 6.4, 6.0
+    base = [span("Pad", -w / 2, w / 2, -d / 2, d / 2, 0.0, 0.14, "M_Dirt", 0.03)]
+    base.append(span("Deck", -1.9, 1.9, -1.9, 1.5, 0.14, 0.3, "M_Plank", 0.02))
+    # The cabin under construction: three walls of logs and bare rafters.
+    cw, cd = 3.2, 2.8
+    for i in range(6):
+        z = 0.45 + i * 0.27
+        base.append(fcyl("LogB", 0.14, cw + 0.4, (0, -cd / 2 - 0.2, z), "M_Bark", rot=(0, math.radians(90), 0), verts=8))
+        for s in (-1, 1):
+            base.append(fcyl("LogS", 0.14, cd + 0.4, (s * cw / 2, -0.2, z + 0.13), "M_Bark", rot=(math.radians(90), 0, 0), verts=8))
+    for i in range(3):  # the front wall is half done
+        z = 0.45 + i * 0.27
+        for s in (-1, 1):
+            base.append(fcyl("LogF", 0.14, 1.0, (s * (cw / 2 - 0.4), cd / 2 - 0.2, z), "M_Bark", rot=(0, math.radians(90), 0), verts=8))
+    top = 0.45 + 6 * 0.27
+    for k in range(4):  # rafters
+        x = -cw / 2 + 0.1 + k * (cw - 0.2) / 3
+        for s in (-1, 1):
+            base.append(box("Rafter", (0.1, cd / 2 + 0.5, 0.12), (x, -0.2 + s * (cd / 4 + 0.15), top + 0.6), "M_WoodCut", rot=(s * -0.65, 0, 0)))
+    base.append(box("RidgeBeam", (cw + 0.4, 0.14, 0.14), (0, -0.2, top + 1.15), "M_WoodCut"))
+    # Gantry crane: two A-frame legs and a beam along X.
+    H = 6.4
+    for x in (-w / 2 + 0.3, w / 2 - 0.3):
+        for y in (-1.6, 1.4):
+            base.append(ftube("Leg", (x, y + (-0.45 if y < 0 else 0.45), 0.14), (x, -0.1, H), 0.12, 0.1, "M_Paint", 8))
+        base.append(box("Foot", (0.4, 4.2, 0.2), (x, -0.1, 0.24), "M_MetalDark"))
+        base.append(box("Cross", (0.12, 2.6, 0.12), (x, -0.1, 2.6), "M_Paint"))
+    base.append(box("GantryBeam", (w - 0.2, 0.32, 0.4), (0, -0.1, H + 0.2), "M_Paint", 0.02))
+    base.append(box("BeamCap", (w - 0.1, 0.36, 0.06), (0, -0.1, H + 0.43), "M_MetalDark"))
+    for x in (-w / 2 + 0.3, w / 2 - 0.3):
+        base.append(box("Stripe", (0.34, 0.36, 0.42), (x, -0.1, H + 0.2), "M_MetalDark"))
+    # Winch box on the right leg.
+    base.append(box("Winch", (0.6, 0.6, 0.5), (w / 2 - 0.6, 0.9, 0.6), "M_PaintRed", 0.02))
+    base.append(fcyl("Drum", 0.18, 0.5, (w / 2 - 0.6, 0.9, 1.0), "M_Steel", rot=(0, math.radians(90), 0), verts=12))
+    # Input: furniture on the left; output: cabin kits on the right.
+    base += table("InTable", (-1.9, 2.0, 0.14), (0.9, 0.6), 0.72, 1.57)
+    base += chair("InChair", (-1.9, 2.0, 0.86), 0.4)
+    base += chair("InChair2", (-1.0, 2.5, 0.14), 2.6, "M_WoodDark")
+    for k in range(2):
+        z = 0.14 + k * 0.62
+        base += pallet("KitPallet", (1.5, 1.1), (1.75, 2.1, z))
+        for j in range(3):
+            base.append(box("KitPanel", (1.4, 1.0, 0.13), (1.75, 2.1, z + 0.2 + j * 0.13), "M_Wood" if j % 2 else "M_Plank", 0.01))
+        base.append(box("KitStrap", (0.06, 1.12, 0.45), (1.75, 2.1, z + 0.33), "M_PaintRed"))
+    # Sawhorse and spare logs at the back left.
+    base.append(box("Sawhorse", (1.2, 0.1, 0.1), (-2.2, 0.4, 0.75), "M_Wood"))
+    for x in (-2.7, -1.7):
+        base.append(box("SawhorseLeg", (0.08, 0.5, 0.65), (x, 0.4, 0.44), "M_Wood"))
+    base += log_x("Spare", 0.15, 1.6, (-2.2, -2.4, 0.3), "M_Bark") + log_x("Spare", 0.15, 1.6, (-2.2, -2.05, 0.3), "M_Bark")
+    base += log_x("Spare", 0.15, 1.6, (-2.2, -2.22, 0.56), "M_Bark")
+    base.append(col("Cabin", (cw + 0.5, cd + 0.4, top), (0, -0.2, top / 2)))
+    for x in (-w / 2 + 0.3, w / 2 - 0.3):
+        base.append(col("Leg", (0.5, 4.2, 2.0), (x, -0.1, 1.0)))
+    base.append(col("Kits", (1.6, 1.2, 1.5), (1.75, 2.1, 0.75)))
+    base.append(col("Furniture", (1.6, 1.4, 1.2), (-1.6, 2.2, 0.6)))
+    join([o for o in base if not o.name.startswith("COL_")], "Base", (0, 0, 0))
+
+    trolley = part("Trolley", [box("Carriage", (0.5, 0.5, 0.3), (0, -0.1, H - 0.1), "M_MetalDark", 0.02),
+                               disc_x("Pulley", 0.12, 0.08, (0.0, -0.1, H - 0.3), "M_Steel", 10)], (0, -0.1, H - 0.1))
+    hook = part("Hook", [ftube("Cable", (0, -0.1, H - 0.3), (0, -0.1, 4.9), 0.02, 0.02, "M_MetalDark", 4),
+                         box("HookBlock", (0.16, 0.12, 0.22), (0, -0.1, 4.85), "M_Paint"),
+                         box("Spreader", (1.6, 0.08, 0.08), (0, -0.1, 4.7), "M_MetalDark"),
+                         box("Panel", (1.5, 0.14, 0.9), (0, -0.1, 4.2), "M_Plank", 0.01)], (0, -0.1, H - 0.3))
+    parent(hook, trolley)
+    empty("WorkPoint", (0, 1.1, 1.5))
+    export("CabinBuilder")
+
+
+# ----------------------------------------------------------------- yard buildings
+
+@model
+def Warehouse():
+    """A big red lumber barn: board-and-batten walls, white trim, a tin gable roof with a cupola,
+    big X-braced double doors, a hay loft door and a lean-to full of lumber. 10 x 7 m. Front is +Y."""
+    w, d, h = 10.0, 7.0, 4.2
+    p = [span("Base", -w / 2 - 0.1, w / 2 + 0.1, -d / 2 - 0.1, d / 2 + 0.1, 0.0, 0.3, "M_StoneDark", 0.03)]
+    p.append(span("Walls", -w / 2, w / 2, -d / 2, d / 2, 0.3, h, "M_PaintRed"))
+    for i in range(int(w / 0.5) + 1):  # battens on front and back
+        x = -w / 2 + i * 0.5
+        for y in (-d / 2 - 0.03, d / 2 + 0.03):
+            p.append(span("Batten", x - 0.03, x + 0.03, y - 0.02, y + 0.02, 0.3, h, "M_Roof"))
+    for i in range(int(d / 0.5) + 1):
+        y = -d / 2 + i * 0.5
+        for x in (-w / 2 - 0.03, w / 2 + 0.03):
+            p.append(span("Batten", x - 0.02, x + 0.02, y - 0.03, y + 0.03, 0.3, h, "M_Roof"))
+    # Gable ends (the roof runs along X).
+    roof_h = 2.6
+    for x in (-w / 2 + 0.1, w / 2 - 0.1):
+        g = prism("Gable", [(-d / 2, h), (d / 2, h), (0, h + roof_h)], 0.2, "M_PaintRed")
+        g.location.x = x
+        p.append(g)
+    slope = math.atan2(roof_h, d / 2)
+    L = math.hypot(roof_h, d / 2) + 0.6
+    for s in (-1, 1):
+        p.append(box("Roof", (w + 0.8, L, 0.16), (0, s * d / 4, h + roof_h / 2 + 0.08), "M_MetalDark", rot=(-s * slope, 0, 0)))
+        for k in range(7):
+            f = (k + 0.5) / 7
+            p.append(box("Rib", (w + 0.82, 0.05, 0.05), (0, s * (d / 2) * (1 - f), h + roof_h * f + 0.2), "M_Metal", rot=(-s * slope, 0, 0)))
+    p.append(box("RidgeCap", (w + 0.9, 0.3, 0.12), (0, 0, h + roof_h + 0.12), "M_Metal"))
+    # Cupola with a weather vane.
+    p.append(span("Cupola", -0.6, 0.6, -0.6, 0.6, h + roof_h - 0.2, h + roof_h + 0.9, "M_PaintRed"))
+    for s in (-1, 1):
+        p.append(span("Louvre", -0.45, 0.45, s * 0.61 - 0.02, s * 0.61 + 0.02, h + roof_h + 0.15, h + roof_h + 0.75, "M_Canvas"))
+    p.append(prism("CupolaRoof", [(-0.85, h + roof_h + 0.9), (0.85, h + roof_h + 0.9), (0, h + roof_h + 1.5)], 1.6, "M_MetalDark"))
+    p.append(box("Vane", (0.04, 0.04, 0.8), (0, 0, h + roof_h + 1.9), "M_MetalDark"))
+    p.append(box("VaneArrow", (0.6, 0.03, 0.12), (0.1, 0, h + roof_h + 2.1), "M_MetalDark"))
+    # Trim.
+    for x in (-w / 2 - 0.06, w / 2 + 0.06):
+        for y in (-d / 2 - 0.06, d / 2 + 0.06):
+            p.append(span("Corner", x - 0.1, x + 0.1, y - 0.1, y + 0.1, 0.3, h, "M_Canvas"))
+    for y in (-d / 2 - 0.08, d / 2 + 0.08):
+        p.append(span("Eave", -w / 2 - 0.1, w / 2 + 0.1, y - 0.05, y + 0.05, h - 0.2, h, "M_Canvas"))
+    # Big double doors (front) with X braces.
+    dy = d / 2 + 0.1
+    for s in (-1, 1):
+        cx = s * 1.0
+        p.append(span("Door", cx - 1.0, cx + 1.0, dy - 0.05, dy + 0.05, 0.3, 3.4, "M_PaintRed"))
+        for (a, b) in (((cx - 0.9, 0.4), (cx + 0.9, 3.3)), ((cx + 0.9, 0.4), (cx - 0.9, 3.3))):
+            p.append(ftube("DoorX", (a[0], dy + 0.07, a[1]), (b[0], dy + 0.07, b[1]), 0.07, 0.07, "M_Canvas", 4))
+        p.append(span("DoorFrame", cx - 1.0, cx + 1.0, dy + 0.02, dy + 0.12, 3.3, 3.45, "M_Canvas"))
+        p.append(span("DoorFrame", cx - 1.0, cx + 1.0, dy + 0.02, dy + 0.12, 0.3, 0.42, "M_Canvas"))
+        p.append(span("DoorFrame", cx + s * 0.92, cx + s * 1.02, dy + 0.02, dy + 0.12, 0.3, 3.45, "M_Canvas"))
+    p.append(span("Track", -2.6, 2.6, dy + 0.1, dy + 0.18, 3.5, 3.62, "M_MetalDark"))
+    p.append(span("Loft", -0.7, 0.7, dy - 0.02, dy + 0.06, 4.3, 5.5, "M_WoodDark"))
+    p.append(span("LoftFrame", -0.8, 0.8, dy - 0.04, dy + 0.08, 5.45, 5.6, "M_Canvas"))
+    p.append(box("Pulley", (0.12, 1.0, 0.12), (0, dy + 0.4, 6.05), "M_WoodDark"))
+    # Windows.
+    for x in (-3.6, 3.6):
+        for y in (-d / 2 - 0.06, d / 2 + 0.06):
+            p.append(span("Window", x - 0.45, x + 0.45, y - 0.03, y + 0.03, 2.0, 2.9, "M_Glass"))
+            p.append(span("WinFrame", x - 0.52, x + 0.52, y - 0.02, y + 0.02, 1.93, 2.97, "M_Canvas"))
+    # Lean-to with lumber on the right side.
+    p.append(box("LeanRoof", (2.1, 4.6, 0.1), (w / 2 + 1.0, 0, 2.7), "M_MetalDark", rot=(0, math.radians(14), 0)))
+    for y in (-2.1, 2.1):
+        p.append(box("LeanPost", (0.15, 0.15, 2.5), (w / 2 + 1.8, y, 1.25), "M_WoodDark"))
+    for layer in range(6):
+        p.append(box("Lumber", (1.2, 3.8, 0.12), (w / 2 + 0.9, 0, 0.12 + layer * 0.13), "M_Plank" if layer % 2 else "M_WoodCut", 0.01))
+    p.append(col("Barn", (w + 0.2, d + 0.2, h + roof_h), (0, 0, (h + roof_h) / 2)))
+    p.append(col("Lean", (2.0, 4.6, 1.0), (w / 2 + 1.0, 0, 0.5)))
+    finish("Warehouse", p)
+
+
+@model
+def WaterTower():
+    """A wooden water tank on four splayed timber legs with a ladder and a spout."""
+    p = []
+    top = 5.2
+    for (x, y) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        p.append(ftube("Leg", (x * 1.7, y * 1.7, 0), (x * 1.05, y * 1.05, top), 0.13, 0.11, "M_WoodDark", 6))
+        p.append(span("Footing", x * 1.7 - 0.25, x * 1.7 + 0.25, y * 1.7 - 0.25, y * 1.7 + 0.25, -0.1, 0.25, "M_Stone", 0.02))
+    for z, r in ((1.6, 1.53), (3.4, 1.3)):
+        for (a, b) in (((-r, -r), (r, -r)), ((r, -r), (r, r)), ((r, r), (-r, r)), ((-r, r), (-r, -r))):
+            p.append(ftube("Rail", (a[0], a[1], z), (b[0], b[1], z), 0.06, 0.06, "M_Wood", 4))
+    p.append(span("Deck", -1.5, 1.5, -1.5, 1.5, top - 0.1, top + 0.05, "M_Plank", 0.02))
+    p.append(fcyl("Tank", 1.35, 2.4, (0, 0, top + 1.25), "M_Wood", verts=20))
+    for z in (top + 0.35, top + 1.25, top + 2.15):
+        p.append(fcyl("Hoop", 1.38, 0.07, (0, 0, z), "M_MetalDark", verts=20))
+    p.append(cone("Roof", 1.6, 0.1, 1.0, (0, 0, top + 2.95), "M_Roof", 16))
+    p.append(fcyl("Finial", 0.06, 0.4, (0, 0, top + 3.6), "M_MetalDark", verts=6))
+    for k in range(int(top / 0.35)):  # ladder up the front
+        p.append(box("Rung", (0.5, 0.04, 0.04), (0, 1.75, 0.3 + k * 0.35), "M_Wood"))
+    for x in (-0.25, 0.25):
+        p.append(box("Stile", (0.06, 0.06, top + 0.2), (x, 1.75, (top + 0.2) / 2), "M_WoodDark"))
+    p.append(ftube("Spout", (1.3, 0, top + 0.6), (2.2, 0, top + 0.2), 0.12, 0.1, "M_MetalDark", 8))
+    p.append(ftube("Chain", (2.2, 0, top + 0.2), (2.2, 0, 2.6), 0.015, 0.015, "M_MetalDark", 4))
+    for (x, y) in ((-1, -1), (1, -1), (1, 1), (-1, 1)):
+        p.append(col("Leg", (0.4, 0.4, 2.4), (x * 1.6, y * 1.6, 1.2)))
+    finish("WaterTower", p)
+
+
+@model
+def LumberRack():
+    """An outdoor drying rack: three stands, plank layers on stickers and a small tin roof."""
+    L = 4.0
+    p = []
+    for x in (-L / 2 + 0.2, 0, L / 2 - 0.2):
+        for y in (-0.6, 0.6):
+            p.append(box("Post", (0.12, 0.12, 2.3), (x, y, 1.15), "M_WoodDark"))
+        for z in (0.35, 1.05, 1.75):
+            p.append(box("Arm", (0.1, 1.4, 0.1), (x, 0, z), "M_Wood"))
+    for z0 in (0.4, 1.1, 1.8):
+        for layer in range(3):
+            z = z0 + 0.05 + layer * 0.1
+            p.append(box("Plank", (L - 0.1, 1.15, 0.06), (0, 0, z), "M_Plank" if layer % 2 else "M_WoodCut", 0.008))
+            if layer < 2:
+                for x in (-1.2, 0, 1.2):
+                    p.append(box("Sticker", (0.05, 1.15, 0.04), (x, 0, z + 0.05), "M_WoodDark"))
+    p.append(box("Roof", (L + 0.4, 1.8, 0.06), (0, 0, 2.38), "M_MetalDark", rot=(math.radians(8), 0, 0)))
+    p.append(col("Rack", (L, 1.4, 2.3), (0, 0, 1.15)))
+    finish("LumberRack", p)
+
+
+def wheel_y(name, r, loc, spokes=8):
+    """A spoked cart wheel facing sideways (axle along Y)."""
+    rx = (math.radians(90), 0, 0)
+    parts = [fcyl(name + "Rim", r, 0.08, loc, "M_WoodDark", rot=rx, verts=16),
+             fcyl(name + "Tyre", r + 0.02, 0.05, loc, "M_MetalDark", rot=rx, verts=16),
+             fcyl(name + "Hub", r * 0.22, 0.14, loc, "M_MetalDark", rot=rx, verts=8)]
+    for k in range(spokes // 2):
+        parts.append(box(name + "Spoke", (r * 1.9, 0.04, 0.04), loc, "M_Wood", rot=(0, k * math.tau / spokes, 0)))
+    return parts
+
+
+@model
+def Wagon():
+    """A four-wheeled timber wagon loaded with logs. Long axis X."""
+    p = [span("Bed", -1.3, 1.3, -0.65, 0.65, 0.7, 0.82, "M_Plank", 0.01)]
+    for y in (-0.68, 0.68):
+        p.append(span("Side", -1.3, 1.3, y - 0.04, y + 0.04, 0.82, 1.12, "M_Wood"))
+        for x in (-1.25, -0.4, 0.4, 1.25):
+            p.append(box("Stake", (0.08, 0.08, 0.7), (x, y, 1.05), "M_WoodDark"))
+    for x in (-0.85, 0.85):
+        p.append(box("Axle", (0.1, 1.6, 0.1), (x, 0, 0.45), "M_MetalDark"))
+        for y in (-0.78, 0.78):
+            p += wheel_y("Wheel", 0.42, (x, y, 0.45))
+    p.append(ftube("Tongue", (1.3, 0, 0.6), (2.6, 0, 0.35), 0.05, 0.04, "M_WoodDark", 6))
+    p.append(box("Yoke", (0.08, 0.9, 0.08), (2.6, 0, 0.35), "M_WoodDark"))
+    for k, (y, z) in enumerate([(-0.33, 1.0), (0.0, 1.0), (0.33, 1.0), (-0.17, 1.3), (0.17, 1.3)]):
+        p += log_x("Load", 0.16, 2.3 - 0.1 * (k % 2), (0, y, z), "M_Bark")
+    p.append(col("Wagon", (2.7, 1.5, 1.5), (0, 0, 0.75)))
+    finish("Wagon", p)
+
+
+@model
+def Well():
+    """A stone well with a little shingled roof, a crank and a bucket."""
+    p = [fcyl("Ring", 0.85, 0.9, (0, 0, 0.45), "M_Stone", verts=14), fcyl("Water", 0.66, 0.05, (0, 0, 0.6), "M_Glass", verts=14)]
+    for k in range(14):
+        a = k * math.tau / 14
+        p.append(box("Cap", (0.36, 0.22, 0.12), (math.cos(a) * 0.78, math.sin(a) * 0.78, 0.94), "M_StoneDark", rot=(0, 0, a + math.pi / 2)))
+    for x in (-0.75, 0.75):
+        p.append(box("Post", (0.12, 0.12, 2.0), (x, 0, 1.2), "M_WoodDark"))
+    for s in (-1, 1):
+        p.append(box("Roof", (1.9, 0.85, 0.08), (0, s * 0.35, 2.35), "M_Roof", rot=(-s * 0.55, 0, 0)))
+    p.append(box("Ridge", (2.0, 0.1, 0.1), (0, 0, 2.58), "M_WoodDark"))
+    p.append(fcyl("Crank", 0.08, 1.6, (0, 0, 1.75), "M_Wood", rot=(0, math.radians(90), 0), verts=8))
+    p.append(box("Handle", (0.06, 0.06, 0.35), (0.86, 0, 1.6), "M_MetalDark"))
+    p.append(ftube("Rope", (0, 0, 1.7), (0, 0, 1.15), 0.02, 0.02, "M_Rope", 4))
+    p.append(cone("Bucket", 0.14, 0.18, 0.25, (0, 0, 1.02), "M_Wood", 10))
+    p.append(col("Well", (1.8, 1.8, 1.0), (0, 0, 0.5)))
+    finish("Well", p)
 
 
 def main():

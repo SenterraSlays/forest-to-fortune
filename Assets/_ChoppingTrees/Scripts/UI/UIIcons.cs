@@ -65,6 +65,10 @@ namespace ChoppingTrees
             ["log"] = p => Cut(Circle(p, V(.5f, .5f), .42f), Union(RingD(p, V(.5f, .5f), .28f, .045f), RingD(p, V(.5f, .5f), .14f, .045f))),
             ["plank"] = p => Cut(Union(Box(p, V(.5f, .62f), V(.4f, .09f), -12f, .03f), Box(p, V(.5f, .36f), V(.4f, .09f), -12f, .03f)),
                 Box(p, V(.42f, .63f), V(.16f, .012f), -12f)),
+            ["chair"] = p => Union(Union(Box(p, V(.3f, .55f), V(.06f, .37f), 0f, .02f), Box(p, V(.5f, .46f), V(.26f, .06f), 0f, .02f)),
+                Box(p, V(.7f, .27f), V(.055f, .16f), 0f, .02f)),
+            ["house"] = p => Cut(Union(Poly(p, V(.08f, .5f), V(.92f, .5f), V(.5f, .9f)), Box(p, V(.5f, .32f), V(.3f, .2f), 0f, .02f)),
+                Box(p, V(.5f, .22f), V(.08f, .12f))),
             ["axe"] = p => Union(Capsule(p, V(.24f, .14f), V(.7f, .82f), .05f),
                 Poly(p, V(.5f, .64f), V(.66f, .5f), V(.9f, .6f), V(.86f, .9f), V(.66f, .92f))),
             ["gear"] = p =>

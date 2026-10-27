@@ -11,6 +11,8 @@ namespace ChoppingTrees
         [Tooltip("Money earned per unit before upgrades.")]
         public double basePrice = 1;
         public Color color = new Color(0.72f, 0.5f, 0.3f);
+        [Tooltip("UI icon name (UIIcons): log, plank, chair, house, ...")]
+        public string icon = "log";
         [Tooltip("Hidden in the HUD until the player owns some or a machine produces it.")]
         public bool hiddenUntilProduced;
         public int sortOrder;

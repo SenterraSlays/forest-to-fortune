@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03718af4b079955418aca04e5d41891c, type: 3}
+  m_Name: furniture_price
+  m_EditorClassIdentifier: ChoppingTrees::ChoppingTrees.UpgradeDef
+  id: furniture_price
+  displayName: Furniture Showroom
+  description: 'A showroom in town: furniture sells for more.'
+  category: 2
+  effect: 6
+  targetId: furniture
+  maxLevel: 10
+  baseCost: 125000
+  costGrowth: 1.9
+  explicitCosts: []
+  effectPerLevel: 0.25
+  levelNames: []
+  requires:
+  - upgradeId: workshop_count
+    level: 1
+  sortOrder: 13
+  legacy: 0
+  treePosition: {x: 5.8, y: 6.55}
+  icon: chair

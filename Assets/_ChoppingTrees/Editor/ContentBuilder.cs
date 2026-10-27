@@ -39,6 +39,12 @@ namespace ChoppingTrees.EditorTools
             wood.id = "wood"; wood.displayName = "Wood"; wood.basePrice = 1; wood.color = new Color(0.78f, 0.56f, 0.33f); wood.sortOrder = 0; wood.hiddenUntilProduced = false;
             var planks = Asset<ResourceDef>($"{Data}/Resources/Planks.asset");
             planks.id = "planks"; planks.displayName = "Planks"; planks.basePrice = 3.5; planks.color = new Color(0.95f, 0.80f, 0.55f); planks.sortOrder = 1; planks.hiddenUntilProduced = true;
+            wood.icon = "log"; planks.icon = "plank";
+            // The production chain goes on: planks -> furniture (Carpentry Workshop) -> cabin kits (Cabin Builder).
+            var furniture = Asset<ResourceDef>($"{Data}/Resources/Furniture.asset");
+            furniture.id = "furniture"; furniture.displayName = "Furniture"; furniture.basePrice = 16; furniture.color = new Color(0.86f, 0.58f, 0.36f); furniture.sortOrder = 2; furniture.hiddenUntilProduced = true; furniture.icon = "chair";
+            var cabins = Asset<ResourceDef>($"{Data}/Resources/CabinKits.asset");
+            cabins.id = "cabins"; cabins.displayName = "Cabin Kits"; cabins.basePrice = 130; cabins.color = new Color(0.93f, 0.47f, 0.33f); cabins.sortOrder = 3; cabins.hiddenUntilProduced = true; cabins.icon = "house";
 
             // ---- trees: id, name, model, stump, hp, wood, cash, tier, respawn, radius, height, notch, logs, pitch, chip, leaf
             var pine = Tree("pine", "Pine", "Tree_Pine", "Stump_Bark", 3, 4, 0, 0, 25, 0.28f, 7.0f, 0.55f, 2, 1.1f, new Color(0.9f, 0.75f, 0.5f), new Color(0.16f, 0.38f, 0.25f));
@@ -60,6 +66,14 @@ namespace ChoppingTrees.EditorTools
             sawmill.id = "sawmill"; sawmill.displayName = "Sawmill"; sawmill.kind = MachineKind.Processor; sawmill.baseRate = 2.5; sawmill.input = wood; sawmill.inputPerOutput = 2; sawmill.output = planks;
             sawmill.description = "Turns wood into planks, which sell for more.";
             sawmill.tierModels = new[] { "Sawmill" }; sawmill.order = 1;
+            var workshop = Asset<MachineDef>($"{Data}/Machines/Workshop.asset");
+            workshop.id = "workshop"; workshop.displayName = "Carpentry Workshop"; workshop.kind = MachineKind.Processor; workshop.baseRate = 1.5; workshop.input = planks; workshop.inputPerOutput = 3; workshop.output = furniture;
+            workshop.description = "Turns planks into chairs and tables, which sell for more than the planks they use.";
+            workshop.tierModels = new[] { "Workshop" }; workshop.order = 2;
+            var builder = Asset<MachineDef>($"{Data}/Machines/CabinBuilder.asset");
+            builder.id = "builder"; builder.displayName = "Cabin Builder"; builder.kind = MachineKind.Processor; builder.baseRate = 0.6; builder.input = furniture; builder.inputPerOutput = 5; builder.output = cabins;
+            builder.description = "Builds furnished flat-pack log cabins: the most valuable thing you can sell.";
+            builder.tierModels = new[] { "CabinBuilder" }; builder.order = 3;
 
             // ---- areas
             var clearing = Area("clearing", "Pinewood Clearing", "Where it all begins.", true, 0, new[] { pine, birch, oak }, new[] { 0.5f, 0.32f, 0.18f });
@@ -167,6 +181,24 @@ namespace ChoppingTrees.EditorTools
                 Up("overdrive_saws", "Overdrive Saws", "Sawmills run in overdrive.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "sawmill", 10, 250000, 1.9, null, 0.25f, 14,
                     null, Req("kiln_drying", 1)),
 
+                // ---- Furniture and cabins: the next steps of the production chain.
+                Up("workshop_count", "Carpentry Workshop", "Turns 3 planks into a set of furniture. Furniture sells for more than the planks it uses.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "workshop", 3, 0, 5,
+                    new double[] { 120000, 600000, 3000000 }, 1, 15, null, Req("sawmill_count", 1)),
+                Up("workshop_speed", "Workshop Tools", "Better chisels, planes and lathes for every workshop.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "workshop", 10, 180000, 2.0, null, 0.3f, 16,
+                    null, Req("workshop_count", 1)),
+                Up("joinery", "Fine Joinery", "Tighter joints, less waste: more furniture from the same planks.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "workshop", 5, 400000, 2.1, null, 0.1f, 17,
+                    null, Req("workshop_speed", 2)),
+                Up("builder_count", "Cabin Builder", "Builds 5 sets of furniture into a log cabin kit, the most valuable thing you can sell.", UpgradeCategory.Automation, UpgradeEffect.MachineCount, "builder", 3, 0, 5,
+                    new double[] { 1500000, 8000000, 40000000 }, 1, 18, null, Req("workshop_count", 1)),
+                Up("builder_speed", "Power Cranes", "Bigger cranes put cabins up faster.", UpgradeCategory.Automation, UpgradeEffect.MachineSpeed, "builder", 10, 2500000, 2.0, null, 0.3f, 19,
+                    null, Req("builder_count", 1)),
+                Up("master_builders", "Master Builders", "A seasoned crew gets more cabins out of the same furniture.", UpgradeCategory.Automation, UpgradeEffect.ProcessorYield, "builder", 5, 6000000, 2.1, null, 0.1f, 20,
+                    null, Req("builder_speed", 2)),
+                Up("furniture_price", "Furniture Showroom", "A showroom in town: furniture sells for more.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "furniture", 10, 250000, 1.9, null, 0.25f, 13,
+                    null, Req("workshop_count", 1)),
+                Up("cabin_price", "Cabin Realtors", "Realtors sell your cabins as holiday homes, for a lot more.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "cabins", 10, 3000000, 1.9, null, 0.25f, 14,
+                    null, Req("builder_count", 1)),
+
                 Up("wood_brokers", "Wood Brokers", "Brokers find buyers who pay top price for wood.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "wood", 15, 3000, 1.7, null, 0.2f, 6,
                     null, Req("wood_price", 10)),
                 Up("premium_planks", "Premium Planks", "Graded planks sell at a premium.", UpgradeCategory.Economy, UpgradeEffect.ResourcePrice, "planks", 10, 60000, 1.9, null, 0.25f, 7,
@@ -208,7 +240,8 @@ namespace ChoppingTrees.EditorTools
             };
 
             // ---- skill tree layout (x = -8..7 left to right, y = 0..8 from the trunk up) and icons.
-            // Branches read left to right: Forests, Axe, Automation, Economy; each grows upwards
+            // Branches read left to right: Forests, Axe, Automation (choppers, sawmills, workshops,
+            // cabin builders), Economy; each grows upwards
             // in columns from its first upgrade (rows 1.35 apart), with links curving between rows.
             // The tree is bigger than the window: it is dragged and zoomed to explore.
             var layout = new Dictionary<string, (float x, float y, string icon)>
@@ -259,21 +292,29 @@ namespace ChoppingTrees.EditorTools
                 ["precision_saws"] = (2.2f, 5.25f, "saw"),
                 ["kiln_drying"] = (2.2f, 6.55f, "plank"),
                 ["overdrive_saws"] = (2.2f, 7.85f, "saw"),
+                ["workshop_count"] = (3.3f, 3.95f, "chair"),
+                ["workshop_speed"] = (3.3f, 5.25f, "wrench"),
+                ["joinery"] = (3.3f, 6.55f, "gem"),
+                ["builder_count"] = (4.4f, 5.25f, "house"),
+                ["builder_speed"] = (4.4f, 6.55f, "gear"),
+                ["master_builders"] = (4.4f, 7.85f, "crown"),
 
                 // Economy: prices, pickup, offline time, sales and luck.
-                ["wood_price"] = (4.7f, 1.35f, "coin"),
-                ["haggling"] = (5.8f, 1.35f, "tag"),
-                ["export_deals"] = (6.9f, 1.35f, "cart"),
-                ["wood_brokers"] = (3.6f, 2.65f, "coin"),
-                ["plank_price"] = (3.6f, 3.95f, "star"),
-                ["premium_planks"] = (3.6f, 5.25f, "plank"),
-                ["magnet"] = (4.7f, 2.65f, "magnet"),
-                ["strong_magnet"] = (4.7f, 3.95f, "magnet"),
-                ["night_shift"] = (5.8f, 2.65f, "moon"),
-                ["long_nights"] = (5.8f, 3.95f, "moon"),
-                ["lucky_finds"] = (6.9f, 2.65f, "clover"),
-                ["fortunes_favor"] = (6.9f, 3.95f, "clover"),
-                ["bulk_buyer"] = (6.9f, 5.25f, "tag"),
+                ["wood_price"] = (6.9f, 1.35f, "coin"),
+                ["haggling"] = (8.0f, 1.35f, "tag"),
+                ["export_deals"] = (9.1f, 1.35f, "cart"),
+                ["wood_brokers"] = (5.8f, 2.65f, "coin"),
+                ["plank_price"] = (5.8f, 3.95f, "star"),
+                ["premium_planks"] = (5.8f, 5.25f, "plank"),
+                ["magnet"] = (6.9f, 2.65f, "magnet"),
+                ["strong_magnet"] = (6.9f, 3.95f, "magnet"),
+                ["night_shift"] = (8.0f, 2.65f, "moon"),
+                ["long_nights"] = (8.0f, 3.95f, "moon"),
+                ["lucky_finds"] = (9.1f, 2.65f, "clover"),
+                ["fortunes_favor"] = (9.1f, 3.95f, "clover"),
+                ["bulk_buyer"] = (9.1f, 5.25f, "tag"),
+                ["furniture_price"] = (5.8f, 6.55f, "chair"),
+                ["cabin_price"] = (5.8f, 7.85f, "house"),
             };
             foreach (var u in ups)
                 if (layout.TryGetValue(u.id, out var l)) { u.treePosition = new Vector2(l.x, l.y); u.icon = l.icon; }
@@ -308,9 +349,9 @@ namespace ChoppingTrees.EditorTools
             cfg.rebirthSkillPoints = 1;
             var db = Asset<GameDatabase>(DatabasePath);
             db.config = cfg;
-            db.resources = new[] { wood, planks };
+            db.resources = new[] { wood, planks, furniture, cabins };
             db.trees = new[] { pine, birch, oak, maple, redwood, iron, gold };
-            db.machines = new[] { chopper, sawmill };
+            db.machines = new[] { chopper, sawmill, workshop, builder };
             db.areas = new[] { clearing, grove, ridge };
             db.upgrades = ups.ToArray();
             db.bodyFont = ProjectSetup.Font("Inter-Regular");
