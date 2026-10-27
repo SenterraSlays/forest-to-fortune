@@ -57,6 +57,7 @@ MonoBehaviour:
   rebirthCostGrowth: 1.08
   rebirthBonus: 0.1
   rebirthSkillPoints: 1
+  discordApplicationId: 1564495499145519115
   startingMoney: 0
   autosaveSeconds: 30
   baseOfflineHours: 2

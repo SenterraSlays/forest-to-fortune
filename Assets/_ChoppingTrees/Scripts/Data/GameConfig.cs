@@ -54,7 +54,7 @@ namespace ChoppingTrees
         [Header("Discord")]
         [Tooltip("Application ID from discord.com/developers/applications (an app named \"Forest to Fortune\", " +
                  "with the game icon uploaded under Rich Presence > Art Assets as \"icon\"). Empty = Rich Presence off.")]
-        public string discordApplicationId = "";
+        public string discordApplicationId = "1564495499145519115";
 
         [Header("Economy")]
         public double startingMoney;

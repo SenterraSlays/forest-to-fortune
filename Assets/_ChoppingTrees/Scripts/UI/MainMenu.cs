@@ -33,16 +33,6 @@ namespace ChoppingTrees
             m_Column.Place(new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(130, 10), new Vector2(640, 900));
             UIFactory.VStack(m_Column, 14f, null, TextAnchor.MiddleLeft);
 
-            var brand = UIFactory.Rect("Brand", m_Column);
-            UIFactory.HStack(brand, 14f);
-            var badge = UIFactory.Panel(brand, "Badge", UIStyle.Accent);
-            badge.sprite = UIStyle.Circle;
-            badge.Layout(54, 54);
-            var axe = UIFactory.Icon(badge.transform, "axe", UIStyle.AccentDark, 34f);
-            axe.rectTransform.anchoredPosition = Vector2.zero;
-            axe.GetComponent<LayoutElement>().ignoreLayout = true;
-            UIFactory.Caption(brand, "A lumber idle game", UIStyle.Accent, 24f).characterSpacing = 12f;
-
             var title = UIFactory.Text(m_Column, "Forest to\nFortune", 124, UIStyle.Text, true);
             title.lineSpacing = -22f;
             title.Layout(-1, 270);
