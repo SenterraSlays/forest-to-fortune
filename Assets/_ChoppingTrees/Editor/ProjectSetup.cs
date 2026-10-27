@@ -82,6 +82,26 @@ namespace ChoppingTrees.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>iOS settings for the Xcode export (the IPA is compiled on a Mac in CI, see
+        /// .github/workflows/ios.yml): same id, orientation and phone pipeline as Android.</summary>
+        public static void IosSettings()
+        {
+            var ios = NamedBuildTarget.iOS;
+            PlayerSettings.SetApplicationIdentifier(ios, "com.hazelwood.foresttofortune");
+            PlayerSettings.iOS.buildNumber = "1";
+            PlayerSettings.iOS.targetOSVersionString = "15.0";
+            PlayerSettings.iOS.appleEnableAutomaticSigning = false;
+            PlayerSettings.SetScriptingBackend(ios, ScriptingImplementation.IL2CPP);
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.statusBarHidden = true;
+            MobilePipeline();
+            AssetDatabase.SaveAssets();
+        }
+
         /// <summary>
         /// The "Mobile" quality level (Android's default) uses the mobile URP asset and renderer:
         /// no SSAO, no depth or opaque texture copies, per-vertex lantern lights without shadows,

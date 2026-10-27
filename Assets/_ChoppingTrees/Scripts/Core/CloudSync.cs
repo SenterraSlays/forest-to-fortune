@@ -53,7 +53,7 @@ namespace ChoppingTrees
         public static void Ensure()
         {
             if (Instance != null) return;
-            if (Environment.CommandLine.Contains("-ct-smoke") || !Game.SavingEnabled) return;
+            if (LaunchArgs.Has("-ct-smoke") || LaunchArgs.Has("-ct-bench") || !Game.SavingEnabled) return;
             var go = new GameObject("CloudSync");
             DontDestroyOnLoad(go);
             go.AddComponent<CloudSync>();

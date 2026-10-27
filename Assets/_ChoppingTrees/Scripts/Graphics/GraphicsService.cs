@@ -36,6 +36,14 @@ namespace ChoppingTrees
         readonly System.Collections.Generic.List<GameObject> m_Scenery = new System.Collections.Generic.List<GameObject>();
         DetailLevel m_SceneryLevel = (DetailLevel)(-1);
         bool m_SceneryShadowsOff;
+        int m_OrigMsaa;
+        bool m_StaticDone;
+        readonly StaticCombiner m_SceneryBatch = new StaticCombiner("Combined Scenery", 16f);
+        readonly StaticCombiner m_DecorBatch = new StaticCombiner("Combined Decor", 40f);
+
+        /// <summary>Merge static scenery into per-cell meshes (phones; settable for editor tests).</summary>
+        public static bool ForceCombine;
+        static bool CombineStatic => Application.isMobilePlatform || ForceCombine;
 
         void Awake()
         {
@@ -49,9 +57,12 @@ namespace ChoppingTrees
                 m_OrigCascades = m_Asset.shadowCascadeCount;
                 m_OrigSplit2 = m_Asset.cascade2Split;
                 m_OrigSplit4 = m_Asset.cascade4Split;
+                m_OrigMsaa = m_Asset.msaaSampleCount;
             }
             else Debug.LogWarning("[Graphics] The active render pipeline is not URP; upscaling is unavailable.");
-            Debug.Log("[Display] " + DisplayModes.Describe());
+            // Logging must never stop the settings below from being applied.
+            try { Debug.Log("[Display] " + DisplayModes.Describe()); }
+            catch (Exception e) { Debug.LogWarning("[Display] " + e.Message); }
             Application.logMessageReceived += OnLog;
             GameSettings.Changed += Apply;
             Apply();
@@ -73,6 +84,7 @@ namespace ChoppingTrees
             m_Asset.shadowCascadeCount = m_OrigCascades;
             m_Asset.cascade2Split = m_OrigSplit2;
             m_Asset.cascade4Split = m_OrigSplit4;
+            m_Asset.msaaSampleCount = m_OrigMsaa;
 #endif
         }
 
@@ -119,9 +131,9 @@ namespace ChoppingTrees
                     ? s.shadows switch
                     {
                         ShadowQuality.Off => (0f, 512, 1),
-                        ShadowQuality.Low => (25f, 1024, 1),
-                        ShadowQuality.Medium => (40f, 1024, 2),
-                        ShadowQuality.High => (55f, 2048, 2),
+                        ShadowQuality.Low => (20f, 1024, 1),
+                        ShadowQuality.Medium => (35f, 1024, 1),
+                        ShadowQuality.High => (45f, 2048, 2),
                         _ => (75f, 2048, 4),
                     }
                     : s.shadows switch
@@ -139,7 +151,16 @@ namespace ChoppingTrees
                 m_Asset.cascade4Split = s.shadows == ShadowQuality.Ultra ? new Vector3(0.06f, 0.17f, 0.42f) : new Vector3(0.08f, 0.2f, 0.45f);
                 // Phones on Low skip HDR: less memory bandwidth per frame (bloom still works).
                 if (Application.isMobilePlatform) m_Asset.supportsHDR = s.qualityPreset != QualityPreset.Low;
+                // MSAA is the phone AA: tile GPUs resolve it on-chip, and unlike FXAA it is visible
+                // on high-density screens. Temporal upscalers do their own AA.
+                m_Asset.msaaSampleCount = GraphicsCapabilities.IsTemporal(ActiveUpscaler) ? 1 : s.antiAliasing switch
+                {
+                    AntiAliasingSetting.MSAA2x => 2,
+                    AntiAliasingSetting.MSAA4x => 4,
+                    _ => 1,
+                };
             }
+            ApplyStatic();
             var sun = RenderSettings.sun;
             if (sun != null)
             {
@@ -147,7 +168,8 @@ namespace ChoppingTrees
                 sun.shadows = s.shadows == ShadowQuality.Off ? LightShadows.None : soft ? LightShadows.Soft : LightShadows.Hard;
                 // Better soft-shadow filtering on the higher settings: clean edges without blur or stair-steps.
                 if (sun.TryGetComponent<UniversalAdditionalLightData>(out var data) || (data = sun.gameObject.AddComponent<UniversalAdditionalLightData>()) != null)
-                    data.softShadowQuality = s.shadows >= ShadowQuality.High ? SoftShadowQuality.High : s.shadows == ShadowQuality.Medium ? SoftShadowQuality.Medium : SoftShadowQuality.Low;
+                    // (Phones always use the 4-tap filter: the wider ones cost every pixel on screen.)
+                    data.softShadowQuality = Application.isMobilePlatform ? SoftShadowQuality.Low : s.shadows >= ShadowQuality.High ? SoftShadowQuality.High : s.shadows == ShadowQuality.Medium ? SoftShadowQuality.Medium : SoftShadowQuality.Low;
             }
 
             // Post-processing on a runtime copy of the profile (the asset is never changed).
@@ -249,6 +271,32 @@ namespace ChoppingTrees
                 bool on = h < keep;
                 if (go.activeSelf != on) go.SetActive(on);
             }
+            if (CombineStatic)
+            {
+                var renderers = new System.Collections.Generic.List<MeshRenderer>();
+                foreach (var go in m_Scenery) renderers.AddRange(go.GetComponentsInChildren<MeshRenderer>(true));
+                m_SceneryBatch.Build(renderers);
+                Debug.Log($"[Graphics] Scenery merged: {m_SceneryBatch.SourceCount} renderers into {m_SceneryBatch.CombinedCount}.");
+            }
+        }
+
+        /// <summary>
+        /// Phones, once per scene: merges the static decor (forest beyond the walls, stumps, rocks,
+        /// mountains) into per-cell meshes and stops the big ground meshes casting shadows (hundreds
+        /// of thousands of triangles drawn into the shadow map for shadows on flat ground).
+        /// </summary>
+        void ApplyStatic()
+        {
+            if (m_StaticDone || !CombineStatic) return;
+            m_StaticDone = true;
+            var decor = new System.Collections.Generic.List<MeshRenderer>();
+            foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsInactive.Exclude))
+            {
+                if (r.gameObject.layer == GameLayers.Decor) decor.Add(r);
+                else if (r.gameObject.layer == GameLayers.Ground) r.shadowCastingMode = ShadowCastingMode.Off;
+            }
+            m_DecorBatch.Build(decor);
+            Debug.Log($"[Graphics] Decor merged: {m_DecorBatch.SourceCount} renderers into {m_DecorBatch.CombinedCount}.");
         }
 
         void ApplyUpscaling(SettingsData s)

@@ -60,7 +60,7 @@ namespace ChoppingTrees
     [Serializable]
     public class SettingsData
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 4;
 
         /// <summary>0 for files from 1.1 and earlier (JsonUtility keeps this default when the key
         /// is missing); <see cref="GameSettings.Migrate"/> brings it up to date.</summary>
@@ -147,6 +147,7 @@ namespace ChoppingTrees
 
     public enum UpscalerSetting { Off, FSR1, STP, DLSS, FSR2 }
     public enum UpscaleQuality { NativeAA, Quality, Balanced, Performance }
-    public enum AntiAliasingSetting { Off, FXAA, SMAA, TAA }
+    /// <summary>MSAA is offered on phones only; PCs keep the post-process modes.</summary>
+    public enum AntiAliasingSetting { Off, FXAA, SMAA, TAA, MSAA2x, MSAA4x }
     public enum FpsCounterMode { Off, Fps, Detailed }
 }

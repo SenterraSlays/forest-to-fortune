@@ -48,7 +48,7 @@ namespace ChoppingTrees
             }
             Instance = this;
             if (m_Database == null) m_Database = GameDatabase.Load();
-            if (Environment.CommandLine.Contains("-ct-nosave")) SavingEnabled = false;
+            if (LaunchArgs.Has("-ct-nosave")) SavingEnabled = false;
 
             GameSettings.Apply();
             DiscordPresence.Ensure(m_Database);
@@ -224,6 +224,7 @@ namespace ChoppingTrees
         void Start()
         {
             SmokeTest.StartIfRequested();
+            Bench.StartIfRequested();
             if (s_StartImmediately)
             {
                 s_StartImmediately = false;

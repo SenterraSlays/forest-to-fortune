@@ -24,7 +24,7 @@ namespace ChoppingTrees
 
         public static void StartIfRequested()
         {
-            string[] args = Environment.GetCommandLineArgs();
+            string[] args = LaunchArgs.All;
             if (Array.IndexOf(args, "-ct-smoke") < 0) return;
             var go = new GameObject("SmokeTest");
             var s = go.AddComponent<SmokeTest>();

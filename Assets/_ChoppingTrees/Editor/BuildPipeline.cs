@@ -13,6 +13,7 @@ namespace ChoppingTrees.EditorTools
     {
         public const string PlayerPath = "Builds/Windows/ForestToFortune.exe";
         public const string AndroidPath = "Builds/Android/ForestToFortune.apk";
+        public const string IosPath = "Builds/iOS";
 
         [MenuItem("Tools/Forest to Fortune/Build Everything", priority = 20)]
         public static void BuildEverythingMenu() => BuildEverything(true);
@@ -94,6 +95,39 @@ namespace ChoppingTrees.EditorTools
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android) return;
             SessionState.EraseBool(ResumeAndroidKey);
             EditorApplication.delayCall += () => BuildAndroid();
+        }
+
+        /// <summary>
+        /// iOS Xcode project. Windows can't compile or sign an IPA, so the GitHub Actions workflow
+        /// (.github/workflows/ios.yml) runs this on Linux and builds the unsigned IPA on a cloud
+        /// Mac. From the menu it switches the editor to iOS first; run it again after the reload.
+        /// </summary>
+        [MenuItem("Tools/Forest to Fortune/Export iOS Xcode Project", priority = 24)]
+        public static string BuildIos()
+        {
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.iOS)
+            {
+                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.iOS, BuildTarget.iOS);
+                const string wait = "[BuildScript] Switched the editor to iOS; export again after the reload.";
+                Debug.Log(wait);
+                return wait;
+            }
+            ProjectSetup.IosSettings();
+            Directory.CreateDirectory(IosPath);
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { SceneBuilder.ScenePath },
+                locationPathName = IosPath,
+                target = BuildTarget.iOS,
+                targetGroup = BuildTargetGroup.iOS,
+                options = BuildOptions.None,
+            };
+            var report = UnityEditor.BuildPipeline.BuildPlayer(options);
+            string msg = $"[BuildScript] iOS {report.summary.result}: {report.summary.totalErrors} errors, {report.summary.totalTime.TotalSeconds:0}s -> {IosPath}";
+            Debug.Log(msg);
+            // CI (batch mode) needs a failing exit code to stop the workflow.
+            if (Application.isBatchMode && report.summary.result != BuildResult.Succeeded) EditorApplication.Exit(1);
+            return msg;
         }
 
         /// <summary>Back to Windows after an Android build. The package assemblies are rebuilt

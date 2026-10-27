@@ -18,16 +18,19 @@ namespace ChoppingTrees
             new Vector2Int(2560, 1440), new Vector2Int(3200, 1800), new Vector2Int(3840, 2160),
         };
 
-        /// <summary>All monitors Windows reports, in Unity's order.</summary>
+        /// <summary>The monitor APIs throw NotSupportedException outside Windows, macOS and Linux players.</summary>
+        static bool HasMonitors => !Application.isMobilePlatform;
+
+        /// <summary>All monitors Windows reports, in Unity's order (empty on phones).</summary>
         public static List<DisplayInfo> Monitors()
         {
             var list = new List<DisplayInfo>();
-            Screen.GetDisplayLayout(list);
+            if (HasMonitors) Screen.GetDisplayLayout(list);
             return list;
         }
 
-        /// <summary>The monitor the game window is on.</summary>
-        public static DisplayInfo Current => Screen.mainWindowDisplayInfo;
+        /// <summary>The monitor the game window is on (empty on phones).</summary>
+        public static DisplayInfo Current => HasMonitors ? Screen.mainWindowDisplayInfo : default;
 
         /// <summary>Native (desktop) size of the monitor the window is on.</summary>
         public static Vector2Int Native

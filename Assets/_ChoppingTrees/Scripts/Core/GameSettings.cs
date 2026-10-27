@@ -34,6 +34,18 @@ namespace ChoppingTrees
                 d.resolutionWidth = d.resolutionHeight = 0;
                 d.version = 2;
             }
+            if (d.version < 3)
+            {
+                // 1.3 moved phones to MSAA: re-apply a phone's preset so its AA follows.
+                if (Application.isMobilePlatform) QualityPresets.Apply(d, d.qualityPreset);
+                d.version = 3;
+            }
+            if (d.version < 4)
+            {
+                // 1.4 retuned the phone presets for 120 Hz tablets (lower render scales).
+                if (Application.isMobilePlatform) QualityPresets.Apply(d, d.qualityPreset);
+                d.version = 4;
+            }
             return d;
         }
 
@@ -71,7 +83,8 @@ namespace ChoppingTrees
             {
                 // DLSS and FSR 2 are PC-only; phones scale with the render scale slider.
                 d.upscaler = UpscalerSetting.Off;
-                if (d.antiAliasing == AntiAliasingSetting.TAA) d.antiAliasing = AntiAliasingSetting.FXAA;
+                // Phones offer Off / FXAA / MSAA (SMAA and TAA are full-screen passes that barely show on dense screens).
+                if (d.antiAliasing == AntiAliasingSetting.SMAA || d.antiAliasing == AntiAliasingSetting.TAA) d.antiAliasing = AntiAliasingSetting.MSAA2x;
                 // Phones ignore V-Sync settings and default to 30 FPS: the frame rate is always set.
                 // Asking for 90 or 120 also switches high-refresh screens to that rate.
                 QualitySettings.vSyncCount = 0;
@@ -80,6 +93,7 @@ namespace ChoppingTrees
             }
             else
             {
+                if (d.antiAliasing > AntiAliasingSetting.TAA) d.antiAliasing = AntiAliasingSetting.SMAA;
                 QualitySettings.vSyncCount = d.vSync ? 1 : 0;
                 Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
             }
@@ -164,7 +178,8 @@ namespace ChoppingTrees
         /// <summary>Every setting back to its default (High preset, native resolution).</summary>
         public static void ResetToDefaults()
         {
-            s_Data = new SettingsData { version = SettingsData.CurrentVersion };
+            // Through Migrate so phones get their own defaults, not the PC High preset.
+            s_Data = Migrate(new SettingsData());
             Apply();
         }
 

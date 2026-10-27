@@ -26,13 +26,15 @@ namespace ChoppingTrees
             new Values { shadows = ShadowQuality.Ultra, textures = TextureQuality.Full, anisotropic = true, bloom = true, detail = DetailLevel.Ultra, effects = EffectsQuality.High, renderScale = 1f, aa = AntiAliasingSetting.SMAA },
         };
 
-        /// <summary>Phones: lighter render scales and FXAA up to High (SMAA costs more on mobile GPUs).</summary>
+        /// <summary>Phones: lighter render scales and MSAA (cheap on tile GPUs, and visible on dense
+        /// screens). Tablets are GPU-bound at native resolution (2560x1600 on a Tab S7), so only
+        /// Ultra renders at full size; Low aims at 120 FPS and High at 60+ on a recent tablet.</summary>
         static readonly Values[] s_MobileTable =
         {
-            new Values { shadows = ShadowQuality.Low, textures = TextureQuality.Half, anisotropic = false, bloom = false, detail = DetailLevel.Low, effects = EffectsQuality.Low, renderScale = 0.67f, aa = AntiAliasingSetting.FXAA },
-            new Values { shadows = ShadowQuality.Medium, textures = TextureQuality.Full, anisotropic = false, bloom = true, detail = DetailLevel.Medium, effects = EffectsQuality.Medium, renderScale = 0.85f, aa = AntiAliasingSetting.FXAA },
-            new Values { shadows = ShadowQuality.High, textures = TextureQuality.Full, anisotropic = true, bloom = true, detail = DetailLevel.High, effects = EffectsQuality.High, renderScale = 1f, aa = AntiAliasingSetting.FXAA },
-            new Values { shadows = ShadowQuality.Ultra, textures = TextureQuality.Full, anisotropic = true, bloom = true, detail = DetailLevel.Ultra, effects = EffectsQuality.High, renderScale = 1f, aa = AntiAliasingSetting.SMAA },
+            new Values { shadows = ShadowQuality.Low, textures = TextureQuality.Half, anisotropic = false, bloom = false, detail = DetailLevel.Low, effects = EffectsQuality.Low, renderScale = 0.5f, aa = AntiAliasingSetting.Off },
+            new Values { shadows = ShadowQuality.Medium, textures = TextureQuality.Full, anisotropic = false, bloom = false, detail = DetailLevel.Medium, effects = EffectsQuality.Medium, renderScale = 0.6f, aa = AntiAliasingSetting.MSAA2x },
+            new Values { shadows = ShadowQuality.High, textures = TextureQuality.Full, anisotropic = true, bloom = true, detail = DetailLevel.Medium, effects = EffectsQuality.High, renderScale = 0.75f, aa = AntiAliasingSetting.MSAA2x },
+            new Values { shadows = ShadowQuality.Ultra, textures = TextureQuality.Full, anisotropic = true, bloom = true, detail = DetailLevel.Ultra, effects = EffectsQuality.High, renderScale = 1f, aa = AntiAliasingSetting.MSAA4x },
         };
 
         static Values[] Table => UnityEngine.Application.isMobilePlatform ? s_MobileTable : s_Table;
@@ -43,10 +45,10 @@ namespace ChoppingTrees
 
         static readonly string[] s_MobileDescriptions =
         {
-            "For older phones and the longest battery life: short hard shadows, half-resolution textures, fewer plants, 67% render scale.",
-            "Balanced for most phones: medium-range shadows, full textures, most of the scenery, 85% render scale.",
-            "For recent high-end phones: longer, softer shadows, full resolution and nearly all the scenery.",
-            "Everything on: the sharpest shadows and every blade of grass. Needs a top phone and runs warm.",
+            "For older phones, the longest battery life and 120 Hz screens: short hard shadows, half-resolution textures, fewer plants, 50% render scale.",
+            "Balanced for most phones: medium-range shadows, full textures, most of the scenery, 60% render scale.",
+            "For recent high-end phones and tablets: longer, softer shadows, bloom, 75% render scale.",
+            "Everything on: full resolution, the sharpest shadows and every blade of grass. Needs a top phone and runs warm.",
         };
 
         static readonly string[] s_DesktopDescriptions =

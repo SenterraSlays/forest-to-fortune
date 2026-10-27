@@ -145,8 +145,16 @@ namespace ChoppingTrees
                 S.renderScale = steps[Cycle(i < 0 ? steps.Length - 1 : i, d, steps.Length)];
                 QualityChanged();
             });
-            // TAA isn't offered on phones (it blurs on small screens and costs a full-screen pass).
-            CyclerRow(left, "Anti-aliasing", "Smooths jagged edges", AaText, d => { S.antiAliasing = (AntiAliasingSetting)Cycle((int)S.antiAliasing, d, Mobile ? 3 : 4); QualityChanged(); });
+            // Phones get MSAA instead of SMAA / TAA (cheap on tile GPUs; post-process AA barely shows on dense screens).
+            CyclerRow(left, "Anti-aliasing", "Smooths jagged edges", AaText, d =>
+            {
+                var modes = Mobile
+                    ? new[] { AntiAliasingSetting.Off, AntiAliasingSetting.FXAA, AntiAliasingSetting.MSAA2x, AntiAliasingSetting.MSAA4x }
+                    : new[] { AntiAliasingSetting.Off, AntiAliasingSetting.FXAA, AntiAliasingSetting.SMAA, AntiAliasingSetting.TAA };
+                int i = Array.IndexOf(modes, S.antiAliasing);
+                S.antiAliasing = modes[Cycle(Mathf.Max(0, i), d, modes.Length)];
+                QualityChanged();
+            });
             m_UpscalerNote = UIFactory.Text(left, "", 15, UIStyle.Muted);
 
             var right = Section(cols, "Detail", "pine");
@@ -548,7 +556,12 @@ namespace ChoppingTrees
             _ => S.upscaleQuality.ToString(),
         };
 
-        static string AaText() => GraphicsCapabilities.IsTemporal(GraphicsService.ActiveUpscaler) ? "By upscaler" : S.antiAliasing.ToString();
+        static string AaText() => GraphicsCapabilities.IsTemporal(GraphicsService.ActiveUpscaler) ? "By upscaler" : S.antiAliasing switch
+        {
+            AntiAliasingSetting.MSAA2x => "MSAA 2x",
+            AntiAliasingSetting.MSAA4x => "MSAA 4x",
+            _ => S.antiAliasing.ToString(),
+        };
 
         static void StepUpscaler(int d)
         {

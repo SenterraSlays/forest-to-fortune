@@ -35,7 +35,8 @@ namespace ChoppingTrees.EditorTools
             imp.importBlendShapes = false;
             imp.animationType = ModelImporterAnimationType.None;
             imp.addCollider = false;
-            imp.isReadable = false;
+            // Readable so phones can merge static scenery at load (StaticCombiner); the meshes are small.
+            imp.isReadable = true;
             imp.importNormals = ModelImporterNormals.Import;
             imp.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
             imp.materialLocation = ModelImporterMaterialLocation.InPrefab;
