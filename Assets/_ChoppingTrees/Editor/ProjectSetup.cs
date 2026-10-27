@@ -116,6 +116,20 @@ namespace ChoppingTrees.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(mobile);
 
+            // The phone renderer must use the same rendering path as the PC one (Forward+). Android
+            // builds include the PC asset too (it is the Graphics settings default), and with one
+            // Forward and one Forward+ renderer the build stripped every variant of the Lit shader's
+            // main pass: the whole world was invisible on phones.
+            var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/Mobile_Renderer.asset");
+            if (renderer != null)
+            {
+                var rso = new SerializedObject(renderer);
+                rso.FindProperty("m_RenderingMode").intValue = (int)UnityEngine.Rendering.Universal.RenderingMode.ForwardPlus;
+                rso.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(renderer);
+            }
+            AssetDatabase.SaveAssets();
+
             var quality = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0]);
             var levels = quality.FindProperty("m_QualitySettings");
             for (int i = 0; i < levels.arraySize; i++)
