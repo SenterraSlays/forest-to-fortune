@@ -80,7 +80,7 @@ vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*
    are nearby. A wooden stake marks where the next machine will go.
 6. **Rebirth.** From the skill tree header at the Workbench, pay to start over with a
    permanent bonus: every rebirth adds +15% to all money you earn (sales, Goldbark cash and
-   lucky finds). The first costs $5,000 and each one after that costs 1.03 times the previous one.
+   lucky finds). The first costs $2,500 and each one after that costs 1.03 times the previous one.
    Buy x1, x5, x10 or as many as you can afford at once (the price is the sum of the single prices).
    A rebirth resets money, every upgrade (axes, backpack, machines, forests) and all wood; it keeps
    your rebirths, achievements, lifetime stats and settings. The HUD shows the current multiplier next

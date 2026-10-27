@@ -200,13 +200,13 @@ namespace ChoppingTrees.Tests
         public void RebirthCostsGrowAndCanBeBoughtInBulk()
         {
             var cfg = m_Db.config;
-            Assert.AreEqual(5000, cfg.rebirthBaseCost, 1e-9);
+            Assert.AreEqual(2500, cfg.rebirthBaseCost, 1e-9);
             Assert.AreEqual(1.03, cfg.rebirthCostGrowth, 1e-9);
             var m = NewModel(0);
-            Assert.AreEqual(5000, m.RebirthCost(), 1e-6);
+            Assert.AreEqual(2500, m.RebirthCost(), 1e-6);
             // Several at once cost exactly the sum of the single prices.
             double sum = 0;
-            for (int i = 0; i < 5; i++) sum += 5000 * Math.Pow(1.03, i);
+            for (int i = 0; i < 5; i++) sum += 2500 * Math.Pow(1.03, i);
             Assert.AreEqual(sum, m.RebirthCost(5), 1e-6);
             Assert.AreEqual(0, m.MaxRebirths());
             m.State.Money = sum;
@@ -220,7 +220,7 @@ namespace ChoppingTrees.Tests
             m.State.Money = sum;
             Assert.IsTrue(m.TryRebirth(5, out _));
             Assert.AreEqual(5, m.State.Rebirths);
-            Assert.AreEqual(5000 * Math.Pow(1.03, 5), m.RebirthCost(), 1e-6, "the next one continues the series");
+            Assert.AreEqual(2500 * Math.Pow(1.03, 5), m.RebirthCost(), 1e-6, "the next one continues the series");
         }
 
         [Test]

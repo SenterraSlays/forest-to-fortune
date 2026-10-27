@@ -43,7 +43,7 @@ namespace ChoppingTrees
 
         [Header("Rebirth")]
         [Tooltip("Price of the first rebirth.")]
-        public double rebirthBaseCost = 5000;
+        public double rebirthBaseCost = 2500;
         [Tooltip("Each rebirth costs this many times the previous one.")]
         public double rebirthCostGrowth = 1.03;
         [Tooltip("Extra share of all money earned per rebirth (0.15 = +15% each).")]

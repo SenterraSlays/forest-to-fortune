@@ -648,9 +648,9 @@ namespace ChoppingTrees.EditorTools
             cfg.axeTierSpeed = new[] { 1f, 1.05f, 1.1f, 1.15f, 1.2f, 1.25f, 1.3f, 1.35f, 1.4f, 1.45f, 1.5f };
             cfg.axeModels = new[] { "Axe_0", "Axe_1", "Axe_2", "Axe_3", "Axe_4", "Axe_5", "Axe_6", "Axe_7", "Axe_8", "Axe_9", "Axe_10" };
             cfg.baseBackpackName = "Burlap Sack";
-            // Rebirths: first one $5,000, each next one x1.03; every rebirth adds +15% to all earnings
+            // Rebirths: first one $2,500, each next one x1.03; every rebirth adds +15% to all earnings
             // and gives 3 skill points.
-            cfg.rebirthBaseCost = 5000;
+            cfg.rebirthBaseCost = 2500;
             cfg.rebirthCostGrowth = 1.03;
             cfg.rebirthBonus = 0.15;
             cfg.rebirthSkillPoints = 3;
