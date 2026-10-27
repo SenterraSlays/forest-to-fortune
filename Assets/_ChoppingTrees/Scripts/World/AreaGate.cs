@@ -39,7 +39,9 @@ namespace ChoppingTrees
 
         void OnPurchased(UpgradeDef u)
         {
-            if (u == m_Upgrade && !m_Open)
+            // Any purchase can open the gate: its own upgrade, or a Legacy perk (Forest Charter)
+            // that grants the area directly.
+            if (!m_Open && Game.Instance.Model.Upgrades.AreaUnlocked(m_Area))
             {
                 SetOpen(true, false);
                 AudioManager.Sfx("gate_open", transform.position + Vector3.up, 1f);
@@ -78,24 +80,31 @@ namespace ChoppingTrees
             if (Mathf.Approximately(m_OpenT, target)) enabled = false;
         }
 
-        public string Prompt => m_Open ? null : "Unlock " + m_Area.displayName;
+        public string Prompt => m_Open ? null : (Owned ? "Open " : "Unlock ") + m_Area.displayName;
 
         public string Detail
         {
             get
             {
-                if (m_Open || m_Upgrade == null) return null;
+                if (m_Open || m_Upgrade == null || Owned) return null;
                 var up = Game.Instance.Model.Upgrades;
                 string req = up.MissingRequirement(m_Upgrade);
                 return NumberUtil.Money(up.NextCost(m_Upgrade)) + (req != null ? "  -  " + req : "");
             }
         }
 
-        public bool CanInteract => !m_Open && m_Upgrade != null && Game.Instance.Model.Upgrades.Blocker(m_Upgrade) == null;
+        public bool CanInteract => !m_Open && m_Upgrade != null && (Owned || Game.Instance.Model.Upgrades.Blocker(m_Upgrade) == null);
+
+        bool Owned => Game.Instance.Model.Upgrades.AreaUnlocked(m_Area);
 
         public void Interact()
         {
             if (m_Open || m_Upgrade == null) return;
+            if (Game.Instance.Model.Upgrades.AreaUnlocked(m_Area))
+            {
+                OnPurchased(m_Upgrade); // already owned: just swing the doors open
+                return;
+            }
             if (!Game.Instance.Model.TryBuy(m_Upgrade, out string why))
             {
                 AudioManager.Ui("error", 0.6f);
