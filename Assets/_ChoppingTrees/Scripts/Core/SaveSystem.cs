@@ -131,6 +131,41 @@ namespace ChoppingTrees
             return GameState.FromSave(data);
         }
 
+        /// <summary>A slot's save file as text (the backup if the file is damaged), or null.</summary>
+        public static string ReadRaw(int slot)
+        {
+            MigrateLegacyFile();
+            string path = SlotPath(slot);
+            foreach (var p in new[] { path, path + ".bak" })
+            {
+                try
+                {
+                    if (!File.Exists(p)) continue;
+                    string json = File.ReadAllText(p);
+                    if (!string.IsNullOrWhiteSpace(json) && JsonUtility.FromJson<SaveData>(json) != null) return json;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[Save] Could not read " + p + ": " + e.Message);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>Replaces a slot's save with this text (from the cloud), keeping the old file as the backup.</summary>
+        public static bool WriteRaw(int slot, string json)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json) || JsonUtility.FromJson<SaveData>(json) == null) return false;
+            }
+            catch
+            {
+                return false;
+            }
+            return WriteJson(SlotPath(slot), json);
+        }
+
         public static void Delete() => Delete(CurrentSlot);
 
         public static void Delete(int slot)

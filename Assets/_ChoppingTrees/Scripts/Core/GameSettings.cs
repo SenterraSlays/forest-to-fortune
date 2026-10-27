@@ -17,6 +17,14 @@ namespace ChoppingTrees
         /// <summary>Upgrades settings saved by older versions.</summary>
         public static SettingsData Migrate(SettingsData d)
         {
+            if (d.version == 0 && Application.isMobilePlatform)
+            {
+                // First launch on a phone or tablet: balanced quality at a steady 60 FPS.
+                QualityPresets.Apply(d, QualityPreset.Medium);
+                d.vSync = false;
+                d.frameRateCap = 60;
+                d.fieldOfView = 70f;
+            }
             if (d.version < 2)
             {
                 // Before 1.2 the resolution list came only from the modes the signal chain
@@ -55,8 +63,21 @@ namespace ChoppingTrees
             QualitySettings.lodBias = d.detail switch { DetailLevel.Low => 0.6f, DetailLevel.Medium => 1f, DetailLevel.High => 1.5f, _ => 2.5f };
             Effects.Density = d.effects switch { EffectsQuality.Low => 0.4f, EffectsQuality.Medium => 0.7f, _ => 1f };
             d.frameRateCap = Mathf.Clamp(d.frameRateCap, 0, 360);
-            QualitySettings.vSyncCount = d.vSync ? 1 : 0;
-            Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
+            d.touchLookSensitivity = Mathf.Clamp(d.touchLookSensitivity, 0.2f, 3f);
+            d.touchButtonScale = Mathf.Clamp(d.touchButtonScale, 0.75f, 1.35f);
+            d.touchOpacity = Mathf.Clamp(d.touchOpacity, 0.3f, 1f);
+            if (Application.isMobilePlatform)
+            {
+                // Phones ignore V-Sync settings and default to 30 FPS: the frame rate is always set.
+                QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = d.frameRateCap > 0 ? d.frameRateCap : 60;
+                Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            }
+            else
+            {
+                QualitySettings.vSyncCount = d.vSync ? 1 : 0;
+                Application.targetFrameRate = d.vSync || d.frameRateCap <= 0 ? -1 : d.frameRateCap;
+            }
             ApplyDisplay(d);
             Changed?.Invoke();
         }
@@ -83,7 +104,8 @@ namespace ChoppingTrees
             DisplayNotice = "";
             // Unity remembers the last window size in the registry; the game always sets its own
             // so it starts at the monitor's native resolution. Command-line sizes (tests) win.
-            if (Application.isEditor || SizeFromCommandLine()) return;
+            // Phones always run full screen at their own resolution.
+            if (Application.isEditor || Application.isMobilePlatform || SizeFromCommandLine()) return;
 
             if (!string.IsNullOrEmpty(d.monitor) && d.monitor != DisplayModes.Current.name)
             {

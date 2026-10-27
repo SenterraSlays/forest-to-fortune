@@ -52,6 +52,7 @@ namespace ChoppingTrees
 
             GameSettings.Apply();
             DiscordPresence.Ensure(m_Database);
+            CloudSync.Ensure();
             // The slot chosen on the save screen (carried over the scene reload), else the last one played.
             SaveSystem.CurrentSlot = s_PendingSlot >= 0 ? s_PendingSlot : GameSettings.Data.lastSlot;
             s_PendingSlot = -1;
@@ -123,7 +124,11 @@ namespace ChoppingTrees
             m_AutosaveTimer = 0f;
             if (!SavingEnabled || Model == null) return false;
             bool ok = SaveSystem.Save(Model.State);
-            if (ok) Saved?.Invoke();
+            if (ok)
+            {
+                Saved?.Invoke();
+                CloudSync.NotifySaved(SaveSystem.CurrentSlot);
+            }
             return ok;
         }
 
@@ -131,6 +136,7 @@ namespace ChoppingTrees
         public void ResetProgress()
         {
             if (SavingEnabled) SaveSystem.Delete();
+            CloudSync.Instance?.DeleteSlot(SaveSystem.CurrentSlot);
             Time.timeScale = 1f;
             m_Quitting = true; // don't write the old state back on unload
             UIState.Clear();
@@ -164,9 +170,21 @@ namespace ChoppingTrees
         public void DeleteSlot(int slot)
         {
             if (SavingEnabled) SaveSystem.Delete(slot);
+            CloudSync.Instance?.DeleteSlot(slot);
             if (slot != SaveSystem.CurrentSlot) return;
             s_PendingSlot = slot;
             m_Quitting = true;
+            UIState.Clear();
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>Reloads the open slot from its file (newer progress came from the cloud),
+        /// staying in the menu or in play.</summary>
+        public void ReloadSlot()
+        {
+            s_PendingSlot = SaveSystem.CurrentSlot;
+            s_StartImmediately = Phase == GamePhase.Playing;
+            m_Quitting = true; // the file is newer than what's in memory
             UIState.Clear();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }

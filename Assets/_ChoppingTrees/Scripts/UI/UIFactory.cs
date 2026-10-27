@@ -178,7 +178,8 @@ namespace ChoppingTrees
             var panel = Surface(parent, "Window", UIStyle.Panel);
             panel.raycastTarget = true;
             panel.rectTransform.Place(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, size);
-            DropShadow(panel.rectTransform);
+            var shadow = DropShadow(panel.rectTransform);
+            panel.gameObject.AddComponent<FitToParent>().Configure(shadow.rectTransform, 16f);
             var header = Rect("Header", panel.transform);
             header.anchorMin = new Vector2(0, 1);
             header.anchorMax = new Vector2(1, 1);

@@ -143,6 +143,44 @@ The FPS counter (*Settings > Interface* or F3) shows FPS; *Detailed* adds frame 
 worst frame, CPU/GPU times (when the platform reports them), the active upscaler and the
 resolution.
 
+### Cloud saves
+
+Players can sign in with a Unity Player Account (Google, Apple or email, in the browser) from
+*Settings > Account* or the save screen. Save slots A, B and C then follow them between devices,
+PC and phone; settings stay per device. Saves upload about 45 s after the game saves, when the app
+goes to the background and on quit, and download when the game starts or after signing in. Each
+slot is compared by a fingerprint of its progress (not its timestamp, so re-saving unchanged
+progress isn't a change). If a slot changed on two devices since they last synced, a dialog shows
+both versions and the player picks one. Offline, the game plays from its local files and retries
+every minute. Code: `Scripts/Core/CloudSync.cs`, `Scripts/UI/CloudConflictDialog.cs`.
+
+**One-time setup (needed before cloud saves work):**
+1. In Unity: *Edit > Project Settings > Services*, link the project to a Unity Cloud project.
+2. In the Unity Dashboard (cloud.unity.com) for that project, open *Player Authentication >
+   Identity providers*, add **Unity Player Accounts** and save. Cloud Save needs no extra setup.
+3. Back in Unity: *Project Settings > Services > Authentication*, open the Unity Player Accounts
+   settings and press *Generate settings*. This creates `Assets/Resources/UnityPlayerAccountSettings.asset`
+   with the client id. Builds without it show "Cloud saves aren't available" and play normally.
+
+### Android
+
+*Tools > Forest to Fortune > Build Android APK* writes `Builds/Android/ForestToFortune.apk`
+(ARM64, IL2CPP, Vulkan with GLES3 fallback, landscape, Android 8.0+, debug-signed for sideloading).
+The build switches the editor to Android; *Switch Editor to Windows* switches back.
+
+Touch controls (`Scripts/UI/TouchControls.cs`):
+- **Move:** a floating stick appears under the left thumb. Push it fully forward to run.
+- **Look:** drag anywhere else.
+- **Chop:** hold the big axe button. Dragging on it aims while chopping.
+- **Jump:** the jump button.
+- **Use:** a button that pops up, labelled, when something can be used.
+- **Menu:** the top-right button, or Android's back button.
+- Every finger is tracked separately, so moving, looking and chopping work together. Presses, hits and falling trees vibrate the phone.
+- *Settings > Controls > Touch* sets look sensitivity, invert, a fixed stick, button size, opacity and vibration.
+
+The skill tree pans with one finger and pinch-zooms with two. Windows shrink to fit phone screens,
+the HUD stays out of notches, and a first launch on a phone starts at Medium quality and 60 FPS.
+
 ### Discord
 
 The game shows Rich Presence on your Discord profile, for example "Chopping with the Lumberjack's Axe", plus money

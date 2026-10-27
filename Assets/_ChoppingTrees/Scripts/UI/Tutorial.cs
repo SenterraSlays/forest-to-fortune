@@ -134,7 +134,8 @@ namespace ChoppingTrees
             switch (Step)
             {
                 case StepChop:
-                    body = GameInput.UsingGamepad ? $"Walk up to a tree and <b>hold {GameInput.Key("chop")}</b> to chop it down." : "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
+                    body = GameInput.UsingTouch ? "Walk up to a tree and <b>hold the axe button</b> to chop it down."
+                        : GameInput.UsingGamepad ? $"Walk up to a tree and <b>hold {GameInput.Key("chop")}</b> to chop it down." : "Walk up to a tree and <b>hold Left Mouse</b> to chop it down.";
                     icon = "axe";
                     break;
                 case StepCollect:
@@ -142,12 +143,14 @@ namespace ChoppingTrees
                     icon = "log";
                     break;
                 case StepSell:
-                    body = $"Take your wood to the <b>Lumber Market</b> and press <b>{GameInput.Key("use")}</b> to sell it.";
+                    body = GameInput.UsingTouch ? "Take your wood to the <b>Lumber Market</b> and tap <b>Use</b> to sell it."
+                        : $"Take your wood to the <b>Lumber Market</b> and press <b>{GameInput.Key("use")}</b> to sell it.";
                     icon = "coin";
                     target = SellPoint.Instance != null ? SellPoint.Instance.transform : null;
                     break;
                 case StepUpgrade:
-                    body = $"Open the <b>Workbench</b> skill tree ({GameInput.Key("use")}) and unlock the <b>Steel Axe</b>.";
+                    body = GameInput.UsingTouch ? "Tap <b>Use</b> at the <b>Workbench</b> to open the skill tree, and unlock the <b>Steel Axe</b>."
+                        : $"Open the <b>Workbench</b> skill tree ({GameInput.Key("use")}) and unlock the <b>Steel Axe</b>.";
                     icon = "leaf";
                     target = UpgradeStation.Instance != null ? UpgradeStation.Instance.transform : null;
                     break;

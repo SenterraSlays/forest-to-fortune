@@ -284,6 +284,7 @@ namespace ChoppingTrees
             Hint("menu", "Menu", true);
             GameInput.DeviceChanged += RelabelKeys;
             m_Controls = controls.gameObject.AddComponent<CanvasGroup>();
+            RelabelKeys();
 
             var saved = UIFactory.Surface(Root, "Saved", UIStyle.Hud);
             saved.rectTransform.Place(new Vector2(1, 0), new Vector2(1, 0), new Vector2(-24, 20), Vector2.zero);
@@ -298,7 +299,12 @@ namespace ChoppingTrees
         /// <summary>Key caps show keyboard keys or controller buttons, whichever was used last.</summary>
         void RelabelKeys()
         {
-            if (m_UseCap != null) UIFactory.SetKeyCap(m_UseCap, GameInput.Key("use"), GameInput.Glyph("use"));
+            if (m_UseCap != null)
+            {
+                // On a touch screen the Use button carries the prompt; no key cap.
+                m_UseCap.gameObject.SetActive(!GameInput.UsingTouch);
+                if (!GameInput.UsingTouch) UIFactory.SetKeyCap(m_UseCap, GameInput.Key("use"), GameInput.Glyph("use"));
+            }
             foreach (var (cap, action) in m_HintCaps) if (cap != null) UIFactory.SetKeyCap(cap, GameInput.Key(action), GameInput.Glyph(action));
         }
 
@@ -396,7 +402,9 @@ namespace ChoppingTrees
 
             m_SavedTimer -= dt;
             m_Saved.alpha = Mathf.Clamp01(m_SavedTimer);
-            m_Controls.alpha = model.State.TutorialDone ? 0.65f : 0.95f;
+            m_Controls.alpha = GameInput.UsingTouch ? 0f : model.State.TutorialDone ? 0.65f : 0.95f;
+            // The touch menu button takes the top-right corner; the FPS counter moves beside it.
+            ((RectTransform)m_FpsRoot.transform).anchoredPosition = new Vector2(GameInput.UsingTouch ? -140f : -20f, -20f);
         }
 
         void UpdateTarget(GameModel model, float dt)

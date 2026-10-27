@@ -26,6 +26,9 @@ namespace ChoppingTrees
         }
 
         readonly Card[] m_Cards = new Card[3];
+        TextMeshProUGUI m_CloudText;
+        UIButton m_CloudButton;
+        Image m_CloudIcon;
 
         protected override void Build()
         {
@@ -40,12 +43,14 @@ namespace ChoppingTrees
             close.navigation = new Navigation { mode = Navigation.Mode.None }; // B closes
 
             var row = UIFactory.Rect("Slots", body);
-            row.Stretch(36, 36, 26, 36);
+            row.Stretch(36, 36, 26, 110);
             var h = UIFactory.HStack(row, 22f, null, TextAnchor.UpperCenter);
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = true;
             for (int i = 0; i < 3; i++) m_Cards[i] = BuildCard(row, i);
+            BuildCloudBar(body);
             Game.Instance.PhaseChanged += _ => Close();
+            CloudSync.Changed += OnCloudChanged;
         }
 
         Card BuildCard(RectTransform parent, int slot)
@@ -100,6 +105,56 @@ namespace ChoppingTrees
             return c;
         }
 
+        /// <summary>Cloud status along the bottom: synced account, or an invitation to sign in.</summary>
+        void BuildCloudBar(RectTransform body)
+        {
+            var bar = UIFactory.Surface(body, "Cloud", new Color(0.075f, 0.085f, 0.07f, 1f));
+            bar.rectTransform.anchorMin = new Vector2(0, 0);
+            bar.rectTransform.anchorMax = new Vector2(1, 0);
+            bar.rectTransform.pivot = new Vector2(0.5f, 0);
+            bar.rectTransform.offsetMin = new Vector2(36, 28);
+            bar.rectTransform.offsetMax = new Vector2(-36, 28 + 64);
+            UIFactory.HStack(bar, 14f, new RectOffset(18, 10, 6, 6));
+            m_CloudIcon = UIFactory.Icon(bar.transform, "cloud", UIStyle.Accent, 30f);
+            m_CloudText = UIFactory.Text(bar.transform, "", 18, UIStyle.Muted);
+            m_CloudText.Layout(-1, -1, 1);
+            m_CloudButton = UIFactory.Button(bar.transform, "Sign in", CloudAction, 19, ButtonStyle.Ghost, "cloud");
+            m_CloudButton.Layout(200, 50);
+        }
+
+        void CloudAction()
+        {
+            var c = CloudSync.Instance;
+            if (c == null) return;
+            if (c.SignedIn) _ = c.SyncAll();
+            else c.SignIn();
+        }
+
+        void OnCloudChanged()
+        {
+            if (IsOpen) Refresh();
+        }
+
+        void RefreshCloud()
+        {
+            var c = CloudSync.Instance;
+            var state = c != null ? c.State : CloudState.Unavailable;
+            bool signedIn = c != null && c.SignedIn;
+            m_CloudButton.gameObject.SetActive(state != CloudState.Unavailable && state != CloudState.SigningIn);
+            m_CloudButton.Label.text = signedIn ? "Sync now" : "Sign in";
+            m_CloudButton.interactable = state != CloudState.Syncing;
+            m_CloudIcon.color = signedIn && state == CloudState.Synced ? UIStyle.Good : state == CloudState.Unavailable ? UIStyle.Dim : UIStyle.Accent;
+            m_CloudText.text = state switch
+            {
+                CloudState.Unavailable => "Cloud saves aren't available in this version.",
+                CloudState.SigningIn => "Finish signing in in your browser...",
+                CloudState.Syncing => "Syncing your saves...",
+                CloudState.Synced => $"<color=#F2EEDF>Cloud saves on</color>  ·  {c.Account}",
+                CloudState.Offline => signedIn ? "Offline: saves stay on this device and sync when you're back online." : "Offline.",
+                _ => "<color=#F2EEDF>Play on PC and phone:</color> sign in to keep these saves on all your devices.",
+            };
+        }
+
         static TextMeshProUGUI StatRow(RectTransform parent, string icon, Color color, string label)
         {
             var row = UIFactory.Panel(parent, label, new Color(1f, 0.95f, 0.82f, 0.035f));
@@ -115,6 +170,7 @@ namespace ChoppingTrees
 
         void OnDestroy()
         {
+            CloudSync.Changed -= OnCloudChanged;
             if (Instance == this) Instance = null;
         }
 
@@ -137,6 +193,7 @@ namespace ChoppingTrees
             var db = Game.Instance.Db;
             var axe = db.Upgrade("axe_tier");
             int last = GameSettings.Data.lastSlot;
+            RefreshCloud();
             for (int i = 0; i < 3; i++)
             {
                 var c = m_Cards[i];
@@ -155,7 +212,8 @@ namespace ChoppingTrees
                     continue;
                 }
                 var when = new DateTime(Math.Max(DateTime.MinValue.Ticks, Math.Min(DateTime.MaxValue.Ticks, d.lastSavedUtcTicks)), DateTimeKind.Utc).ToLocalTime();
-                c.tag.text = (isLast ? "<color=#F5B545>Last played</color>  ·  " : "") + when.ToString("MMM d, HH:mm");
+                c.tag.text = (isLast ? "<color=#F5B545>Last played</color>  ·  " : "") + when.ToString("MMM d, HH:mm")
+                             + (CloudSync.IsSlotSynced(i) ? "  ·  <color=#86CC61>In the cloud</color>" : "");
                 int axeLevel = 0;
                 foreach (var u in d.upgrades) if (u.id == "axe_tier") axeLevel = u.level;
                 c.values[0].text = NumberUtil.Money(d.money);

@@ -34,6 +34,7 @@ namespace ChoppingTrees
         {
             if (Instance != null || db == null || db.config == null) return;
             if (Environment.CommandLine.Contains("-ct-smoke")) return; // automated runs stay offline
+            if (Application.platform != RuntimePlatform.WindowsPlayer && Application.platform != RuntimePlatform.WindowsEditor) return; // Discord's pipe is Windows-only here
             var go = new GameObject("DiscordPresence");
             DontDestroyOnLoad(go);
             var p = go.AddComponent<DiscordPresence>();

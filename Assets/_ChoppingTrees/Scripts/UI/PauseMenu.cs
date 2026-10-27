@@ -21,7 +21,7 @@ namespace ChoppingTrees
             UIFactory.Button(body, "Save Game", SaveNow, 22, ButtonStyle.Ghost, "save").Layout(-1, 56);
             UIFactory.Button(body, "Main Menu", () => Game.Instance.ReturnToMenu(), 22, ButtonStyle.Ghost, "leaf").Layout(-1, 56);
             UIFactory.Button(body, "Reset Progress", ResetProgress, 22, ButtonStyle.Danger, "refresh").Layout(-1, 56);
-            UIFactory.Button(body, "Quit to Desktop", () => Game.Instance.Quit(), 22, ButtonStyle.Ghost, "power").Layout(-1, 56);
+            UIFactory.Button(body, Application.isMobilePlatform ? "Quit Game" : "Quit to Desktop", () => Game.Instance.Quit(), 22, ButtonStyle.Ghost, "power").Layout(-1, 56);
             Game.Instance.PhaseChanged += _ => Close();
         }
 

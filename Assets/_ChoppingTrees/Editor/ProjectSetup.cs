@@ -52,6 +52,31 @@ namespace ChoppingTrees.EditorTools
 
         public const string IconPath = Root + "/Art/Icon/GameIcon.png";
 
+        /// <summary>Phone and tablet player settings: landscape only, ARM64 with IL2CPP, Vulkan
+        /// with OpenGL ES 3 as the fallback, ASTC textures, and the notch area left to the system
+        /// so nothing is drawn under a camera cut-out.</summary>
+        public static void AndroidSettings()
+        {
+            var android = NamedBuildTarget.Android;
+            PlayerSettings.SetApplicationIdentifier(android, "com.hazelwood.foresttofortune");
+            PlayerSettings.Android.bundleVersionCode = 2;
+            PlayerSettings.SetScriptingBackend(android, ScriptingImplementation.IL2CPP);
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.Android.renderOutsideSafeArea = false;
+            PlayerSettings.Android.optimizedFramePacing = true;
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { UnityEngine.Rendering.GraphicsDeviceType.Vulkan, UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3 });
+            EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
+            AssetDatabase.SaveAssets();
+        }
+
         /// <summary>The game icon (rendered by Blender/icon_render.py, framed by icon_compose.py).</summary>
         public static string Icon()
         {

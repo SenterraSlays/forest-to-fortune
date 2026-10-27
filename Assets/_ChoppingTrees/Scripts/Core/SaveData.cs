@@ -115,6 +115,21 @@ namespace ChoppingTrees
         public bool cameraShake = true;
         public bool damageNumbers = true;
         public float uiScale = 1f;
+
+        [Header("Touch")]
+        public float touchLookSensitivity = 1f;
+        public bool touchInvertY;
+        public float touchButtonScale = 1f;
+        public float touchOpacity = 0.85f;
+        [Tooltip("Floating: the stick appears where the thumb lands. Fixed: it stays in the corner.")]
+        public bool touchFixedStick;
+
+        [Header("Cloud saves")]
+        [Tooltip("Account shown in Settings; empty when signed out.")]
+        public string cloudAccount = "";
+        [Tooltip("Per slot: fingerprint of the progress this device and the cloud last agreed on.")]
+        public long[] cloudSynced = new long[3];
+        public bool cloudAutoSync = true;
     }
 
     public enum QualityPreset { Low, Medium, High, Ultra, Custom }

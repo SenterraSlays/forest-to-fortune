@@ -20,8 +20,12 @@ namespace ChoppingTrees
     {
         public static SettingsMenu Instance { get; private set; }
 
-        static readonly string[] TabNames = { "Graphics", "Display", "Audio", "Controls", "Interface" };
-        static readonly string[] TabIcons = { "star", "chart", "bolt", "axe", "leaf" };
+        static readonly string[] TabNames = { "Graphics", "Display", "Audio", "Controls", "Interface", "Account" };
+        static readonly string[] TabIcons = { "star", "chart", "bolt", "axe", "leaf", "cloud" };
+
+        TextMeshProUGUI m_CloudStatus, m_CloudDetail;
+        UIButton m_CloudSignIn, m_CloudSignOut, m_CloudSync;
+        Image m_CloudBadge;
 
         TextMeshProUGUI m_DisplayNote, m_UpscalerNote, m_PresetNote;
         readonly UIButton[] m_PresetButtons = new UIButton[4];
@@ -36,6 +40,7 @@ namespace ChoppingTrees
         static readonly List<(UIButton button, Func<bool> get, string on, string off)> s_Toggles = new List<(UIButton, Func<bool>, string, string)>();
         static readonly List<(Slider slider, TextMeshProUGUI text, Func<float> get, Func<float, string> format)> s_Sliders = new List<(Slider, TextMeshProUGUI, Func<float>, Func<float, string>)>();
         static SettingsData S => GameSettings.Data;
+        static bool Mobile => Application.isMobilePlatform;
 
         protected override void Build()
         {
@@ -83,6 +88,7 @@ namespace ChoppingTrees
             BuildAudio(Page(pages));
             BuildControls(Page(pages));
             BuildInterface(Page(pages));
+            BuildAccount(Page(pages));
 
             // Footer.
             var reset = m_Reset = UIFactory.Button(body, "Reset to defaults", ResetDefaults, 20, ButtonStyle.Ghost, "refresh");
@@ -153,15 +159,19 @@ namespace ChoppingTrees
         {
             UIFactory.VStack(page, 16f);
             var display = Section(page, "Display", "chart");
-            CyclerRow(display, "Monitor", "Which screen the game runs on", MonitorText, StepMonitor);
-            CyclerRow(display, "Display mode", "Borderless switches apps fastest", () => GameSettings.WindowModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
-                d => { S.displayMode = Cycle(S.displayMode, d, GameSettings.WindowModes.Length); GameSettings.Apply(); });
-            CyclerRow(display, "Resolution", "Native is the sharpest", ResText, StepResolution);
-            ToggleRow(display, "V-Sync", "No tearing; caps FPS to the refresh rate", () => S.vSync, v => { S.vSync = v; GameSettings.Apply(); });
-            m_DisplayNote = UIFactory.Text(display, "", 16, UIStyle.Accent);
-            CyclerRow(display, "Frame rate cap", "Only used with V-Sync off", () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
+            if (!Mobile)
             {
-                int[] caps = { 0, 30, 60, 120, 144, 165, 240 };
+                CyclerRow(display, "Monitor", "Which screen the game runs on", MonitorText, StepMonitor);
+                CyclerRow(display, "Display mode", "Borderless switches apps fastest", () => GameSettings.WindowModeNames[Mathf.Clamp(S.displayMode, 0, 2)],
+                    d => { S.displayMode = Cycle(S.displayMode, d, GameSettings.WindowModes.Length); GameSettings.Apply(); });
+                CyclerRow(display, "Resolution", "Native is the sharpest", ResText, StepResolution);
+                ToggleRow(display, "V-Sync", "No tearing; caps FPS to the refresh rate", () => S.vSync, v => { S.vSync = v; GameSettings.Apply(); });
+            }
+            m_DisplayNote = UIFactory.Text(display, "", 16, UIStyle.Accent);
+            CyclerRow(display, Mobile ? "Frame rate" : "Frame rate cap", Mobile ? "Higher is smoother; lower saves battery" : "Only used with V-Sync off",
+                () => S.frameRateCap <= 0 ? "Unlimited" : S.frameRateCap.ToString(), d =>
+            {
+                int[] caps = Mobile ? new[] { 30, 60, 90, 120 } : new[] { 0, 30, 60, 120, 144, 165, 240 };
                 int i = Array.IndexOf(caps, S.frameRateCap);
                 S.frameRateCap = caps[Cycle(i < 0 ? 0 : i, d, caps.Length)];
                 GameSettings.Apply();
@@ -188,9 +198,23 @@ namespace ChoppingTrees
             h.childForceExpandWidth = true;
             var left = UIFactory.Rect("Left", page);
             UIFactory.VStack(left, 16f);
-            var mouse = Section(left, "Mouse", "axe");
-            SliderRow(mouse, "Sensitivity", "How fast the mouse turns the view", 0.1f, 4f, () => S.mouseSensitivity, v => S.mouseSensitivity = v, v => v.ToString("0.00"));
-            ToggleRow(mouse, "Invert Y", "Push up to look down", () => S.invertY, v => S.invertY = v);
+            if (Mobile || UnityEngine.InputSystem.Touchscreen.current != null)
+            {
+                var touch = Section(left, "Touch", "hand");
+                SliderRow(touch, "Look sensitivity", "How far a swipe turns the view", 0.2f, 3f, () => S.touchLookSensitivity, v => S.touchLookSensitivity = v, v => v.ToString("0.00"));
+                ToggleRow(touch, "Invert Y", "Swipe up to look down", () => S.touchInvertY, v => S.touchInvertY = v);
+                ToggleRow(touch, "Fixed stick", "Off: the stick appears under your thumb", () => S.touchFixedStick, v => S.touchFixedStick = v);
+                SliderRow(touch, "Button size", "Size of the stick and action buttons", 0.75f, 1.35f, () => S.touchButtonScale, v => { S.touchButtonScale = Mathf.Round(v * 20f) / 20f; GameSettings.Apply(); },
+                    v => Mathf.RoundToInt(Mathf.Round(v * 20f) * 5f) + "%");
+                SliderRow(touch, "Button opacity", "How visible the on-screen controls are", 0.3f, 1f, () => S.touchOpacity, v => S.touchOpacity = v, v => Mathf.RoundToInt(v * 100) + "%");
+                ToggleRow(touch, "Vibration", "Buzz on hits, presses and felled trees", () => S.vibration, v => S.vibration = v);
+            }
+            if (!Mobile)
+            {
+                var mouse = Section(left, "Mouse", "axe");
+                SliderRow(mouse, "Sensitivity", "How fast the mouse turns the view", 0.1f, 4f, () => S.mouseSensitivity, v => S.mouseSensitivity = v, v => v.ToString("0.00"));
+                ToggleRow(mouse, "Invert Y", "Push up to look down", () => S.invertY, v => S.invertY = v);
+            }
             var pad = Section(left, "Controller", "gear");
             BuildStylePicker(pad);
             SliderRow(pad, "Look sensitivity", "How fast the right stick turns", 0.2f, 3f, () => S.stickSensitivity, v => S.stickSensitivity = v, v => v.ToString("0.00"));
@@ -291,13 +315,83 @@ namespace ChoppingTrees
                 d => S.fpsCounter = (FpsCounterMode)Cycle((int)S.fpsCounter, d, 3));
             ToggleRow(ui, "Tutorial hints", "Step-by-step goals for new players", () => S.showTutorial, v => S.showTutorial = v);
             ToggleRow(ui, "Damage numbers", "Show the damage of each hit", () => S.damageNumbers, v => S.damageNumbers = v);
-            ToggleRow(ui, "Discord status", "Show what you're doing on your Discord profile", () => S.discordPresence, v => S.discordPresence = v);
+            if (Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
+                ToggleRow(ui, "Discord status", "Show what you're doing on your Discord profile", () => S.discordPresence, v => S.discordPresence = v);
+        }
+
+        void BuildAccount(RectTransform page)
+        {
+            UIFactory.VStack(page, 16f);
+            var card = UIFactory.Surface(page, "Cloud", UIStyle.Card);
+            UIFactory.VStack(card, 14f, new RectOffset(26, 26, 22, 24));
+            var head = UIFactory.Rect("Head", card.transform);
+            UIFactory.HStack(head, 16f);
+            m_CloudBadge = UIFactory.Panel(head, "Badge", UIStyle.Accent);
+            m_CloudBadge.sprite = UIStyle.Circle;
+            m_CloudBadge.Layout(66, 66);
+            var ic = UIFactory.Icon(m_CloudBadge.transform, "cloud", UIStyle.AccentDark, 40f);
+            ic.rectTransform.anchoredPosition = Vector2.zero;
+            ic.GetComponent<LayoutElement>().ignoreLayout = true;
+            var titles = UIFactory.Rect("Titles", head);
+            UIFactory.VStack(titles, 4f);
+            titles.Layout(-1, -1, 1);
+            UIFactory.Text(titles, "Cloud saves", 30, UIStyle.Text, true);
+            m_CloudStatus = UIFactory.Text(titles, "", 19, UIStyle.Muted);
+            m_CloudDetail = UIFactory.Text(card.transform, "", 18, UIStyle.Muted);
+            var row = UIFactory.Rect("Buttons", card.transform);
+            UIFactory.HStack(row, 12f);
+            m_CloudSignIn = UIFactory.Button(row, "Sign in with Unity", () => CloudSync.Instance?.SignIn(), 22, ButtonStyle.Primary, "cloud");
+            m_CloudSignIn.Layout(330, 58);
+            m_CloudSync = UIFactory.Button(row, "Sync now", () => { if (CloudSync.Instance != null) _ = CloudSync.Instance.SyncAll(); }, 21, ButtonStyle.Ghost, "refresh");
+            m_CloudSync.Layout(220, 58);
+            m_CloudSignOut = UIFactory.Button(row, "Sign out", () => ConfirmDialog.Ask("Sign out?",
+                "Your saves stay on this device. Sign in again any time to keep syncing them.", "Sign out", () => CloudSync.Instance?.SignOut()), 21, ButtonStyle.Ghost, "power");
+            m_CloudSignOut.Layout(200, 58);
+
+            var opts = Section(page, "Syncing", "save");
+            ToggleRow(opts, "Sync automatically", "Upload saves shortly after the game saves", () => S.cloudAutoSync, v => S.cloudAutoSync = v);
+            var how = Section(page, "How it works", "leaf");
+            UIFactory.Text(how, "Sign in on each device with the same Unity account (Google, Apple or email) and saves A, B and C follow you " +
+                "between PC and phone. Settings stay on each device. You can play offline any time: progress uploads when you're back online. " +
+                "If a save changed on two devices in the meantime, you choose which one to keep.", 18, UIStyle.Muted);
+            CloudSync.Changed += RefreshCloud;
+            RefreshCloud();
+        }
+
+        void RefreshCloud()
+        {
+            if (m_CloudStatus == null) return;
+            var c = CloudSync.Instance;
+            var state = c != null ? c.State : CloudState.Unavailable;
+            bool signedIn = c != null && c.SignedIn;
+            string account = c != null ? c.Account : "";
+            m_CloudStatus.text = state switch
+            {
+                CloudState.Unavailable => "<color=#E8705F>Not available</color>",
+                CloudState.SigningIn => "Signing in... finish in your browser",
+                CloudState.Syncing => "Syncing...",
+                CloudState.Synced => "<color=#86CC61>Synced</color>  ·  " + account,
+                CloudState.Offline => signedIn ? "<color=#E8B04A>Offline</color>  ·  " + account : "<color=#E8B04A>Offline</color>",
+                _ => "Not signed in",
+            };
+            string last = c != null && c.LastSync.HasValue ? "Last synced at " + c.LastSync.Value.ToString("HH:mm") + ". " : "";
+            m_CloudDetail.text = c == null ? "Cloud saves are off in automated runs."
+                : !string.IsNullOrEmpty(c.Message) ? c.Message
+                : signedIn ? last + "Your saves are kept on every device you sign in on."
+                : "Sign in to keep saves A, B and C on all your devices, PC and phone.";
+            m_CloudSignIn.gameObject.SetActive(!signedIn && state != CloudState.Unavailable);
+            m_CloudSignIn.interactable = state != CloudState.SigningIn;
+            m_CloudSync.gameObject.SetActive(signedIn);
+            m_CloudSync.interactable = state != CloudState.Syncing;
+            m_CloudSignOut.gameObject.SetActive(signedIn);
+            m_CloudBadge.color = signedIn ? UIStyle.Good : state == CloudState.Unavailable ? new Color(0.36f, 0.37f, 0.34f) : UIStyle.Accent;
         }
 
         // ------------------------------------------------------------------ behaviour
 
         void OnDestroy()
         {
+            CloudSync.Changed -= RefreshCloud;
             if (Instance == this) Instance = null;
         }
 

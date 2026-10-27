@@ -24,6 +24,7 @@ namespace ChoppingTrees
         RebirthMenu m_Rebirth;
         SaveMenu m_Saves;
         ConfirmDialog m_Confirm;
+        CloudConflictDialog m_Conflict;
         OfflinePopup m_Offline;
 
         void Awake()
@@ -40,10 +41,11 @@ namespace ChoppingTrees
             canvas.sortingOrder = 10;
             var scaler = canvasGo.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080) / GameSettings.Data.uiScale;
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = Reference;
+            // Phones fit the height (they're all wide) and draw everything larger: a phone screen is small.
+            scaler.matchWidthOrHeight = Application.isMobilePlatform ? 1f : 0.5f;
             // Interface scale setting: a smaller reference resolution makes everything bigger.
-            GameSettings.Changed += () => { if (scaler != null) scaler.referenceResolution = new Vector2(1920, 1080) / GameSettings.Data.uiScale; };
+            GameSettings.Changed += () => { if (scaler != null) scaler.referenceResolution = Reference; };
             canvasGo.AddComponent<GraphicRaycaster>();
             var root = (RectTransform)canvasGo.transform;
 
@@ -55,6 +57,8 @@ namespace ChoppingTrees
 
             m_Hud = Screen<Hud>(root, "HUD");
             m_Hud.Bind(m_Axe, m_Interactor);
+            m_Hud.gameObject.AddComponent<SafeArea>();
+            new GameObject("TouchControls", typeof(RectTransform)).AddComponent<TouchControls>().Create(root, m_Interactor);
             new GameObject("FloatingText", typeof(RectTransform)).AddComponent<FloatingText>().Create(root, canvas);
             new GameObject("Tutorial", typeof(RectTransform)).AddComponent<Tutorial>().Create(root);
             new GameObject("Toasts", typeof(RectTransform)).AddComponent<Toasts>().Create(root);
@@ -65,6 +69,7 @@ namespace ChoppingTrees
             m_Saves = Screen<SaveMenu>(root, "SaveMenu");
             m_Offline = Screen<OfflinePopup>(root, "OfflinePopup");
             m_Settings = Screen<SettingsMenu>(root, "SettingsMenu");
+            m_Conflict = Screen<CloudConflictDialog>(root, "CloudConflictDialog");
             m_Confirm = Screen<ConfirmDialog>(root, "ConfirmDialog");
             // Toasts stay above menus; the controller focus frame and hints above everything.
             root.Find("Toasts").SetAsLastSibling();
@@ -76,6 +81,8 @@ namespace ChoppingTrees
                 else m_Hud.Close();
             };
         }
+
+        static Vector2 Reference => new Vector2(1920, 1080) / (GameSettings.Data.uiScale * (Application.isMobilePlatform ? 1.3f : 1f));
 
         static T Screen<T>(RectTransform root, string name) where T : UIScreen
         {
@@ -93,6 +100,7 @@ namespace ChoppingTrees
             bool back = GameInput.BackPressed && UIState.AnyMenuOpen;
             if (!menu && !back) return;
             if (m_Confirm.IsOpen) m_Confirm.Close();
+            else if (m_Conflict.IsOpen) m_Conflict.Close();
             else if (m_Settings.IsOpen) m_Settings.Close();
             else if (m_Offline.IsOpen) m_Offline.Close();
             else if (m_Rebirth.IsOpen) m_Rebirth.Close();

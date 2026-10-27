@@ -12,6 +12,7 @@ namespace ChoppingTrees.EditorTools
     public static class BuildPipeline
     {
         public const string PlayerPath = "Builds/Windows/ForestToFortune.exe";
+        public const string AndroidPath = "Builds/Android/ForestToFortune.apk";
 
         [MenuItem("Tools/Forest to Fortune/Build Everything", priority = 20)]
         public static void BuildEverythingMenu() => BuildEverything(true);
@@ -46,5 +47,32 @@ namespace ChoppingTrees.EditorTools
             Debug.Log(msg);
             return msg;
         }
+
+        /// <summary>
+        /// Android APK (ARM64, IL2CPP) for sideloading, signed with the debug key. Switches the
+        /// editor to Android for the build; <see cref="SwitchToWindows"/> switches back.
+        /// </summary>
+        [MenuItem("Tools/Forest to Fortune/Build Android APK", priority = 22)]
+        public static string BuildAndroid()
+        {
+            ProjectSetup.AndroidSettings();
+            Directory.CreateDirectory(Path.GetDirectoryName(AndroidPath));
+            EditorUserBuildSettings.buildAppBundle = false;
+            var options = new BuildPlayerOptions
+            {
+                scenes = new[] { SceneBuilder.ScenePath },
+                locationPathName = AndroidPath,
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+                options = BuildOptions.None,
+            };
+            var report = UnityEditor.BuildPipeline.BuildPlayer(options);
+            string msg = $"[BuildScript] Android {report.summary.result}: {report.summary.totalSize / (1024 * 1024)} MB, {report.summary.totalErrors} errors, {report.summary.totalTime.TotalSeconds:0}s -> {AndroidPath}";
+            Debug.Log(msg);
+            return msg;
+        }
+
+        [MenuItem("Tools/Forest to Fortune/Switch Editor to Windows", priority = 23)]
+        public static bool SwitchToWindows() => EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
     }
 }

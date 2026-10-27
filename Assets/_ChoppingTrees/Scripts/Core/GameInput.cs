@@ -13,14 +13,34 @@ namespace ChoppingTrees
     ///
     /// Controller layout: left stick move (click: sprint), right stick look, RT chop, A jump,
     /// X use, Start pause, View/Select hide hints; in menus the D-pad or stick moves, A selects
-    /// and B goes back.
+    /// and B goes back. On phones and tablets the on-screen <see cref="TouchControls"/> feed
+    /// the Touch* values below.
     /// </summary>
     public static class GameInput
     {
         /// <summary>True after the controller was used last, false after the keyboard or mouse.</summary>
         public static bool UsingGamepad { get; private set; }
-        /// <summary>Raised when <see cref="UsingGamepad"/> flips (prompts re-label).</summary>
+        /// <summary>True while playing with the touch screen (phones and tablets start this way).</summary>
+        public static bool UsingTouch { get; private set; } = Application.isMobilePlatform;
+        /// <summary>Raised when <see cref="UsingGamepad"/> or <see cref="UsingTouch"/> flips (prompts re-label).</summary>
         public static event Action DeviceChanged;
+
+        // Set every frame by TouchControls (which runs before the player scripts).
+        /// <summary>On-screen stick, -1..1.</summary>
+        public static Vector2 TouchMove;
+        /// <summary>Degrees to turn this frame from swipes.</summary>
+        public static Vector2 TouchLook;
+        public static bool TouchChop, TouchSprint, TouchJump, TouchUse, TouchMenu;
+
+        /// <summary>Resets the one-frame touch values (taps, swipes); <paramref name="all"/> also lets go of the stick.</summary>
+        public static void ClearTouch(bool all = false)
+        {
+            TouchLook = Vector2.zero;
+            TouchChop = TouchJump = TouchUse = TouchMenu = false;
+            if (!all) return;
+            TouchMove = Vector2.zero;
+            TouchSprint = false;
+        }
 
         static bool s_SprintToggle;
         static float s_RumbleUntil;
@@ -46,21 +66,22 @@ namespace ChoppingTrees
                     if (Kb.aKey.isPressed) v.x -= 1f;
                 }
                 if (Pad != null) v += Stick(Pad.leftStick.ReadValue());
+                v += TouchMove;
                 return Vector2.ClampMagnitude(v, 1f);
             }
         }
 
-        public static bool JumpPressed => Kb != null && Kb.spaceKey.wasPressedThisFrame || Pad != null && Pad.buttonSouth.wasPressedThisFrame;
+        public static bool JumpPressed => Kb != null && Kb.spaceKey.wasPressedThisFrame || Pad != null && Pad.buttonSouth.wasPressedThisFrame || TouchJump;
 
         /// <summary>Shift held, or the left stick clicked (stays on until the stick is let go).</summary>
-        public static bool Sprint => Kb != null && Kb.leftShiftKey.isPressed || s_SprintToggle;
+        public static bool Sprint => Kb != null && Kb.leftShiftKey.isPressed || s_SprintToggle || TouchSprint;
 
-        public static bool ChopHeld => Ms != null && Ms.leftButton.isPressed || Pad != null && Pad.rightTrigger.ReadValue() > 0.4f;
+        public static bool ChopHeld => Ms != null && Ms.leftButton.isPressed && !UsingTouch || Pad != null && Pad.rightTrigger.ReadValue() > 0.4f || TouchChop;
 
-        public static bool UsePressed => Kb != null && Kb.eKey.wasPressedThisFrame || Pad != null && Pad.buttonWest.wasPressedThisFrame;
+        public static bool UsePressed => Kb != null && Kb.eKey.wasPressedThisFrame || Pad != null && Pad.buttonWest.wasPressedThisFrame || TouchUse;
 
         /// <summary>Esc or Start: pause in play, close the top menu otherwise.</summary>
-        public static bool MenuPressed => Kb != null && Kb.escapeKey.wasPressedThisFrame || Pad != null && Pad.startButton.wasPressedThisFrame;
+        public static bool MenuPressed => Kb != null && Kb.escapeKey.wasPressedThisFrame || Pad != null && Pad.startButton.wasPressedThisFrame || TouchMenu;
 
         /// <summary>LB / RB (L1 / R1, L / R): previous and next tab.</summary>
         public static bool TabLeftPressed => Pad != null && Pad.leftShoulder.wasPressedThisFrame;
@@ -94,9 +115,15 @@ namespace ChoppingTrees
 
         // ------------------------------------------------------------------ rumble
 
-        /// <summary>Short controller rumble (only when a controller is in use and vibration is on).</summary>
+        /// <summary>Short controller rumble (only when a controller is in use and vibration is on);
+        /// with the touch screen, a phone vibration of similar strength.</summary>
         public static void Rumble(float low, float high, float seconds)
         {
+            if (UsingTouch)
+            {
+                Haptics.Play(Mathf.RoundToInt(Mathf.Min(seconds, 0.2f) * 600f), Mathf.Max(low, high));
+                return;
+            }
             if (Pad == null || !UsingGamepad || !GameSettings.Data.vibration) return;
             Pad.SetMotorSpeeds(Mathf.Clamp01(low), Mathf.Clamp01(high));
             s_RumbleUntil = Mathf.Max(s_RumbleUntil, Time.unscaledTime + seconds);
@@ -134,19 +161,29 @@ namespace ChoppingTrees
 
         static void DetectDevice()
         {
-            bool pad = false, desk = false;
+            bool pad = false, desk = false, touch = false;
+            var ts = Touchscreen.current;
+            if (ts != null && ts.primaryTouch.press.wasPressedThisFrame) touch = true;
             var p = Pad;
             if (p != null)
                 pad = p.leftStick.ReadValue().magnitude > 0.4f || p.rightStick.ReadValue().magnitude > 0.4f || p.dpad.ReadValue().sqrMagnitude > 0.1f
                       || p.buttonSouth.isPressed || p.buttonEast.isPressed || p.buttonWest.isPressed || p.buttonNorth.isPressed
                       || p.startButton.isPressed || p.selectButton.isPressed || p.leftShoulder.isPressed || p.rightShoulder.isPressed
                       || p.leftTrigger.ReadValue() > 0.3f || p.rightTrigger.ReadValue() > 0.3f;
-            if (Kb != null && Kb.anyKey.wasPressedThisFrame) desk = true;
-            if (Ms != null && (Ms.delta.ReadValue().sqrMagnitude > 16f || Ms.leftButton.wasPressedThisFrame || Ms.rightButton.wasPressedThisFrame)) desk = true;
-            bool now = UsingGamepad;
-            if (pad) now = true;
-            else if (desk) now = false;
-            if (now == UsingGamepad) return;
+            // (Android's back button arrives as Esc and doesn't count as switching to a keyboard.)
+            if (Kb != null && Kb.anyKey.wasPressedThisFrame && !Kb.escapeKey.wasPressedThisFrame) desk = true;
+            if (!touch && Ms != null && (Ms.delta.ReadValue().sqrMagnitude > 16f || Ms.leftButton.wasPressedThisFrame || Ms.rightButton.wasPressedThisFrame)) desk = true;
+            bool now = UsingGamepad, nowTouch = UsingTouch;
+            if (pad) { now = true; nowTouch = false; }
+            else if (touch) { now = false; nowTouch = true; }
+            else if (desk) { now = false; nowTouch = false; }
+            if (now == UsingGamepad && nowTouch == UsingTouch) return;
+            UsingTouch = nowTouch;
+            if (now == UsingGamepad)
+            {
+                DeviceChanged?.Invoke();
+                return;
+            }
             UsingGamepad = now;
             // Buttons look "hovered" while selected: with the mouse nothing should stay selected.
             if (!now && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
@@ -207,12 +244,18 @@ namespace ChoppingTrees
             ["tabRight"] = new[] { ("RB", "RB"), ("R1", "R1"), ("R", "R") },
         };
 
+        static readonly System.Collections.Generic.Dictionary<string, string> s_TouchNames = new System.Collections.Generic.Dictionary<string, string>
+        {
+            ["chop"] = "the axe button", ["use"] = "Use", ["jump"] = "Jump", ["sprint"] = "the stick forward", ["menu"] = "Menu",
+        };
+
         static readonly string[] s_KeyboardKeys = { "chop:LMB", "use:E", "sprint:Shift", "jump:Space", "menu:Esc", "hints:H", "select:Enter", "back:Esc" };
         static readonly System.Collections.Generic.Dictionary<string, Sprite> s_Glyphs = new System.Collections.Generic.Dictionary<string, Sprite>();
 
         /// <summary>Prompt label for an action on the device in use ("E" on keyboard, "X" / "Square" / "Y" on a controller).</summary>
         public static string Key(string action)
         {
+            if (UsingTouch && s_TouchNames.TryGetValue(action, out var touchName)) return touchName;
             if (UsingGamepad && s_Buttons.TryGetValue(action, out var b)) return b[(int)Style].label;
             foreach (var k in s_KeyboardKeys)
                 if (k.StartsWith(action + ":")) return k.Substring(action.Length + 1);

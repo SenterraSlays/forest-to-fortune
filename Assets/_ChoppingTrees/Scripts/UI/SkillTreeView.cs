@@ -103,7 +103,26 @@ namespace ChoppingTrees
                 float z = GameInput.ZoomAxis;
                 if (Mathf.Abs(z) > 0.05f) ZoomBy(1f + z * 1.6f * Time.unscaledDeltaTime, Vector2.zero);
             }
+            Pinch();
             Apply(false);
+        }
+
+        void OnEnable() => UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport.Enable();
+
+        /// <summary>Two fingers zoom about the point between them.</summary>
+        void Pinch()
+        {
+            var touches = UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches;
+            if (touches.Count != 2) return;
+            Vector2 a = touches[0].screenPosition, b = touches[1].screenPosition;
+            Vector2 pa = a - touches[0].delta, pb = b - touches[1].delta;
+            float before = Vector2.Distance(pa, pb), now = Vector2.Distance(a, b);
+            if (before < 20f || Mathf.Abs(now - before) < 0.5f) return;
+            if (!RectTransformUtility.RectangleContainsScreenPoint(m_Viewport, (a + b) * 0.5f, null)) return;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(m_Viewport, (a + b) * 0.5f, null, out var mid);
+            ZoomBy(now / before, mid - m_Viewport.rect.center);
+            m_Zoom = m_TargetZoom;
+            m_Pan = m_TargetPan;
         }
 
         /// <summary>Pans so a point of the tree (content coordinates, origin bottom-left) is comfortably in view.</summary>

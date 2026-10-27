@@ -25,6 +25,7 @@ namespace ChoppingTrees
             stick.y *= 0.75f; // pitch a little slower than yaw feels natural on a stick
             if (s.invertStickY) stick.y = -stick.y;
             d += stick;
+            d += GameInput.TouchLook; // already in degrees, with the touch sensitivity and invert
             transform.Rotate(0f, d.x, 0f, Space.Self);
             m_PitchAngle = Mathf.Clamp(m_PitchAngle - d.y, -86f, 86f);
             m_Pitch.localRotation = Quaternion.Euler(m_PitchAngle, 0f, 0f);
