@@ -1,4 +1,6 @@
-# Builds an unsigned iOS IPA (Actions tab > "iOS IPA" > Run workflow).
+# Builds an unsigned iOS IPA on every push to the "game" branch (main is the website, so the
+# Run workflow button, which only lists workflows on the default branch, isn't available).
+# Re-run a build from its run page in the Actions tab.
 # 1. Linux: Unity exports the Xcode project (BuildPipeline.BuildIos).
 # 2. Cloud Mac: Xcode compiles it without signing and zips Payload/ into an IPA.
 # Sign and install the IPA with Sideloadly or AltStore using your Apple ID.
@@ -10,6 +12,8 @@
 name: iOS IPA
 
 on:
+  push:
+    branches: [game]
   workflow_dispatch:
 
 jobs:
