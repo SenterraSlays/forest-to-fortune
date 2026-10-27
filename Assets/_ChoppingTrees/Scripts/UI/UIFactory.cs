@@ -448,10 +448,15 @@ namespace ChoppingTrees
             Border(root.transform, UIStyle.Border);
             HStack(root, 4f, new RectOffset(4, 4, 4, 4), TextAnchor.MiddleCenter);
             TextMeshProUGUI label = null;
+            // The whole selector is one stop for a controller: left / right change the value,
+            // up / down move on. The arrow buttons are for the mouse only.
+            var sel = root.gameObject.AddComponent<CyclerSelectable>();
+            sel.Init(root, d => { step(d); label.text = get(); });
             void Arrow(string icon, int dir)
             {
                 var b = Button(root.transform, "", () => { step(dir); label.text = get(); }, 18, ButtonStyle.Ghost, icon);
                 b.Layout(36, 36);
+                b.navigation = new Navigation { mode = Navigation.Mode.None };
             }
             Arrow("chevron_left", -1);
             label = Text(root.transform, get(), 20, UIStyle.Text, true, TextAlignmentOptions.Center);

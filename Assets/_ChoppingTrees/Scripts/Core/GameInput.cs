@@ -62,6 +62,10 @@ namespace ChoppingTrees
         /// <summary>Esc or Start: pause in play, close the top menu otherwise.</summary>
         public static bool MenuPressed => Kb != null && Kb.escapeKey.wasPressedThisFrame || Pad != null && Pad.startButton.wasPressedThisFrame;
 
+        /// <summary>LB / RB (L1 / R1, L / R): previous and next tab.</summary>
+        public static bool TabLeftPressed => Pad != null && Pad.leftShoulder.wasPressedThisFrame;
+        public static bool TabRightPressed => Pad != null && Pad.rightShoulder.wasPressedThisFrame;
+
         /// <summary>B / Circle: back out of menus.</summary>
         public static bool BackPressed => Pad != null && Pad.buttonEast.wasPressedThisFrame;
 
@@ -199,6 +203,8 @@ namespace ChoppingTrees
             ["zoomOut"] = new[] { ("LT", "LT"), ("L2", "L2"), ("ZL", "ZL") },
             ["zoomIn"] = new[] { ("RT", "RT"), ("R2", "R2"), ("ZR", "ZR") },
             ["dpad"] = new[] { ("Dpad", "D-pad"), ("Dpad", "D-pad"), ("Dpad", "D-pad") },
+            ["tabLeft"] = new[] { ("LB", "LB"), ("L1", "L1"), ("L", "L") },
+            ["tabRight"] = new[] { ("RB", "RB"), ("R1", "R1"), ("R", "R") },
         };
 
         static readonly string[] s_KeyboardKeys = { "chop:LMB", "use:E", "sprint:Shift", "jump:Space", "menu:Esc", "hints:H", "select:Enter", "back:Esc" };

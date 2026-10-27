@@ -107,6 +107,7 @@ namespace ChoppingTrees
             var rebirth = UIFactory.Button(header, "Rebirth", () => RebirthMenu.Instance.Open(), 20, ButtonStyle.Ghost, "rebirth");
             ((RectTransform)rebirth.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-546, 0), new Vector2(170, 52));
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
+            close.navigation = new Navigation { mode = Navigation.Mode.None }; // B closes
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
 
             // Tree area: atmosphere behind, the tree on top, clipped to the rounded frame.
@@ -366,7 +367,13 @@ namespace ChoppingTrees
             hint.textWrappingMode = TextWrappingModes.NoWrap;
             var buttons = UIFactory.Rect("View", legend.transform);
             UIFactory.HStack(buttons, 4f);
-            void Btn(string icon, UnityEngine.Events.UnityAction a) => UIFactory.Button(buttons, "", a, 15, ButtonStyle.Ghost, icon).Layout(34, 30);
+            // Mouse tools: a controller zooms with the triggers, so these aren't navigation stops.
+            void Btn(string icon, UnityEngine.Events.UnityAction a)
+            {
+                var b = UIFactory.Button(buttons, "", a, 15, ButtonStyle.Ghost, icon);
+                b.Layout(34, 30);
+                b.navigation = new Navigation { mode = Navigation.Mode.None };
+            }
             Btn("minus", () => m_View.ZoomBy(1f / 1.25f, Vector2.zero));
             Btn("plus", () => m_View.ZoomBy(1.25f, Vector2.zero));
             Btn("refresh", () => m_View.ResetView());

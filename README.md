@@ -28,7 +28,9 @@ No input setup is needed: the game reads the devices directly through the Input 
 package. Whichever you used last decides the button prompts (keys or controller buttons), and a
 controller always has a focused element in menus. *Settings > Controls > Controller buttons*
 switches the prompts between Xbox, PlayStation and Switch button icons (until you pick one, the
-connected controller decides). Controller look speed, invert, dead zone and
+connected controller decides). With a controller, a bold animated frame marks the selected
+control, a hint bar shows the Select / Back / Switch tab buttons, LB / RB switch tabs in Settings
+and Rebirth, and left / right on a setting changes its value. Controller look speed, invert, dead zone and
 vibration (rumble on hits, felled trees and clangs) are in *Settings > Controls*.
 
 ### The loop

@@ -182,6 +182,18 @@ namespace ChoppingTrees
 
         static Sprite s_Shadow, s_Ring, s_GradientH, s_GradientV, s_Glow;
         static Sprite s_Bezel, s_Face, s_ThinRing, s_ArcRing, s_Vignette, s_TreeRings, s_ForestNear, s_ForestFar, s_Dash;
+        static Sprite s_FocusRing, s_ThickRing;
+
+        /// <summary>Bold rounded outline (about 4 px, 9-sliced) for the controller focus frame.</summary>
+        public static Sprite FocusRing => s_FocusRing != null ? s_FocusRing : s_FocusRing = MakeSliced(64, 18, (x, y, size) =>
+        {
+            float d = RoundedDist(x, y, size, 1f, 16f);
+            return Mathf.Clamp01(2.4f - Mathf.Abs(d + 2.4f));
+        });
+
+        /// <summary>Bold circle outline for the focus frame around round skill nodes.</summary>
+        public static Sprite ThickRing => s_ThickRing != null ? s_ThickRing : s_ThickRing = MakeRadial(128, (r, nx, ny) =>
+            new Color(1, 1, 1, Mathf.Clamp01(1f - Mathf.Abs(r - 0.94f) * 64f / 3.5f)));
 
         // ---------------------------------------------------------------- skill tree sprites
 

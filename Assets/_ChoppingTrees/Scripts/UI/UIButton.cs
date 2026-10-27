@@ -68,7 +68,9 @@ namespace ChoppingTrees
             if (Label != null) Label.alpha = alpha;
             if (m_Icon != null) { var ic = m_Icon.color; ic.a = alpha; m_Icon.color = ic; }
             m_Punch = Mathf.MoveTowards(m_Punch, 0f, dt * 6f);
-            float scale = 1f + 0.025f * m_Hover - 0.05f * Mathf.Sin(m_Punch * Mathf.PI);
+            // With a controller the focused button stands out more (the focus frame does the rest).
+            float focus = GameInput.UsingGamepad && currentSelectionState == SelectionState.Selected ? 1f : 0f;
+            float scale = 1f + 0.025f * m_Hover + 0.03f * focus - 0.05f * Mathf.Sin(m_Punch * Mathf.PI);
             transform.localScale = Vector3.one * scale;
         }
     }

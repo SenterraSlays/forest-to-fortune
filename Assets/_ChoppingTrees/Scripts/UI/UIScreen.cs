@@ -31,11 +31,15 @@ namespace ChoppingTrees
 
         /// <summary>What a controller focuses when this screen opens: by default the first
         /// interactable control (top-left first).</summary>
-        public virtual GameObject DefaultSelection()
+        public virtual GameObject DefaultSelection() => FirstSelectable(transform);
+
+        /// <summary>The top-left interactable, navigable control under <paramref name="within"/>.</summary>
+        public static GameObject FirstSelectable(Transform within)
         {
             Selectable best = null;
-            foreach (var s in GetComponentsInChildren<Selectable>())
+            foreach (var s in within.GetComponentsInChildren<Selectable>())
             {
+                if (s.navigation.mode == Navigation.Mode.None) continue;
                 if (!s.IsInteractable() || !s.isActiveAndEnabled) continue;
                 if (best == null) { best = s; continue; }
                 Vector3 a = s.transform.position, b = best.transform.position;
@@ -96,6 +100,13 @@ namespace ChoppingTrees
                     es.SetSelectedGameObject(null);
             }
             OnClosed();
+        }
+
+        /// <summary>Moves controller focus to a control (no-op with the mouse).</summary>
+        protected static void Focus(GameObject target)
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null && target != null && GameInput.UsingGamepad) es.SetSelectedGameObject(target);
         }
 
         protected virtual void OnOpened() { }

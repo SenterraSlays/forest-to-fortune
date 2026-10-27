@@ -16,7 +16,7 @@ namespace ChoppingTrees
     /// damage numbers. Changes apply at once and save on close. Upscalers the hardware check
     /// rejects are skipped when cycling and listed with the reason.
     /// </summary>
-    public class SettingsMenu : UIScreen
+    public class SettingsMenu : UIScreen, ITabbedScreen
     {
         public static SettingsMenu Instance { get; private set; }
 
@@ -29,6 +29,7 @@ namespace ChoppingTrees
         readonly List<UIButton> m_Tabs = new List<UIButton>();
         readonly List<Image> m_TabBars = new List<Image>();
         int m_Tab;
+        UIButton m_Reset, m_Done;
 
         /// <summary>Every selector, toggle and slider with its source, refreshed whenever the menu opens or a value changes.</summary>
         static readonly List<(TextMeshProUGUI label, Func<string> get)> s_Cyclers = new List<(TextMeshProUGUI, Func<string>)>();
@@ -62,6 +63,8 @@ namespace ChoppingTrees
                 int index = i;
                 var b = UIFactory.Button(nav.transform, TabNames[i], () => ShowTab(index), 21, ButtonStyle.Tab, TabIcons[i]);
                 b.Layout(-1, 54);
+                // A controller switches tabs with LB / RB, so the tab list isn't a navigation stop.
+                b.navigation = new Navigation { mode = Navigation.Mode.None };
                 var content = b.transform.Find("Content").GetComponent<HorizontalLayoutGroup>();
                 content.childAlignment = TextAnchor.MiddleLeft;
                 content.padding = new RectOffset(14, 0, 0, 0);
@@ -82,9 +85,9 @@ namespace ChoppingTrees
             BuildInterface(Page(pages));
 
             // Footer.
-            var reset = UIFactory.Button(body, "Reset to defaults", ResetDefaults, 20, ButtonStyle.Ghost, "refresh");
+            var reset = m_Reset = UIFactory.Button(body, "Reset to defaults", ResetDefaults, 20, ButtonStyle.Ghost, "refresh");
             ((RectTransform)reset.transform).Place(new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(28, 28), new Vector2(250, 56));
-            var done = UIFactory.Button(body, "Done", Close, 24, ButtonStyle.Primary, "check");
+            var done = m_Done = UIFactory.Button(body, "Done", Close, 24, ButtonStyle.Primary, "check");
             ((RectTransform)done.transform).Place(new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-32, 28), new Vector2(300, 60));
             ShowTab(0, false);
         }
@@ -309,9 +312,23 @@ namespace ChoppingTrees
             GameSettings.Save();
         }
 
+        /// <summary>A controller starts on the first control of the open tab.</summary>
+        public override GameObject DefaultSelection() => m_Pages.Count > 0 ? FirstSelectable(m_Pages[m_Tab]) : base.DefaultSelection();
+
+        protected override void Update()
+        {
+            base.Update();
+            if (!IsOpen || TopModal != this) return;
+            int dir = GameInput.TabLeftPressed ? -1 : GameInput.TabRightPressed ? 1 : 0;
+            if (dir == 0) return;
+            ShowTab(Cycle(m_Tab, dir, m_Pages.Count));
+            Focus(DefaultSelection());
+        }
+
         void ShowTab(int index, bool sound = true)
         {
             m_Tab = index;
+            WirePage(m_Pages[index]);
             for (int i = 0; i < m_Pages.Count; i++) m_Pages[i].gameObject.SetActive(i == index);
             for (int i = 0; i < m_Tabs.Count; i++)
             {
@@ -346,6 +363,49 @@ namespace ChoppingTrees
                 GameSettings.ResetToDefaults();
                 RefreshLabels();
             });
+        }
+
+        /// <summary>
+        /// Controller navigation for a page, in reading order: up / down go from row to row (left
+        /// column, then right column, then Reset / Done), left / right move along a row of buttons
+        /// (presets, controller styles). Unity's automatic navigation skipped rows between the
+        /// offset columns.
+        /// </summary>
+        void WirePage(RectTransform page)
+        {
+            var groups = new List<List<Selectable>>();
+            Transform lastParent = null;
+            foreach (var sel in page.GetComponentsInChildren<Selectable>(true))
+            {
+                if (sel.navigation.mode == Navigation.Mode.None) continue;
+                // Buttons side by side in one row container form a group.
+                if (groups.Count > 0 && sel.transform.parent == lastParent && sel is UIButton) groups[groups.Count - 1].Add(sel);
+                else groups.Add(new List<Selectable> { sel });
+                lastParent = sel.transform.parent;
+            }
+            groups.Add(new List<Selectable> { m_Reset, m_Done });
+            for (int g = 0; g < groups.Count; g++)
+                for (int i = 0; i < groups[g].Count; i++)
+                {
+                    var row = groups[g];
+                    var nav = new Navigation { mode = Navigation.Mode.Explicit };
+                    nav.selectOnLeft = i > 0 ? row[i - 1] : null;
+                    nav.selectOnRight = i < row.Count - 1 ? row[i + 1] : null;
+                    if (g > 0) nav.selectOnUp = Pick(groups[g - 1], i, row.Count);
+                    if (g < groups.Count - 1)
+                    {
+                        var next = groups[g + 1];
+                        nav.selectOnDown = g + 1 == groups.Count - 1 ? m_Done : Pick(next, i, row.Count);
+                    }
+                    row[i].navigation = nav;
+                }
+        }
+
+        /// <summary>The element of a neighbouring row at about the same horizontal place.</summary>
+        static Selectable Pick(List<Selectable> row, int index, int fromCount)
+        {
+            if (row.Count == 1 || fromCount <= 1) return row[0];
+            return row[Mathf.Clamp(Mathf.RoundToInt(index * (row.Count - 1f) / (fromCount - 1f)), 0, row.Count - 1)];
         }
 
         static int Cycle(int value, int dir, int count) => ((value + dir) % count + count) % count;

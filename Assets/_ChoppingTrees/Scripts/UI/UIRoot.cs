@@ -64,8 +64,9 @@ namespace ChoppingTrees
             m_Offline = Screen<OfflinePopup>(root, "OfflinePopup");
             m_Settings = Screen<SettingsMenu>(root, "SettingsMenu");
             m_Confirm = Screen<ConfirmDialog>(root, "ConfirmDialog");
-            // Toasts stay above menus.
+            // Toasts stay above menus; the controller focus frame and hints above everything.
             root.Find("Toasts").SetAsLastSibling();
+            new GameObject("ControllerFocus", typeof(RectTransform)).AddComponent<ControllerFocus>().Create(root);
 
             Game.Instance.PhaseChanged += p =>
             {

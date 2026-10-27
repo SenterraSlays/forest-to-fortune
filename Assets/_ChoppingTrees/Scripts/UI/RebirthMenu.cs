@@ -13,7 +13,7 @@ namespace ChoppingTrees
     /// <b>Legacy Perks</b>: cards for the perks bought with skill points, kept through rebirths.
     /// Opened from the Workbench header and the pause menu.
     /// </summary>
-    public class RebirthMenu : UIScreen
+    public class RebirthMenu : UIScreen, ITabbedScreen
     {
         public static RebirthMenu Instance { get; private set; }
 
@@ -55,6 +55,7 @@ namespace ChoppingTrees
             m_Money = UIFactory.Chip(header, "coin", UIStyle.Money, new Vector2(-104, 0), 250);
             m_Points = UIFactory.Chip(header, "star", UIStyle.Skill, new Vector2(-370, 0), 150);
             var close = UIFactory.Button(header, "", Close, 22, ButtonStyle.Ghost, "close");
+            close.navigation = new Navigation { mode = Navigation.Mode.None }; // B closes
             ((RectTransform)close.transform).Place(new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(-30, 0), new Vector2(56, 52));
 
             // Tabs.
@@ -65,6 +66,8 @@ namespace ChoppingTrees
             m_TabRebirth.Layout(200, 46);
             m_TabLegacy = UIFactory.Button(tabs, "Legacy Perks", () => ShowTab(true), 21, ButtonStyle.Tab, "star");
             m_TabLegacy.Layout(250, 46);
+            // A controller switches tabs with LB / RB.
+            m_TabRebirth.navigation = m_TabLegacy.navigation = new Navigation { mode = Navigation.Mode.None };
             var line = UIFactory.Panel(body, "TabLine", new Color(1f, 0.95f, 0.82f, 0.08f), false);
             line.rectTransform.anchorMin = new Vector2(0, 1);
             line.rectTransform.anchorMax = new Vector2(1, 1);
@@ -318,6 +321,7 @@ namespace ChoppingTrees
         {
             Open();
             ShowTab(true);
+            Focus(DefaultSelection());
         }
 
         protected override void OnOpened()
@@ -424,10 +428,18 @@ namespace ChoppingTrees
                 });
         }
 
+        /// <summary>A controller starts on the first control of the open tab.</summary>
+        public override GameObject DefaultSelection() => FirstSelectable(m_Legacy ? m_LegacyTab : m_RebirthTab) ?? base.DefaultSelection();
+
         protected override void Update()
         {
             base.Update();
             if (!IsOpen) return;
+            if (TopModal == this && (GameInput.TabLeftPressed || GameInput.TabRightPressed))
+            {
+                ShowTab(!m_Legacy);
+                Focus(DefaultSelection());
+            }
             float t = Time.unscaledTime;
             if (m_Ring != null) m_Ring.localRotation = Quaternion.Euler(0, 0, -t * 25f);
             if (m_EmblemGlow != null) m_EmblemGlow.color = new Color(UIStyle.Skill.r, UIStyle.Skill.g, UIStyle.Skill.b, 0.22f + 0.08f * Mathf.Sin(t * 2f));
