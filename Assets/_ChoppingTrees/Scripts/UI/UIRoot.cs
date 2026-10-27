@@ -60,7 +60,12 @@ namespace ChoppingTrees
             m_Hud = Screen<Hud>(root, "HUD");
             m_Hud.Bind(m_Axe, m_Interactor);
             m_Hud.gameObject.AddComponent<SafeArea>();
-            new GameObject("TouchControls", typeof(RectTransform)).AddComponent<TouchControls>().Create(root, m_Interactor);
+            var touch = new GameObject("TouchControls", typeof(RectTransform)).AddComponent<TouchControls>();
+            touch.Create(root, m_Interactor);
+            // The HUD and touch controls change every frame: their own canvases keep those changes
+            // from rebuilding the rest of the interface.
+            OwnCanvas(m_Hud.gameObject);
+            OwnCanvas(touch.gameObject);
             new GameObject("FloatingText", typeof(RectTransform)).AddComponent<FloatingText>().Create(root, canvas);
             new GameObject("Tutorial", typeof(RectTransform)).AddComponent<Tutorial>().Create(root);
             new GameObject("Toasts", typeof(RectTransform)).AddComponent<Toasts>().Create(root);
@@ -85,6 +90,13 @@ namespace ChoppingTrees
                 if (p == GamePhase.Playing) m_Hud.Open();
                 else m_Hud.Close();
             };
+        }
+
+        static void OwnCanvas(GameObject go)
+        {
+            if (go.GetComponent<Canvas>() != null) return;
+            go.AddComponent<Canvas>();
+            go.AddComponent<GraphicRaycaster>();
         }
 
         static Vector2 Reference => new Vector2(1920, 1080) / (GameSettings.Data.uiScale * (Application.isMobilePlatform ? 1.3f : 1f));

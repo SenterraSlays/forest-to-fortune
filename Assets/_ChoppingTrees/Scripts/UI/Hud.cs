@@ -338,8 +338,12 @@ namespace ChoppingTrees
                 m_LastMoney = money;
                 m_Money.text = NumberUtil.Money(money);
             }
-            m_MoneyPunch = Mathf.MoveTowards(m_MoneyPunch, 0f, dt * 4f);
-            m_MoneyRect.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(m_MoneyPunch * Mathf.PI));
+            // Only touch the UI when something changed: every write makes the canvas rebuild.
+            if (m_MoneyPunch > 0f || m_MoneyRect.localScale != Vector3.one)
+            {
+                m_MoneyPunch = Mathf.MoveTowards(m_MoneyPunch, 0f, dt * 4f);
+                m_MoneyRect.localScale = Vector3.one * (1f + 0.08f * Mathf.Sin(m_MoneyPunch * Mathf.PI));
+            }
 
             UpdateBackpack(model, dt);
             if (model.State.Rebirths != m_LastRebirths)
@@ -378,8 +382,11 @@ namespace ChoppingTrees
                     row.rate.color = c;
                     row.ratePill.color = new Color(c.r, c.g, c.b, 0.18f);
                 }
-                row.punch = Mathf.MoveTowards(row.punch, 0f, dt * 5f);
-                row.value.color = Color.Lerp(UIStyle.Text, UIStyle.Accent, row.punch);
+                if (row.punch > 0f || row.value.color != UIStyle.Text)
+                {
+                    row.punch = Mathf.MoveTowards(row.punch, 0f, dt * 5f);
+                    row.value.color = Color.Lerp(UIStyle.Text, UIStyle.Accent, row.punch);
+                }
             }
 
             if (m_YardCaption.activeSelf != anyYard) m_YardCaption.SetActive(anyYard);
@@ -401,10 +408,14 @@ namespace ChoppingTrees
             UpdateFps(dt);
 
             m_SavedTimer -= dt;
-            m_Saved.alpha = Mathf.Clamp01(m_SavedTimer);
-            m_Controls.alpha = GameInput.UsingTouch ? 0f : model.State.TutorialDone ? 0.65f : 0.95f;
+            float saved = Mathf.Clamp01(m_SavedTimer);
+            if (m_Saved.alpha != saved) m_Saved.alpha = saved;
+            float controls = GameInput.UsingTouch ? 0f : model.State.TutorialDone ? 0.65f : 0.95f;
+            if (m_Controls.alpha != controls) m_Controls.alpha = controls;
             // The touch menu button takes the top-right corner; the FPS counter moves beside it.
-            ((RectTransform)m_FpsRoot.transform).anchoredPosition = new Vector2(GameInput.UsingTouch ? -140f : -20f, -20f);
+            var fpsPos = new Vector2(GameInput.UsingTouch ? -140f : -20f, -20f);
+            var fpsRect = (RectTransform)m_FpsRoot.transform;
+            if (fpsRect.anchoredPosition != fpsPos) fpsRect.anchoredPosition = fpsPos;
         }
 
         void UpdateTarget(GameModel model, float dt)
@@ -475,7 +486,9 @@ namespace ChoppingTrees
             {
                 string cpu = p.HasCpuTime ? $"CPU {p.CpuMs:0.0}" : "CPU -";
                 string gpu = p.HasGpuTime ? $"GPU {p.GpuMs:0.0}" : "GPU -";
-                m_FpsDetail.text = $"{p.FrameMs:0.0} ms  (worst {p.WorstFrameMs:0})\n{cpu}  {gpu} ms\n{GraphicsService.Describe()}  {Screen.width}x{Screen.height}";
+                // The size the 3D view is really drawn at, so render scale is visible here.
+                var size = GraphicsService.RenderSize();
+                m_FpsDetail.text = $"{p.FrameMs:0.0} ms  (worst {p.WorstFrameMs:0})\n{cpu}  {gpu} ms\n{GraphicsService.Describe()}  {size.x}x{size.y}";
             }
         }
     }

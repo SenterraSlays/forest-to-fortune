@@ -55,6 +55,18 @@ namespace ChoppingTrees.EditorTools
         [MenuItem("Tools/Forest to Fortune/Build Android APK", priority = 22)]
         public static string BuildAndroid()
         {
+            // The editor must already be on Android. Built straight from Windows (Unity switching
+            // inside BuildPlayer), URP's shader stripping kept 0 variants of the Lit shader's main
+            // pass and nothing drew on phones. So switch first, and build once the scripts reload.
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                SessionState.SetBool(ResumeAndroidKey, true);
+                EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android);
+                EditorApplication.delayCall += ResumeAndroidBuild; // in case the switch didn't reload scripts
+                const string wait = "[BuildScript] Switched the editor to Android; the APK builds after the reload.";
+                Debug.Log(wait);
+                return wait;
+            }
             ProjectSetup.AndroidSettings();
             Directory.CreateDirectory(Path.GetDirectoryName(AndroidPath));
             EditorUserBuildSettings.buildAppBundle = false;
@@ -70,6 +82,18 @@ namespace ChoppingTrees.EditorTools
             string msg = $"[BuildScript] Android {report.summary.result}: {report.summary.totalSize / (1024 * 1024)} MB, {report.summary.totalErrors} errors, {report.summary.totalTime.TotalSeconds:0}s -> {AndroidPath}";
             Debug.Log(msg);
             return msg;
+        }
+
+        const string ResumeAndroidKey = "ForestToFortune.ResumeAndroidBuild";
+
+        /// <summary>Finishes a Build Android APK that had to switch the editor to Android first.</summary>
+        [InitializeOnLoadMethod]
+        static void ResumeAndroidBuild()
+        {
+            if (!SessionState.GetBool(ResumeAndroidKey, false)) return;
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android) return;
+            SessionState.EraseBool(ResumeAndroidKey);
+            EditorApplication.delayCall += () => BuildAndroid();
         }
 
         /// <summary>Back to Windows after an Android build. The package assemblies are rebuilt

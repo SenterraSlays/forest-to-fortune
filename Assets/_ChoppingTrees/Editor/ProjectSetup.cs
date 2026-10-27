@@ -116,10 +116,8 @@ namespace ChoppingTrees.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(mobile);
 
-            // The phone renderer must use the same rendering path as the PC one (Forward+). Android
-            // builds include the PC asset too (it is the Graphics settings default), and with one
-            // Forward and one Forward+ renderer the build stripped every variant of the Lit shader's
-            // main pass: the whole world was invisible on phones.
+            // The phone renderer uses the same rendering path as the PC one (Forward+), so both
+            // pipeline assets in the APK agree on which Lit shader variants to keep.
             var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>("Assets/Settings/Mobile_Renderer.asset");
             if (renderer != null)
             {

@@ -97,14 +97,14 @@ namespace ChoppingTrees.EditorTools
             foreach (var (x, z, yaw) in new[] { (-12.5f, -16.5f, 10f), (-13.2f, -17.6f, 40f), (12.4f, -15.5f, 20f), (4f, -38f, 0f) })
                 Place("Crate", yard, x, z, yaw);
             Place("Signpost", yard, 5.5f, 1.5f, -20f);
-            Place("Signpost", yard, 3.2f, 47f, 10f);
-            Place("Signpost", yard, -3.2f, 117f, -10f);
-            Place("Signpost", yard, 3.2f, 187f, 10f);
-            Place("Signpost", yard, -3.2f, 257f, -10f);
-            Place("Signpost", yard, 3.2f, 327f, 10f);
-            Place("Signpost", yard, -3.2f, 397f, -10f);
-            Place("Signpost", yard, 3.2f, 467f, 10f);
-            Place("Signpost", yard, -3.2f, 537f, -10f);
+            SetLayer(Place("Signpost", yard, 3.2f, 47f, 10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, -3.2f, 117f, -10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, 3.2f, 187f, 10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, -3.2f, 257f, -10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, 3.2f, 327f, 10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, -3.2f, 397f, -10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, 3.2f, 467f, 10f), GameLayers.Decor);
+            SetLayer(Place("Signpost", yard, -3.2f, 537f, -10f), GameLayers.Decor);
 
             // Unlit lantern posts every 45 m along the long road north, so it reads as a road.
             for (float z = 12f; z < WorldLayout.WallNorth - 10f; z += 45f)
@@ -112,6 +112,7 @@ namespace ChoppingTrees.EditorTools
                 float side = Mathf.Repeat(z, 90f) < 45f ? 1f : -1f;
                 var post = Place("Lantern_Post", yard, side * 3.4f, z, 0f);
                 SetStatic(post);
+                SetLayer(post, GameLayers.Decor);
                 Block(side * 3.4f, z, 0.8f);
             }
 
@@ -558,6 +559,7 @@ namespace ChoppingTrees.EditorTools
         {
             var gate = Place("Gate", parent, 0f, z, 180f);
             gate.name = "Gate_" + area.id;
+            SetLayer(gate, GameLayers.Decor);
             var barrierGo = new GameObject("Barrier");
             barrierGo.transform.SetParent(gate.transform, false);
             barrierGo.layer = GameLayers.Interactable;
@@ -577,6 +579,7 @@ namespace ChoppingTrees.EditorTools
                 {
                     var f = Place("Fence_Segment", parent, side * x, z, 0f);
                     SetStatic(f);
+                    SetLayer(f, GameLayers.Decor);
                 }
                 // The fence itself is only 1.6 m tall: an invisible wall along each side stops the
                 // player jumping over it (from flat ground or from a hill next to it).
@@ -713,6 +716,7 @@ namespace ChoppingTrees.EditorTools
                 if (themed[band] != null && s_Rng.NextDouble() < (band >= 3 ? 0.6 : 0.4)) m = themed[Mathf.Min(band, themed.Length - 1)];
                 var t = Place(m, root, x, z, R(0f, 360f), R(1.0f, 1.6f), 0.3f);
                 SetStatic(t);
+                SetLayer(t, GameLayers.Decor);
                 n++;
             }
             // Mountains and hills ring the whole valley, centred on its middle.
@@ -723,6 +727,7 @@ namespace ChoppingTrees.EditorTools
                 float x = Mathf.Sin(a) * 190f, z = midZ + Mathf.Cos(a) * 470f;
                 var m = Model("Mountain_A", root, new Vector3(x, -6f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), new Vector3(R(1.6f, 2.6f), R(1.0f, 1.8f), R(1.6f, 2.6f)));
                 SetStatic(m);
+                SetLayer(m, GameLayers.Decor);
             }
             for (int i = 0; i < 38; i++)
             {
@@ -730,6 +735,7 @@ namespace ChoppingTrees.EditorTools
                 float x = Mathf.Sin(a) * 120f, z = midZ + Mathf.Cos(a) * 395f;
                 var h = Model("Hill_A", root, new Vector3(x, -1f, z), Quaternion.Euler(0f, R(0f, 360f), 0f), Vector3.one * R(1.4f, 2.4f));
                 SetStatic(h);
+                SetLayer(h, GameLayers.Decor);
             }
         }
 
@@ -814,6 +820,8 @@ namespace ChoppingTrees.EditorTools
                     if (!small && WorldLayout.DistToYard(x, z) < 2f) continue;
                     var go = Place(row.model, root, x, z, R(0f, 360f), R(row.minScale, row.maxScale), 0.03f);
                     SetStatic(go);
+                    // Small props are drawn only close by, big ones further out (GraphicsService.DrawDistances).
+                    SetLayer(go, row.collider ? GameLayers.Decor : GameLayers.Scenery);
                     // Rocks and fallen logs get convex mesh colliders that follow their shape
                     // (a box from the world bounds didn't match rotated props, so you could walk into them).
                     bool solid = row.collider || row.model.StartsWith("Rock_");

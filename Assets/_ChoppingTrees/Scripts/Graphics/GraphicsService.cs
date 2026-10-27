@@ -165,6 +165,55 @@ namespace ChoppingTrees
             if (m_Color != null) m_Color.postExposure.Override(m_BaseExposure + s.brightness * 1.2f);
 
             ApplyScenery(s.detail);
+
+            // Fog closes in to just before the tree draw distance, so trees fade out instead of popping.
+            var cull = DrawDistances(s.detail);
+            RenderSettings.fogEndDistance = Mathf.Min(330f, cull.trees - 5f);
+            RenderSettings.fogStartDistance = Mathf.Min(55f, RenderSettings.fogEndDistance * 0.35f);
+        }
+
+        /// <summary>
+        /// How far away trees, large props (and the forest beyond the walls) and small scenery are
+        /// drawn, per detail level; shorter on phones. 0 = up to the camera's far plane. Anything
+        /// past these isn't drawn or shadowed at all, which is most of the 7,000 objects in the world.
+        /// </summary>
+        public static (float trees, float decor, float scenery) DrawDistances(DetailLevel level)
+        {
+            if (Application.isMobilePlatform)
+                return level switch
+                {
+                    DetailLevel.Low => (80f, 95f, 30f),
+                    DetailLevel.Medium => (115f, 135f, 45f),
+                    DetailLevel.High => (160f, 190f, 65f),
+                    _ => (220f, 260f, 90f),
+                };
+            return level switch
+            {
+                DetailLevel.Low => (130f, 150f, 50f),
+                DetailLevel.Medium => (190f, 220f, 75f),
+                DetailLevel.High => (270f, 300f, 110f),
+                _ => (345f, 0f, 160f),
+            };
+        }
+
+        /// <summary>Per-layer cull distances for a camera (see <see cref="DrawDistances"/>).</summary>
+        public static float[] LayerCullDistances()
+        {
+            var d = DrawDistances(GameSettings.Data.detail);
+            var cull = new float[32];
+            cull[GameLayers.Tree] = d.trees;
+            cull[GameLayers.Decor] = d.decor;
+            cull[GameLayers.Scenery] = d.scenery;
+            cull[GameLayers.Pickup] = Mathf.Min(d.trees, 80f);
+            return cull;
+        }
+
+        /// <summary>The size the 3D view is actually rendered at (screen size times render scale).</summary>
+        public static Vector2Int RenderSize()
+        {
+            var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+            float scale = asset != null ? asset.renderScale : 1f;
+            return new Vector2Int(Mathf.RoundToInt(Screen.width * scale), Mathf.RoundToInt(Screen.height * scale));
         }
 
         /// <summary>Shows a share of the small props: Low 35%, Medium 60%, High 85%, Ultra all.
