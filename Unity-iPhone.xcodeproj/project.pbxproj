@@ -216,7 +216,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				7B37BCD52E8EB3E300EBD088 /* UnityRuntime.framework in Embed Frameworks */,
 				9D25ABA5213FB47800354C27 /* UnityFramework.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";

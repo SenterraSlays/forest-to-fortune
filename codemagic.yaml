@@ -42,6 +42,10 @@ workflows:
               rm -rf "$fw"
             fi
           done
+          echo "Frameworks in the app:"; ls -la "$CM_BUILD_DIR/build/ipa/Payload/"*.app/Frameworks
+          if [ -e "$(echo "$CM_BUILD_DIR/build/ipa/Payload/"*.app)/Frameworks/UnityRuntime.framework" ]; then
+            echo "UnityRuntime.framework is still embedded; the IPA would not install." >&2; exit 1
+          fi
           cd "$CM_BUILD_DIR/build/ipa"
           zip -qry "$CM_BUILD_DIR/build/ForestToFortune.ipa" Payload
           ls -lh "$CM_BUILD_DIR/build/ForestToFortune.ipa"
