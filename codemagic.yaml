@@ -1,0 +1,39 @@
+# Forest to Fortune: unsigned iOS IPA from the Xcode project Unity exported on Windows
+# (Tools > Forest to Fortune > Export iOS Xcode Project). Start it from the Codemagic app
+# page with "Start new build" on the ios-xcode branch; the IPA is under the build's Artifacts.
+# Sign and install it with Sideloadly using your Apple ID.
+workflows:
+  ios-ipa:
+    name: Unsigned IPA
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    environment:
+      xcode: latest
+    scripts:
+      - name: Rejoin UnityRuntime (split into parts for GitHub's 100 MB file limit)
+        script: |
+          set -e
+          cd Frameworks/UnityRuntime.framework
+          cat UnityRuntime.part.* > UnityRuntime
+          rm UnityRuntime.part.*
+          ls -lh UnityRuntime
+      - name: Restore executable bits (git on Windows doesn't keep them)
+        script: |
+          find . -name "*.sh" -exec chmod +x {} +
+          chmod +x usymtool usymtoolarm64 || true
+          if [ -d Il2CppOutputProject/IL2CPP/build ]; then chmod -R +x Il2CppOutputProject/IL2CPP/build; fi
+      - name: Build unsigned IPA
+        script: |
+          set -eo pipefail
+          xcodebuild -project Unity-iPhone.xcodeproj -scheme Unity-iPhone -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$CM_BUILD_DIR/build/game.xcarchive" archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" \
+            | xcpretty
+          mkdir -p "$CM_BUILD_DIR/build/ipa/Payload"
+          cp -R "$CM_BUILD_DIR/build/game.xcarchive/Products/Applications/"*.app "$CM_BUILD_DIR/build/ipa/Payload/"
+          cd "$CM_BUILD_DIR/build/ipa"
+          zip -qry "$CM_BUILD_DIR/build/ForestToFortune.ipa" Payload
+          ls -lh "$CM_BUILD_DIR/build/ForestToFortune.ipa"
+    artifacts:
+      - build/ForestToFortune.ipa
